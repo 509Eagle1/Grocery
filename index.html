@@ -1,10 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Master Grocery List</title>
-<link rel="stylesheet" href="style.css" />
+<style>
+  body { font-family: Arial, sans-serif; margin:0; padding:0; background:#f4f4f4; }
+  header { background:#2c3e50; color:#fff; padding:10px; text-align:center; }
+  nav { display:flex; justify-content:center; gap:10px; background:#34495e; padding:10px; flex-wrap:wrap; }
+  nav button { padding:8px 14px; border:none; border-radius:6px; background:#3498db; color:#fff; cursor:pointer; touch-action:manipulation; }
+  nav button:hover { background:#2980b9; }
+  .container { padding:15px; max-width:600px; margin:auto; }
+  .hidden { display:none; }
+  ul { list-style:none; padding:0; margin:0; }
+  li { background:#fff; margin:8px 0; padding:10px; border-radius:6px; box-shadow:0 1px 3px rgba(0,0,0,0.2); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; }
+  .item-left { display:flex; align-items:center; gap:10px; }
+  .item-aisle { color:#555; font-size:0.9em; }
+  .btns { display:flex; gap:6px; }
+  button.edit, button.remove, button.clear, button.add, button.save { padding:6px 10px; border:none; border-radius:4px; cursor:pointer; touch-action:manipulation; color:white; margin-top:0; }
+  button.edit { background:#27ae60; }
+  button.remove { background:#e74c3c; }
+  button.clear { background:#f39c12; }
+  button.add { background:#2ecc71; }
+  button.save { background:#8e44ad; }
+  input[type="text"] { padding:6px; margin:5px 0; width:100%; border:1px solid #ccc; border-radius:4px; }
+  label { font-weight:bold; }
+  .checked-list li { transition: all 0.4s ease; }
+  .checked { text-decoration: line-through; color:#777; }
+  .top-buttons { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; justify-content:center; }
+</style>
 </head>
 <body>
 <header><h2>Master Grocery List</h2></header>
@@ -16,13 +40,17 @@
 </nav>
 
 <div class="container">
+
   <div id="masterPage">
-    <input type="text" id="searchInput" placeholder="Search items..." />
+    <!-- Buttons at the top -->
+    <div class="top-buttons">
+      <button id="clearChecksBtn" class="clear">Clear All Checks</button>
+      <button id="exportListBtn" class="save">Export JSON</button>
+      <button id="importListBtn" class="save">Import JSON</button>
+      <button id="importFileBtn" class="save">Import File</button>
+    </div>
+    <input type="text" id="searchInput" placeholder="Search items...">
     <ul id="groceryList"></ul>
-    <button id="clearChecksBtn" class="clear">Clear All Checks</button>
-    <button id="exportListBtn" class="save">Export (Copy)</button>
-    <button id="importListBtn" class="save">Import (Paste)</button>
-    <button id="importFileBtn" class="save">Import File</button>
     <input type="file" id="importFileInput" accept=".json,.csv" style="display:none;">
   </div>
 
@@ -32,13 +60,143 @@
 
   <div id="addPage" class="hidden">
     <label>Item:</label>
-    <input type="text" id="itemInput" />
+    <input type="text" id="itemInput">
     <label>Aisle:</label>
-    <input type="text" id="aisleInput" />
+    <input type="text" id="aisleInput">
     <button id="addItemBtn" class="add">Add Item</button>
   </div>
 </div>
 
-<script src="script.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  let groceryItems = JSON.parse(localStorage.getItem("groceryItems") || "[]");
+  let checkedAisle = JSON.parse(localStorage.getItem("checkedAisle") || "[]");
+
+  function saveData() {
+    localStorage.setItem("groceryItems", JSON.stringify(groceryItems));
+    localStorage.setItem("checkedAisle", JSON.stringify(checkedAisle));
+  }
+
+  function sortByAisle(arr) {
+    return arr.sort((a,b)=>a.aisle.localeCompare(b.aisle, undefined, {numeric:true, sensitivity:'base'}));
+  }
+
+  function renderMaster(filter="") {
+    const list = document.getElementById('groceryList');
+    list.innerHTML = '';
+    sortByAisle(groceryItems);
+    groceryItems.forEach((item,index)=>{
+      if(filter && !item.name.toLowerCase().includes(filter.toLowerCase())) return;
+      const li = document.createElement('li');
+      const left = document.createElement('div'); left.className='item-left';
+      const cb = document.createElement('input'); cb.type='checkbox'; cb.checked=item.checked||false;
+      cb.addEventListener('change',()=>{ item.checked=cb.checked; saveData(); });
+      const text = document.createElement('span'); text.textContent=`${item.name} (Aisle: ${item.aisle})`;
+      left.appendChild(cb); left.appendChild(text);
+
+      const btns = document.createElement('div'); btns.className='btns';
+      const editBtn=document.createElement('button'); editBtn.textContent='Edit'; editBtn.className='edit';
+      editBtn.onclick=()=>{
+        const newName=prompt("Edit item:",item.name); if(newName!==null) item.name=newName.trim();
+        const newAisle=prompt("Edit aisle:",item.aisle); if(newAisle!==null) item.aisle=newAisle.trim();
+        renderMaster();
+        saveData();
+      };
+      const removeBtn=document.createElement('button'); removeBtn.textContent='Remove'; removeBtn.className='remove';
+      removeBtn.onclick=()=>{ groceryItems.splice(index,1); saveData(); renderMaster(); };
+      btns.appendChild(editBtn); btns.appendChild(removeBtn);
+      li.appendChild(left); li.appendChild(btns);
+      list.appendChild(li);
+    });
+  }
+
+  function renderChecked() {
+    const list=document.getElementById('checkedList');
+    list.innerHTML='';
+    sortByAisle(checkedAisle);
+    checkedAisle.forEach((item,i)=>{
+      const li=document.createElement('li');
+      const left=document.createElement('div'); left.className='item-left';
+      const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=item.done||false;
+      cb.onchange=()=>{
+        item.done=cb.checked;
+        const done = checkedAisle.filter(i=>i.done);
+        const undone = checkedAisle.filter(i=>!i.done);
+        checkedAisle=[...undone,...done];
+        saveData();
+        renderChecked();
+      };
+      const span=document.createElement('span'); span.textContent=`${item.name} (Aisle: ${item.aisle})`;
+      if(item.done) li.classList.add('checked');
+      left.appendChild(cb); left.appendChild(span); li.appendChild(left);
+      list.appendChild(li);
+    });
+  }
+
+  function addItem(){
+    const name=document.getElementById('itemInput').value.trim();
+    const aisle=document.getElementById('aisleInput').value.trim();
+    if(!name) return;
+    const exists=groceryItems.some(g=>g.name.toLowerCase()===name.toLowerCase() && g.aisle.toLowerCase()===aisle.toLowerCase());
+    if(!exists) groceryItems.push({name,aisle,checked:false});
+    document.getElementById('itemInput').value=''; document.getElementById('aisleInput').value='';
+    saveData(); renderMaster();
+  }
+
+  function clearAllChecks(){ groceryItems.forEach(i=>i.checked=false); saveData(); renderMaster(); }
+  function showMaster(){ document.getElementById('masterPage').classList.remove('hidden'); document.getElementById('checkedPage').classList.add('hidden'); document.getElementById('addPage').classList.add('hidden'); }
+  function showChecked(){ checkedAisle=groceryItems.filter(i=>i.checked).map(i=>({...i,done:false})); saveData(); renderChecked(); document.getElementById('checkedPage').classList.remove('hidden'); document.getElementById('masterPage').classList.add('hidden'); document.getElementById('addPage').classList.add('hidden'); }
+  function showAdd(){ document.getElementById('addPage').classList.remove('hidden'); document.getElementById('masterPage').classList.add('hidden'); document.getElementById('checkedPage').classList.add('hidden'); }
+
+  // Export JSON to file (iPhone compatible)
+  function exportToFile(){
+    const blob=new Blob([JSON.stringify({groceryItems,checkedAisle},null,2)],{type:'application/json'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='grocery-list.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
+  // Import from file
+  function importFile(file){
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const text=e.target.result;
+      if(file.name.endsWith('.json')){
+        const data=JSON.parse(text);
+        if(Array.isArray(data.groceryItems)){
+          data.groceryItems.forEach(item=>{
+            const exists=groceryItems.some(g=>g.name.toLowerCase()===item.name.toLowerCase() && g.aisle.toLowerCase()===item.aisle.toLowerCase());
+            if(!exists) groceryItems.push(item);
+          });
+        }
+      } else if(file.name.endsWith('.csv')){
+        const lines=text.split(/\r?\n/).filter(l=>l.trim());
+        lines.forEach(line=>{
+          const [name,aisle]=line.split(',').map(s=>s.trim());
+          const exists=groceryItems.some(g=>g.name.toLowerCase()===name.toLowerCase() && g.aisle.toLowerCase()===aisle.toLowerCase());
+          if(name && !exists) groceryItems.push({name,aisle,checked:false});
+        });
+      }
+      saveData(); renderMaster();
+    };
+    reader.readAsText(file);
+  }
+
+  // Event listeners
+  document.getElementById('addItemBtn').onclick=addItem;
+  document.getElementById('showMasterBtn').onclick=showMaster;
+  document.getElementById('showCheckedBtn').onclick=showChecked;
+  document.getElementById('showAddBtn').onclick=showAdd;
+  document.getElementById('clearChecksBtn').onclick=clearAllChecks;
+  document.getElementById('exportListBtn').onclick=exportToFile;
+  document.getElementById('importFileBtn').onclick=()=>document.getElementById('importFileInput').click();
+  document.getElementById('importFileInput').onchange=e=>{ if(e.target.files.length) importFile(e.target.files[0]); };
+  document.getElementById('searchInput').oninput=e=>renderMaster(e.target.value);
+
+  renderMaster();
+});
+</script>
 </body>
 </html>
