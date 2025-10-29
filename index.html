@@ -27,14 +27,20 @@ h1 { text-align:center; margin-bottom:5px; }
 input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; margin-bottom:5px; }
 #addPage { display:flex; gap:5px; flex-wrap:wrap; align-items:center; margin-top:10px; }
 .hidden { display:none; }
+
+/* Search field with clear button */
+.search-container { position: relative; }
+#searchInput { width: 100%; padding-right: 25px; box-sizing: border-box; }
+.clear-search { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; font-weight: bold; color: #888; font-size: 16px; display: none; }
+.clear-search:hover { color: #333; }
 </style>
 </head>
 <body>
 
-<h1>Albertson List</h1>
+<h1>Albertsons</h1>
 
 <div class="menu">
-  <button id="showMasterBtn">Albertson</button>
+  <button id="showMasterBtn">Albertsons</button>
   <button id="showCheckedBtn">Shopping List</button>
   <button id="showAddBtn">Add Items</button>
   <div class="dropdown">
@@ -54,7 +60,10 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
     <div class="button-bar">
       <button id="clearChecksBtn" class="clear">Clear All Checks</button>
     </div>
-    <input type="text" id="searchInput" placeholder="Search items...">
+    <div class="search-container">
+      <input type="text" id="searchInput" placeholder="Search items...">
+      <span id="clearSearchBtn" class="clear-search">×</span>
+    </div>
     <ul id="groceryList"></ul>
   </div>
 
@@ -237,6 +246,19 @@ function showMaster(){ document.getElementById('masterPage').classList.remove('h
 function showChecked(){ checkedAisle=groceryItems.filter(i=>i.checked).map(i=>({name:i.name, aisle:i.aisle, done:false})); saveData(); renderChecked(); document.getElementById('masterPage').classList.add('hidden'); document.getElementById('checkedPage').classList.remove('hidden'); document.getElementById('addPage').classList.add('hidden'); }
 function showAdd(){ document.getElementById('addPage').classList.remove('hidden'); document.getElementById('masterPage').classList.add('hidden'); document.getElementById('checkedPage').classList.add('hidden'); }
 
+// ---------------- SEARCH CLEAR ----------------
+const searchInput=document.getElementById('searchInput');
+const clearSearchBtn=document.getElementById('clearSearchBtn');
+searchInput.addEventListener('input', e => {
+  renderMaster(e.target.value);
+  clearSearchBtn.style.display = e.target.value ? 'block' : 'none';
+});
+clearSearchBtn.addEventListener('click', () => {
+  searchInput.value='';
+  renderMaster();
+  clearSearchBtn.style.display='none';
+});
+
 // ---------------- EVENTS ----------------
 document.getElementById('addItemBtn').addEventListener('click',addItem);
 document.getElementById('clearChecksBtn').addEventListener('click',clearAllChecks);
@@ -245,7 +267,6 @@ document.getElementById('showCheckedBtn').addEventListener('click', showChecked)
 document.getElementById('showAddBtn').addEventListener('click', showAdd);
 document.getElementById('exportJsonBtn').addEventListener('click', saveToGitHub);
 document.getElementById('restoreGitHubBtn').addEventListener('click', restoreFromGitHub);
-document.getElementById('searchInput').addEventListener('input', e => renderMaster(e.target.value));
 document.getElementById('itemInput').addEventListener('keypress', e => { if (e.key==='Enter') addItem(); });
 
 // ---------------- INIT ----------------
