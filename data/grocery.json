@@ -28,7 +28,7 @@
     {
       "name": "Food Coloring",
       "aisle": "",
-      "checked": false
+      "checked": true
     },
     {
       "name": "French Fries",
@@ -43,7 +43,7 @@
     {
       "name": "Mash Potatoes",
       "aisle": "",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Powdered Sugar",
@@ -53,7 +53,7 @@
     {
       "name": "Shampoo",
       "aisle": "",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Tater Tots",
@@ -67,6 +67,21 @@
     },
     {
       "name": "Trash Bags 39gal",
+      "aisle": "",
+      "checked": false
+    },
+    {
+      "name": "Apple sause",
+      "aisle": "",
+      "checked": false
+    },
+    {
+      "name": "Aaaaa",
+      "aisle": "",
+      "checked": false
+    },
+    {
+      "name": "Bbbbbb",
       "aisle": "",
       "checked": false
     },
@@ -211,17 +226,7 @@
       "checked": false
     },
     {
-      "name": "baolgna",
-      "aisle": "1",
-      "checked": false
-    },
-    {
-      "name": "tiger hair",
-      "aisle": "1",
-      "checked": false
-    },
-    {
-      "name": "assholes",
+      "name": "Bsgs",
       "aisle": "1",
       "checked": false
     },
@@ -303,11 +308,6 @@
     {
       "name": "Tortillas",
       "aisle": "2",
-      "checked": false
-    },
-    {
-      "name": "bullshit",
-      "aisle": "3",
       "checked": false
     },
     {
@@ -437,11 +437,6 @@
     },
     {
       "name": "Tuna",
-      "aisle": "4",
-      "checked": false
-    },
-    {
-      "name": "schmoirnoff",
       "aisle": "4",
       "checked": false
     },
@@ -576,11 +571,6 @@
       "checked": false
     },
     {
-      "name": "shampoo",
-      "aisle": "5",
-      "checked": false
-    },
-    {
       "name": "False Alarm",
       "aisle": "6",
       "checked": false
@@ -619,7 +609,38 @@
       "name": "Lipton Onion Soup",
       "aisle": "8",
       "checked": false
+    },
+    {
+      "name": "Beer",
+      "aisle": "10",
+      "checked": false
+    },
+    {
+      "name": "Cake",
+      "aisle": "11",
+      "checked": false
+    },
+    {
+      "name": "Zzzzz",
+      "aisle": "20",
+      "checked": false
     }
   ],
-  "checkedAisle": []
+  "checkedAisle": [
+    {
+      "name": "Food Coloring",
+      "aisle": "",
+      "done": false
+    },
+    {
+      "name": "Shampoo",
+      "aisle": "",
+      "done": false
+    },
+    {
+      "name": "Mash Potatoes",
+      "aisle": "",
+      "done": true
+    }
+  ]
 }
