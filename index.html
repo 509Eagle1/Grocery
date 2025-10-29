@@ -3,40 +3,43 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Grocery Master List</title>
+<title>Albertsons Grocery List</title>
 <style>
 body { font-family: Arial, sans-serif; margin:10px; background:#f4f4f4; }
 h1 { text-align:center; margin-bottom:5px; }
 .menu { display:flex; gap:5px; justify-content:center; margin-bottom:10px; flex-wrap:wrap; }
 .menu button, .menu .dropdown-btn { padding:8px 12px; border-radius:8px; border:none; background:#007bff; color:white; font-size:14px; cursor:pointer; }
 .menu button:hover, .menu .dropdown-btn:hover { background:#0056b3; }
-.button-bar { display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-bottom:10px; }
-.button-bar button { padding:6px 10px; border-radius:6px; border:none; color:white; cursor:pointer; }
-.button-bar .edit { background:#28a745; } /* green */
-.button-bar .remove { background:#28a745; } /* green */
-.button-bar .clear { background:#ffc107; color:#000; }
-.button-bar .add { background:#17a2b8; }
+.button-bar { display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-bottom:10px; align-items:center; }
+.button-bar .clear { background:#ffc107; color:#000; border-radius:5px; padding:5px 10px; }
+#searchInput { padding:5px; border-radius:5px; border:1px solid #ccc; width:180px; }
+.clear-search { cursor:pointer; font-weight:bold; color:#888; margin-left:5px; display:none; }
+.clear-search:hover { color:#333; }
+
+.list-container { background:white; padding:15px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
+.item { display:flex; justify-content:space-between; align-items:center; padding:6px; border-bottom:1px solid #ddd; }
+.item.checked { text-decoration: line-through; color:gray; }
+.item-left { display:flex; align-items:flex-start; gap:10px; }
+.item-left span { display:block; }
+.item-left span.name { font-weight:bold; }
+.item-left span.aisle { font-size:0.9em; color:#555; }
+
+/* Dropdown per item */
+.item-dropdown { position: relative; display: inline-block; }
+.item-dropdown-content { display: none; position: absolute; right: 0; background-color: #f9f9f9; min-width: 80px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); z-index:1; border-radius:5px; }
+.item-dropdown-content button { background:white; border:none; width:100%; padding:5px; cursor:pointer; text-align:left; }
+.item-dropdown-content button:hover { background:#ddd; }
+.item-dropdown:hover .item-dropdown-content { display:block; }
+
+/* Admin dropdown */
 .dropdown { position:relative; display:inline-block; }
 .dropdown-content { display:none; position:absolute; background-color:#f9f9f9; min-width:160px; box-shadow:0 8px 16px rgba(0,0,0,0.2); z-index:1; border-radius:5px; }
 .dropdown-content button { color:black; background:white; padding:8px 12px; width:100%; text-align:left; border:none; cursor:pointer; }
 .dropdown-content button:hover { background:#ddd; }
 .dropdown:hover .dropdown-content { display:block; }
-.list-container { background:white; padding:15px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
-.item { display:flex; justify-content:space-between; align-items:flex-start; padding:6px; border-bottom:1px solid #ddd; }
-.item.checked { text-decoration: line-through; color:gray; }
-input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; margin-bottom:5px; }
+
 #addPage { display:flex; gap:5px; flex-wrap:wrap; align-items:center; margin-top:10px; }
 .hidden { display:none; }
-
-/* Search field with clear button */
-.search-container { position: relative; }
-#searchInput { width: 100%; padding-right: 25px; box-sizing: border-box; }
-.clear-search { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; font-weight: bold; color: #888; font-size: 16px; display: none; }
-.clear-search:hover { color: #333; }
-
-/* Stacked layout for master list items */
-.item-left { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
-.item-left input[type="checkbox"] { margin-bottom: 2px; }
 </style>
 </head>
 <body>
@@ -63,8 +66,6 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
   <div id="masterPage">
     <div class="button-bar">
       <button id="clearChecksBtn" class="clear">Clear All Checks</button>
-    </div>
-    <div class="search-container">
       <input type="text" id="searchInput" placeholder="Search items...">
       <span id="clearSearchBtn" class="clear-search">×</span>
     </div>
@@ -88,11 +89,6 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 <input type="file" id="importListInput" accept=".json,.csv" style="display:none;">
 
 <script>
-// ---------------- CONFIG ----------------
-const githubUser = "509Eagle1"; // GitHub username
-const repoName = "Grocery";   // repository name
-const filePath = "data/grocery.json"; // file path in repo
-
 // ---------------- DATA ----------------
 let groceryItems = JSON.parse(localStorage.getItem('groceryItems') || "[]");
 let checkedAisle = JSON.parse(localStorage.getItem('checkedAisle') || "[]");
@@ -106,10 +102,65 @@ function sortByAisle(arr){
   return arr.sort((a,b)=>a.aisle.localeCompare(b.aisle, undefined, {numeric:true, sensitivity:'base'}));
 }
 
+// ---------------- GITHUB ----------------
+function getGitHubToken() {
+  let token = localStorage.getItem('githubToken');
+  if (!token) {
+    token = prompt("Enter your GitHub Personal Access Token with repo permissions:");
+    if(token) localStorage.setItem('githubToken', token);
+  }
+  return token;
+}
+
+async function exportToGitHub() {
+  const token = getGitHubToken(); if(!token) return alert("GitHub token required!");
+  const owner="509Eagle1";
+  const repo="Grocery";
+  const path="data/grocery.json";
+
+  try {
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, { headers:{Authorization:`token ${token}`}});
+    let sha;
+    if(res.status===200){ const data=await res.json(); sha=data.sha; }
+
+    const body = {
+      message: "Update grocery list",
+      content: btoa(unescape(encodeURIComponent(JSON.stringify({groceryItems, checkedAisle}, null, 2)))),
+      sha: sha
+    };
+
+    const putRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+      method:"PUT", headers:{Authorization:`token ${token}`,"Content-Type":"application/json"}, body:JSON.stringify(body)
+    });
+
+    if(putRes.ok) alert("✅ Exported grocery list to GitHub successfully!");
+    else { const err = await putRes.json(); alert("Error: "+err.message); }
+
+  } catch(e){ alert("GitHub Export Error: "+e.message); }
+}
+
+async function restoreFromGitHub() {
+  const token = getGitHubToken(); if(!token) return alert("GitHub token required!");
+  const owner="YOUR_GITHUB_USERNAME";
+  const repo="YOUR_REPO_NAME";
+  const path="grocery-list.json";
+
+  try {
+    const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, { headers:{Authorization:`token ${token}`}});
+    if(res.status!==200) return alert("File not found on GitHub.");
+    const data=await res.json();
+    const jsonStr=decodeURIComponent(escape(atob(data.content)));
+    const obj=JSON.parse(jsonStr);
+    groceryItems=obj.groceryItems||[];
+    checkedAisle=obj.checkedAisle||[];
+    saveData(); renderMaster();
+    alert("✅ Grocery list restored from GitHub!");
+  } catch(e){ alert("GitHub Restore Error: "+e.message); }
+}
+
 // ---------------- MASTER LIST ----------------
 function renderMaster(filter="") {
-  const list = document.getElementById('groceryList');
-  list.innerHTML = '';
+  const list=document.getElementById('groceryList'); list.innerHTML='';
   sortByAisle(groceryItems);
   groceryItems.forEach((item,index)=>{
     if(filter && !item.name.toLowerCase().includes(filter.toLowerCase())) return;
@@ -119,26 +170,31 @@ function renderMaster(filter="") {
     const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=item.checked||false;
     cb.addEventListener('change',()=>{ item.checked=cb.checked; saveData(); });
 
-    // Stack name and aisle vertically
-    const textName = document.createElement('span'); textName.textContent = item.name; textName.style.fontWeight='bold';
-    const textAisle = document.createElement('span'); textAisle.textContent = "Aisle: " + item.aisle; textAisle.style.fontSize='0.9em'; textAisle.style.color='#555';
+    const textName=document.createElement('span'); textName.textContent=item.name; textName.className='name';
+    const textAisle=document.createElement('span'); textAisle.textContent="Aisle: "+item.aisle; textAisle.className='aisle';
 
-    left.appendChild(cb);
-    left.appendChild(textName);
-    left.appendChild(textAisle);
+    left.appendChild(cb); left.appendChild(textName); left.appendChild(textAisle);
 
-    const btns=document.createElement('div');
-    const editBtn=document.createElement('button'); editBtn.textContent='Edit'; editBtn.className='edit';
+    const dropdown=document.createElement('div'); dropdown.className='item-dropdown';
+    const dropBtn=document.createElement('button'); dropBtn.textContent='⋮';
+    const dropContent=document.createElement('div'); dropContent.className='item-dropdown-content';
+
+    const editBtn=document.createElement('button'); editBtn.textContent='Edit';
+    editBtn.style.color='green';
     editBtn.addEventListener('click',()=>{
       const newName=prompt("Edit item:",item.name); if(newName!==null)item.name=newName.trim();
       const newAisle=prompt("Edit aisle:",item.aisle); if(newAisle!==null)item.aisle=newAisle.trim();
       renderMaster(document.getElementById('searchInput').value); saveData();
     });
-    const removeBtn=document.createElement('button'); removeBtn.textContent='Remove'; removeBtn.className='remove';
+
+    const removeBtn=document.createElement('button'); removeBtn.textContent='Remove';
+    removeBtn.style.color='red';
     removeBtn.addEventListener('click',()=>{ groceryItems.splice(index,1); saveData(); renderMaster(document.getElementById('searchInput').value); });
 
-    btns.appendChild(editBtn); btns.appendChild(removeBtn);
-    li.appendChild(left); li.appendChild(btns);
+    dropContent.appendChild(editBtn); dropContent.appendChild(removeBtn);
+    dropdown.appendChild(dropBtn); dropdown.appendChild(dropContent);
+
+    li.appendChild(left); li.appendChild(dropdown);
     list.appendChild(li);
   });
 }
@@ -190,10 +246,8 @@ document.getElementById('importListInput').addEventListener('change', e=>{
   reader.onload=e=>{
     let newItems=[];
     if(file.name.endsWith('.json')){
-      try{ 
-        const data=JSON.parse(e.target.result); 
-        if(Array.isArray(data.groceryItems)) newItems=data.groceryItems; 
-      } catch(err){ alert("Invalid JSON file"); return; }
+      try{ const data=JSON.parse(e.target.result); if(Array.isArray(data.groceryItems)) newItems=data.groceryItems; }
+      catch(err){ alert("Invalid JSON file"); return; }
     } else if(file.name.endsWith('.csv')){
       const lines=e.target.result.split(/\r?\n/).filter(Boolean);
       lines.forEach(line=>{
@@ -203,79 +257,7 @@ document.getElementById('importListInput').addEventListener('change', e=>{
     } else { alert("Unsupported file type"); return; }
 
     const existingNames=new Set(groceryItems.map(i=>i.name.toLowerCase()));
-    newItems.forEach(item=>{
-      if(!existingNames.has(item.name.toLowerCase())) groceryItems.push({name:item.name, aisle:item.aisle || "", checked:false});
-    });
+    newItems.forEach(item=>{ if(!existingNames.has(item.name.toLowerCase())) groceryItems.push({name:item.name, aisle:item.aisle||"", checked:false}); });
 
     sortByAisle(groceryItems);
-    saveData();
-    renderMaster(document.getElementById('searchInput').value);
-    alert(`✅ Imported ${newItems.length} new items (duplicates ignored) and sorted by aisle.`);
-  };
-  reader.readAsText(file);
-});
-
-// ---------------- GITHUB ----------------
-function getGitHubToken(){ 
-  let token=localStorage.getItem('githubToken'); 
-  if(!token){ token=prompt("Enter your GitHub token:"); if(token)localStorage.setItem('githubToken',token); } 
-  return token; 
-}
-async function saveToGitHub(){ 
-  const token=getGitHubToken(); 
-  if(!token)return alert("GitHub token required"); 
-  const content=btoa(unescape(encodeURIComponent(JSON.stringify({groceryItems,checkedAisle},null,2)))); 
-  const apiUrl=`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`; 
-  try{ 
-    const res=await fetch(apiUrl,{headers:{Authorization:`token ${token}`, Accept:"application/vnd.github.v3+json"}}); 
-    const data=res.ok?await res.json():{}; 
-    const sha=data.sha||null; 
-    const response=await fetch(apiUrl,{method:'PUT',headers:{"Authorization":`token ${token}`,"Content-Type":"application/json"},body:JSON.stringify({message:"Update grocery list",content:content,sha:sha})}); 
-    if(response.ok) alert("✅ Uploaded to GitHub!"); else alert("❌ Failed to upload"); 
-  }catch(e){console.error(e);alert("❌ Error");} 
-}
-async function restoreFromGitHub(){ 
-  const token=getGitHubToken(); if(!token)return alert("GitHub token required"); 
-  try{ 
-    const response=await fetch(`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`,{headers:{Authorization:`token ${token}`,Accept:"application/vnd.github.v3+json"}}); 
-    if(!response.ok) throw new Error("Fetch failed"); 
-    const data=await response.json(); 
-    const decoded=atob(data.content); 
-    const jsonData=JSON.parse(decoded); 
-    groceryItems=jsonData.groceryItems||[]; 
-    checkedAisle=jsonData.checkedAisle||[]; 
-    saveData(); renderMaster(); renderChecked(); 
-    alert("✅ Restored from GitHub!"); 
-  }catch(e){console.error(e);alert("❌ Could not restore from GitHub");} 
-}
-
-// ---------------- MENU ----------------
-function showMaster(){ document.getElementById('masterPage').classList.remove('hidden'); document.getElementById('checkedPage').classList.add('hidden'); document.getElementById('addPage').classList.add('hidden'); }
-function showChecked(){ checkedAisle=groceryItems.filter(i=>i.checked).map(i=>({name:i.name, aisle:i.aisle, done:false})); saveData(); renderChecked(); document.getElementById('masterPage').classList.add('hidden'); document.getElementById('checkedPage').classList.remove('hidden'); document.getElementById('addPage').classList.add('hidden'); }
-function showAdd(){ document.getElementById('addPage').classList.remove('hidden'); document.getElementById('masterPage').classList.add('hidden'); document.getElementById('checkedPage').classList.add('hidden'); }
-
-// ---------------- SEARCH CLEAR ----------------
-const searchInput=document.getElementById('searchInput');
-const clearSearchBtn=document.getElementById('clearSearchBtn');
-searchInput.addEventListener('input', e => {
-  renderMaster(e.target.value);
-  clearSearchBtn.style.display = e.target.value ? 'block' : 'none';
-});
-clearSearchBtn.addEventListener('click', () => {
-  searchInput.value='';
-  renderMaster();
-  clearSearchBtn.style.display='none';
-});
-
-// ---------------- EVENTS ----------------
-document.getElementById('addItemBtn').addEventListener('click',addItem);
-document.getElementById('clearChecksBtn').addEventListener('click',clearAllChecks);
-document.getElementById('showMasterBtn').addEventListener('click', showMaster);
-document.getElementById('showCheckedBtn').addEventListener('click', showChecked);
-document.getElementById('showAddBtn').addEventListener('click', showAdd);
-document.getElementById('exportJsonBtn').addEventListener('click', saveToGitHub);
-document.getElementById('restoreGitHubBtn').addEventListener('click', restoreFromGitHub);
-document.getElementById('itemInput').addEventListener('keypress', e => { if (e.key==='Enter') addItem(); });
-
-// ---------------- INIT ----------------
-document.addEventListener('DOMContentLoaded',()=>{
+    save
