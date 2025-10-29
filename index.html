@@ -6,13 +6,21 @@
 <title>Grocery Master List</title>
 <style>
 body { font-family: Arial, sans-serif; margin:10px; background:#f4f4f4; }
-h1 { text-align:center; }
+h1 { text-align:center; margin-bottom:5px; }
 .menu { display:flex; gap:5px; justify-content:center; margin-bottom:10px; flex-wrap:wrap; }
-.menu button { padding:8px 12px; border-radius:8px; border:none; background:#007bff; color:white; font-size:14px; }
-.menu button:hover { background:#0056b3; }
+.menu button, .menu .dropdown-btn { padding:8px 12px; border-radius:8px; border:none; background:#007bff; color:white; font-size:14px; cursor:pointer; }
+.menu button:hover, .menu .dropdown-btn:hover { background:#0056b3; }
 .button-bar { display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-bottom:10px; }
-.button-bar button { padding:6px 10px; border-radius:6px; border:none; background:#28a745; color:white; }
-.button-bar button:hover { background:#218838; }
+.button-bar button { padding:6px 10px; border-radius:6px; border:none; color:white; cursor:pointer; }
+.button-bar .edit { background:#28a745; }
+.button-bar .remove { background:#dc3545; }
+.button-bar .clear { background:#ffc107; color:#000; }
+.button-bar .add { background:#17a2b8; }
+.dropdown { position:relative; display:inline-block; }
+.dropdown-content { display:none; position:absolute; background-color:#f9f9f9; min-width:160px; box-shadow:0 8px 16px rgba(0,0,0,0.2); z-index:1; border-radius:5px; }
+.dropdown-content button { color:black; background:white; padding:8px 12px; width:100%; text-align:left; border:none; cursor:pointer; }
+.dropdown-content button:hover { background:#ddd; }
+.dropdown:hover .dropdown-content { display:block; }
 .list-container { background:white; padding:15px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
 .item { display:flex; justify-content:space-between; align-items:center; padding:6px; border-bottom:1px solid #ddd; }
 .item.checked { text-decoration: line-through; color:gray; }
@@ -23,12 +31,20 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 </head>
 <body>
 
-<h1>🛒 Grocery Master List</h1>
+<h1>Master List</h1>
 
 <div class="menu">
   <button id="showMasterBtn">Master List</button>
-  <button id="showCheckedBtn">Checked by Aisle</button>
+  <button id="showCheckedBtn">Shopping List</button>
   <button id="showAddBtn">Add Items</button>
+  <div class="dropdown">
+    <button class="dropdown-btn">Admin ⏷</button>
+    <div class="dropdown-content">
+      <button id="exportJsonBtn">Export to GitHub</button>
+      <button id="restoreGitHubBtn">Restore from GitHub</button>
+      <button id="importListBtn">Import List</button>
+    </div>
+  </div>
 </div>
 
 <div class="list-container">
@@ -36,16 +52,13 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
   <!-- MASTER LIST -->
   <div id="masterPage">
     <div class="button-bar">
-      <button id="exportJsonBtn">Export to GitHub</button>
-      <button id="restoreGitHubBtn">Restore from GitHub</button>
-      <button id="importListBtn">Import List</button>
-      <button id="clearChecksBtn">Clear All Checks</button>
+      <button id="clearChecksBtn" class="clear">Clear All Checks</button>
     </div>
     <input type="text" id="searchInput" placeholder="Search items...">
     <ul id="groceryList"></ul>
   </div>
 
-  <!-- CHECKED BY AISLE -->
+  <!-- SHOPPING LIST -->
   <div id="checkedPage" class="hidden">
     <ul id="checkedList"></ul>
   </div>
@@ -54,7 +67,7 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
   <div id="addPage" class="hidden">
     <input type="text" id="itemInput" placeholder="Item name">
     <input type="text" id="aisleInput" placeholder="Aisle">
-    <button id="addItemBtn">Add Item</button>
+    <button id="addItemBtn" class="add">Add Item</button>
   </div>
 
 </div>
@@ -63,8 +76,8 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 
 <script>
 // ---------------- CONFIG ----------------
-const githubUser = ""; // 509eagle
-const repoName = "";   // Grocery
+const githubUser = ""; // 509Eagle1
+const repoName = "";   // repository Grocery
 const filePath = "data/grocery.json"; // file path in repo
 
 // ---------------- DATA ----------------
@@ -98,13 +111,13 @@ function renderMaster(filter="") {
     left.appendChild(cb); left.appendChild(text);
 
     const btns=document.createElement('div');
-    const editBtn=document.createElement('button'); editBtn.textContent='Edit';
+    const editBtn=document.createElement('button'); editBtn.textContent='Edit'; editBtn.className='edit';
     editBtn.addEventListener('click',()=>{
       const newName=prompt("Edit item:",item.name); if(newName!==null)item.name=newName.trim();
       const newAisle=prompt("Edit aisle:",item.aisle); if(newAisle!==null)item.aisle=newAisle.trim();
       renderMaster(document.getElementById('searchInput').value); saveData();
     });
-    const removeBtn=document.createElement('button'); removeBtn.textContent='Remove';
+    const removeBtn=document.createElement('button'); removeBtn.textContent='Remove'; removeBtn.className='remove';
     removeBtn.addEventListener('click',()=>{ groceryItems.splice(index,1); saveData(); renderMaster(document.getElementById('searchInput').value); });
 
     btns.appendChild(editBtn); btns.appendChild(removeBtn);
@@ -113,7 +126,7 @@ function renderMaster(filter="") {
   });
 }
 
-// ---------------- CHECKED BY AISLE ----------------
+// ---------------- SHOPPING LIST ----------------
 function renderChecked(){
   const list=document.getElementById('checkedList'); list.innerHTML='';
   sortByAisle(checkedAisle);
@@ -172,15 +185,12 @@ document.getElementById('importListInput').addEventListener('change', e=>{
       });
     } else { alert("Unsupported file type"); return; }
 
-    // --- DEDUPLICATE ---
     const existingNames=new Set(groceryItems.map(i=>i.name.toLowerCase()));
     newItems.forEach(item=>{
       if(!existingNames.has(item.name.toLowerCase())) groceryItems.push({name:item.name, aisle:item.aisle || "", checked:false});
     });
 
-    // --- SORT BY AISLE AFTER IMPORT ---
     sortByAisle(groceryItems);
-
     saveData();
     renderMaster(document.getElementById('searchInput').value);
     alert(`✅ Imported ${newItems.length} new items (duplicates ignored) and sorted by aisle.`);
@@ -188,70 +198,17 @@ document.getElementById('importListInput').addEventListener('change', e=>{
   reader.readAsText(file);
 });
 
-// ---------------- GITHUB TOKEN ----------------
-function getGitHubToken(){
-  let token=localStorage.getItem('githubToken');
-  if(!token){ token=prompt("Enter your GitHub Personal Access Token (only once):"); if(token) localStorage.setItem('githubToken',token); }
-  return token;
-}
+// ---------------- GITHUB ----------------
+function getGitHubToken(){ let token=localStorage.getItem('githubToken'); if(!token){ token=prompt("Enter your GitHub token:"); if(token)localStorage.setItem('githubToken',token); } return token; }
+async function saveToGitHub(){ const token=getGitHubToken(); if(!token)return alert("GitHub token required"); const content=btoa(unescape(encodeURIComponent(JSON.stringify({groceryItems,checkedAisle},null,2)))); const apiUrl=`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`; try{ const res=await fetch(apiUrl,{headers:{Authorization:`token ${token}`}}); const data=res.ok?await res.json():{}; const sha=data.sha||null; const response=await fetch(apiUrl,{method:'PUT',headers:{"Authorization":`token ${token}`,"Content-Type":"application/json"},body:JSON.stringify({message:"Update grocery list",content:content,sha:sha})}); if(response.ok) alert("✅ Uploaded to GitHub!"); else alert("❌ Failed to upload"); }catch(e){console.error(e);alert("❌ Error");} }
+async function restoreFromGitHub(){ const token=getGitHubToken(); if(!token)return alert("GitHub token required"); try{ const response=await fetch(`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`,{headers:{Authorization:`token ${token}`,Accept:"application/vnd.github.v3+json"}}); if(!response.ok) throw new Error("Fetch failed"); const data=await response.json(); const decoded=atob(data.content); const jsonData=JSON.parse(decoded); groceryItems=jsonData.groceryItems||[]; checkedAisle=jsonData.checkedAisle||[]; saveData(); renderMaster(); renderChecked(); alert("✅ Restored from GitHub!"); }catch(e){console.error(e);alert("❌ Could not restore from GitHub");} }
 
-// ---------------- GITHUB EXPORT ----------------
-async function saveToGitHub(){
-  const token=getGitHubToken(); if(!token)return alert("GitHub token required");
-  const content=btoa(unescape(encodeURIComponent(JSON.stringify({groceryItems,checkedAisle},null,2))));
-  const apiUrl=`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`;
-  try{
-    const res=await fetch(apiUrl,{headers:{Authorization:`token ${token}`}});
-    const data=res.ok?await res.json():{};
-    const sha=data.sha||null;
-    const response=await fetch(apiUrl,{method:'PUT',headers:{"Authorization":`token ${token}`,"Content-Type":"application/json"},body:JSON.stringify({message:"Update grocery list",content:content,sha:sha})});
-    if(response.ok) alert("✅ Uploaded to GitHub!"); else alert("❌ Failed to upload to GitHub");
-  }catch(e){console.error(e);alert("❌ Error uploading to GitHub");}
-}
-
-// ---------------- GITHUB RESTORE ----------------
-async function restoreFromGitHub(){
-  const token=getGitHubToken(); if(!token)return alert("GitHub token required");
-  try{
-    const response=await fetch(`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`,{headers:{Authorization:`token ${token}`,Accept:"application/vnd.github.v3+json"}});
-    if(!response.ok) throw new Error("Fetch failed");
-    const data=await response.json();
-    const decoded=atob(data.content);
-    const jsonData=JSON.parse(decoded);
-    groceryItems=jsonData.groceryItems||[]; checkedAisle=jsonData.checkedAisle||[];
-    saveData(); renderMaster(); renderChecked(); alert("✅ Restored from GitHub!");
-  }catch(e){console.error(e);alert("❌ Could not restore from GitHub");}
-}
-
-// ---------------- AUTO RESTORE ----------------
-async function autoRestoreGitHub() {
-  const token = localStorage.getItem('githubToken');
-  if(!token) return;
-  try{
-    const response = await fetch(`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`, {
-      headers: { Authorization:`token ${token}`, Accept:"application/vnd.github.v3+json" }
-    });
-    if(!response.ok) return;
-    const data = await response.json();
-    const decoded = atob(data.content);
-    const jsonData = JSON.parse(decoded);
-    groceryItems = jsonData.groceryItems || [];
-    checkedAisle = jsonData.checkedAisle || [];
-    saveData();
-    renderMaster();
-    renderChecked();
-    console.log("✅ Grocery list restored from GitHub automatically.");
-  } catch(e){
-    console.error("Could not auto-restore from GitHub", e);
-  }
-}
-
-// ---------------- MENU TOGGLE ----------------
+// ---------------- MENU ----------------
 function showMaster(){ document.getElementById('masterPage').classList.remove('hidden'); document.getElementById('checkedPage').classList.add('hidden'); document.getElementById('addPage').classList.add('hidden'); }
 function showChecked(){ checkedAisle=groceryItems.filter(i=>i.checked).map(i=>({name:i.name, aisle:i.aisle, done:false})); saveData(); renderChecked(); document.getElementById('masterPage').classList.add('hidden'); document.getElementById('checkedPage').classList.remove('hidden'); document.getElementById('addPage').classList.add('hidden'); }
 function showAdd(){ document.getElementById('addPage').classList.remove('hidden'); document.getElementById('masterPage').classList.add('hidden'); document.getElementById('checkedPage').classList.add('hidden'); }
 
-// ---------------- BUTTON EVENTS ----------------
+// ---------------- EVENTS ----------------
 document.getElementById('addItemBtn').addEventListener('click',addItem);
 document.getElementById('clearChecksBtn').addEventListener('click',clearAllChecks);
 document.getElementById('showMasterBtn').addEventListener('click', showMaster);
@@ -260,14 +217,11 @@ document.getElementById('showAddBtn').addEventListener('click', showAdd);
 document.getElementById('exportJsonBtn').addEventListener('click', saveToGitHub);
 document.getElementById('restoreGitHubBtn').addEventListener('click', restoreFromGitHub);
 document.getElementById('searchInput').addEventListener('input', e => renderMaster(e.target.value));
-document.getElementById('itemInput').addEventListener('keypress', e => { if (e.key === 'Enter') addItem(); });
+document.getElementById('itemInput').addEventListener('keypress', e => { if (e.key==='Enter') addItem(); });
 
-// ---------------- INITIAL LOAD ----------------
-document.addEventListener('DOMContentLoaded', () => {
-  autoRestoreGitHub();  // Auto restore GitHub on load
-  renderMaster();
-});
+// ---------------- INIT ----------------
+document.addEventListener('DOMContentLoaded',()=>{ renderMaster(); renderChecked(); });
+
 </script>
-
 </body>
 </html>
