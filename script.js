@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let groceryItems = [];
   let checkedAisle = [];
 
-  // 🔹 Load from GitHub JSON if available
+  // 🔹 Load JSON from GitHub Pages if exists
   async function loadFromGitHub() {
     try {
       const response = await fetch("data/grocery.json");
@@ -16,11 +16,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // 🔹 Save to localStorage
   function saveData() {
     localStorage.setItem("groceryItems", JSON.stringify(groceryItems));
     localStorage.setItem("checkedAisle", JSON.stringify(checkedAisle));
   }
 
+  // 🔹 Load from localStorage or fallback to GitHub
   function loadLocal() {
     groceryItems = JSON.parse(localStorage.getItem("groceryItems") || "[]");
     checkedAisle = JSON.parse(localStorage.getItem("checkedAisle") || "[]");
@@ -34,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   }
 
+  // 🔹 Render Master List
   function renderMaster(filter = "") {
     const list = document.getElementById("groceryList");
     list.innerHTML = "";
@@ -87,10 +90,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // 🔹 Render Checked by Aisle
   function renderChecked() {
     const list = document.getElementById("checkedList");
     list.innerHTML = "";
     sortByAisle(checkedAisle);
+
     checkedAisle.forEach((item, i) => {
       const li = document.createElement("li");
       const left = document.createElement("div");
@@ -101,6 +106,10 @@ document.addEventListener("DOMContentLoaded", () => {
       cb.checked = item.done || false;
       cb.onchange = () => {
         item.done = cb.checked;
+        // Move checked items to bottom
+        const done = checkedAisle.filter(i => i.done);
+        const undone = checkedAisle.filter(i => !i.done);
+        checkedAisle = [...undone, ...done];
         saveData();
         renderChecked();
       };
@@ -110,20 +119,20 @@ document.addEventListener("DOMContentLoaded", () => {
       if (item.done) li.classList.add("checked");
       left.appendChild(cb);
       left.appendChild(span);
+      li.appendChild(left);
       list.appendChild(li);
     });
-    // Move checked items to bottom
-    const done = [...checkedAisle].filter(i => i.done);
-    const undone = [...checkedAisle].filter(i => !i.done);
-    checkedAisle = [...undone, ...done];
-    saveData();
   }
 
+  // 🔹 Add Item
   function addItem() {
     const name = document.getElementById("itemInput").value.trim();
     const aisle = document.getElementById("aisleInput").value.trim();
     if (!name) return;
-    const exists = groceryItems.some(g => g.name.toLowerCase() === name.toLowerCase() && g.aisle.toLowerCase() === aisle.toLowerCase());
+    const exists = groceryItems.some(
+      g => g.name.toLowerCase() === name.toLowerCase() &&
+           g.aisle.toLowerCase() === aisle.toLowerCase()
+    );
     if (!exists) groceryItems.push({ name, aisle, checked: false });
     saveData();
     renderMaster();
@@ -158,18 +167,19 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("checkedPage").classList.add("hidden");
   }
 
-  // Clipboard-based Export / Import
-  async function exportList() {
+  // 🔹 Clipboard Export
+  async function exportListClipboard() {
     const data = JSON.stringify({ groceryItems, checkedAisle }, null, 2);
     try {
       await navigator.clipboard.writeText(data);
-      alert("✅ List copied to clipboard! Paste it in Notes to save.");
+      alert("✅ List copied to clipboard!");
     } catch (err) {
       alert("❌ Could not copy to clipboard.");
     }
   }
 
-  async function importList() {
+  // 🔹 Clipboard Import
+  async function importListClipboard() {
     try {
       const text = await navigator.clipboard.readText();
       const data = JSON.parse(text);
@@ -191,7 +201,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Import from file (.csv or .json)
+  // 🔹 Import from file
   function importFile(file) {
     const reader = new FileReader();
     reader.onload = e => {
@@ -200,7 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = JSON.parse(text);
         if (Array.isArray(data.groceryItems)) {
           data.groceryItems.forEach(item => {
-            const exists = groceryItems.some(g => 
+            const exists = groceryItems.some(g =>
               g.name.toLowerCase() === item.name.toLowerCase() &&
               g.aisle.toLowerCase() === item.aisle.toLowerCase()
             );
@@ -224,20 +234,57 @@ document.addEventListener("DOMContentLoaded", () => {
     reader.readAsText(file);
   }
 
-  // Event Listeners
+  // 🔹 Save to GitHub (push JSON)
+  async function saveToGitHub(token) {
+    const owner = "YOUR_USERNAME";
+    const repo = "grocery-list";
+    const path = "data/grocery.json";
+    const message = "Update grocery list from app";
+
+    try {
+      const getRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+        headers: { Authorization: `token ${token}` }
+      });
+      const getData = await getRes.json();
+      const sha = getData.sha;
+      const content = btoa(JSON.stringify({ groceryItems, checkedAisle }, null, 2));
+      const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `token ${token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ message, content, sha })
+      });
+      if (res.ok) alert("✅ Saved to GitHub!");
+      else alert("❌ Failed to save to GitHub");
+    } catch (err) {
+      console.error(err);
+      alert("❌ Error saving to GitHub");
+    }
+  }
+
+  // 🔹 Event Listeners
   document.getElementById("addItemBtn").onclick = addItem;
   document.getElementById("showMasterBtn").onclick = showMaster;
   document.getElementById("showCheckedBtn").onclick = showChecked;
   document.getElementById("showAddBtn").onclick = showAdd;
   document.getElementById("clearChecksBtn").onclick = clearAllChecks;
-  document.getElementById("exportListBtn").onclick = exportList;
-  document.getElementById("importListBtn").onclick = importList;
+  document.getElementById("exportListBtn").onclick = exportListClipboard;
+  document.getElementById("importListBtn").onclick = importListClipboard;
   document.getElementById("importFileBtn").onclick = () =>
     document.getElementById("importFileInput").click();
   document.getElementById("importFileInput").onchange = e => {
     if (e.target.files.length) importFile(e.target.files[0]);
   };
   document.getElementById("searchInput").oninput = e => renderMaster(e.target.value);
+
+  // Optional: Export to GitHub via token prompt
+  document.getElementById("exportListBtn").addEventListener("dblclick", async () => {
+    const token = prompt("Enter your GitHub Personal Access Token");
+    if (!token) return;
+    await saveToGitHub(token);
+  });
 
   loadLocal();
 });
