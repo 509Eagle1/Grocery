@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Master Grocery List</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header><h2>Master Grocery List</h2></header>
+
+<nav>
+  <button id="showMasterBtn">Master List</button>
+  <button id="showCheckedBtn">Checked by Aisle</button>
+  <button id="showAddBtn">Add New Items</button>
+</nav>
+
+<div class="container">
+  <div id="masterPage">
+    <input type="text" id="searchInput" placeholder="Search items..." />
+    <ul id="groceryList"></ul>
+    <button id="clearChecksBtn" class="clear">Clear All Checks</button>
+    <button id="exportListBtn" class="save">Export (Copy)</button>
+    <button id="importListBtn" class="save">Import (Paste)</button>
+    <button id="importFileBtn" class="save">Import File</button>
+    <input type="file" id="importFileInput" accept=".json,.csv" style="display:none;">
+  </div>
+
+  <div id="checkedPage" class="hidden">
+    <ul id="checkedList" class="checked-list"></ul>
+  </div>
+
+  <div id="addPage" class="hidden">
+    <label>Item:</label>
+    <input type="text" id="itemInput" />
+    <label>Aisle:</label>
+    <input type="text" id="aisleInput" />
+    <button id="addItemBtn" class="add">Add Item</button>
+  </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
