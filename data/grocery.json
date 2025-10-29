@@ -23,7 +23,7 @@
     {
       "name": "Dawn",
       "aisle": "",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Food Coloring",
@@ -33,7 +33,7 @@
     {
       "name": "French Fries",
       "aisle": "",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Grandmas",
@@ -48,7 +48,7 @@
     {
       "name": "Powdered Sugar",
       "aisle": "",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Shampoo",
@@ -58,7 +58,7 @@
     {
       "name": "Tater Tots",
       "aisle": "",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Toothpaste",
@@ -73,7 +73,7 @@
     {
       "name": "Apple sause",
       "aisle": "",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Bannana / strawberry yogurt",
@@ -113,7 +113,7 @@
     {
       "name": "Canadian Bacon",
       "aisle": "1",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Cheese Shreded",
@@ -128,7 +128,7 @@
     {
       "name": "Corn on the Cob",
       "aisle": "1",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Deli Ham",
@@ -138,7 +138,7 @@
     {
       "name": "Dressing",
       "aisle": "1",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Eggs",
@@ -613,6 +613,21 @@
   ],
   "checkedAisle": [
     {
+      "name": "Dawn",
+      "aisle": "",
+      "done": false
+    },
+    {
+      "name": "French Fries",
+      "aisle": "",
+      "done": false
+    },
+    {
+      "name": "Powdered Sugar",
+      "aisle": "",
+      "done": false
+    },
+    {
       "name": "Apple sause",
       "aisle": "",
       "done": false
@@ -623,42 +638,17 @@
       "done": true
     },
     {
-      "name": "Food Coloring",
-      "aisle": "",
-      "done": true
-    },
-    {
-      "name": "Mash Potatoes",
-      "aisle": "",
-      "done": true
-    },
-    {
-      "name": "Bologna",
-      "aisle": "1",
-      "done": false
-    },
-    {
       "name": "Dressing",
       "aisle": "1",
       "done": false
     },
     {
-      "name": "Green Grapes",
+      "name": "Corn on the Cob",
       "aisle": "1",
-      "done": false
+      "done": true
     },
     {
       "name": "Canadian Bacon",
-      "aisle": "1",
-      "done": true
-    },
-    {
-      "name": "Butter - John",
-      "aisle": "1",
-      "done": true
-    },
-    {
-      "name": "Corn on the Cob",
       "aisle": "1",
       "done": true
     }
