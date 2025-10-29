@@ -76,31 +76,6 @@
       "checked": false
     },
     {
-      "name": "Aaaaa",
-      "aisle": "",
-      "checked": false
-    },
-    {
-      "name": "Bbbbbb",
-      "aisle": "",
-      "checked": false
-    },
-    {
-      "name": "Asshole2",
-      "aisle": "",
-      "checked": false
-    },
-    {
-      "name": "Asshole 3",
-      "aisle": "",
-      "checked": false
-    },
-    {
-      "name": "Bacon",
-      "aisle": "1",
-      "checked": false
-    },
-    {
       "name": "Bannana / strawberry yogurt",
       "aisle": "1",
       "checked": false
@@ -631,25 +606,60 @@
       "checked": false
     },
     {
-      "name": "Zzzzz",
-      "aisle": "20",
+      "name": "Mongoose",
+      "aisle": "11",
       "checked": false
     }
   ],
   "checkedAisle": [
     {
-      "name": "Food Coloring",
+      "name": "Apple sause",
       "aisle": "",
       "done": false
     },
     {
-      "name": "Shampoo",
+      "name": "Tater Tots",
       "aisle": "",
-      "done": false
+      "done": true
+    },
+    {
+      "name": "Food Coloring",
+      "aisle": "",
+      "done": true
     },
     {
       "name": "Mash Potatoes",
       "aisle": "",
+      "done": true
+    },
+    {
+      "name": "Bologna",
+      "aisle": "1",
+      "done": false
+    },
+    {
+      "name": "Dressing",
+      "aisle": "1",
+      "done": false
+    },
+    {
+      "name": "Green Grapes",
+      "aisle": "1",
+      "done": false
+    },
+    {
+      "name": "Canadian Bacon",
+      "aisle": "1",
+      "done": true
+    },
+    {
+      "name": "Butter - John",
+      "aisle": "1",
+      "done": true
+    },
+    {
+      "name": "Corn on the Cob",
+      "aisle": "1",
       "done": true
     }
   ]
