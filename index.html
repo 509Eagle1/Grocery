@@ -12,8 +12,8 @@ h1 { text-align:center; margin-bottom:5px; }
 .menu button:hover, .menu .dropdown-btn:hover { background:#0056b3; }
 .button-bar { display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-bottom:10px; }
 .button-bar button { padding:6px 10px; border-radius:6px; border:none; color:white; cursor:pointer; }
-.button-bar .edit { background:#28a745; }
-.button-bar .remove { background:#dc3545; }
+.button-bar .edit { background:#007bff; } /* blue */
+.button-bar .remove { background:#dc3545; } /* red */
 .button-bar .clear { background:#ffc107; color:#000; }
 .button-bar .add { background:#17a2b8; }
 .dropdown { position:relative; display:inline-block; }
@@ -76,8 +76,8 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 
 <script>
 // ---------------- CONFIG ----------------
-const githubUser = ""; // 509Eagle1
-const repoName = "";   // repository Grocery
+const githubUser = "509Eagle1"; // GitHub username
+const repoName = "Grocery";   // repository name
 const filePath = "data/grocery.json"; // file path in repo
 
 // ---------------- DATA ----------------
@@ -199,9 +199,38 @@ document.getElementById('importListInput').addEventListener('change', e=>{
 });
 
 // ---------------- GITHUB ----------------
-function getGitHubToken(){ let token=localStorage.getItem('githubToken'); if(!token){ token=prompt("Enter your GitHub token:"); if(token)localStorage.setItem('githubToken',token); } return token; }
-async function saveToGitHub(){ const token=getGitHubToken(); if(!token)return alert("GitHub token required"); const content=btoa(unescape(encodeURIComponent(JSON.stringify({groceryItems,checkedAisle},null,2)))); const apiUrl=`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`; try{ const res=await fetch(apiUrl,{headers:{Authorization:`token ${token}`}}); const data=res.ok?await res.json():{}; const sha=data.sha||null; const response=await fetch(apiUrl,{method:'PUT',headers:{"Authorization":`token ${token}`,"Content-Type":"application/json"},body:JSON.stringify({message:"Update grocery list",content:content,sha:sha})}); if(response.ok) alert("✅ Uploaded to GitHub!"); else alert("❌ Failed to upload"); }catch(e){console.error(e);alert("❌ Error");} }
-async function restoreFromGitHub(){ const token=getGitHubToken(); if(!token)return alert("GitHub token required"); try{ const response=await fetch(`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`,{headers:{Authorization:`token ${token}`,Accept:"application/vnd.github.v3+json"}}); if(!response.ok) throw new Error("Fetch failed"); const data=await response.json(); const decoded=atob(data.content); const jsonData=JSON.parse(decoded); groceryItems=jsonData.groceryItems||[]; checkedAisle=jsonData.checkedAisle||[]; saveData(); renderMaster(); renderChecked(); alert("✅ Restored from GitHub!"); }catch(e){console.error(e);alert("❌ Could not restore from GitHub");} }
+function getGitHubToken(){ 
+  let token=localStorage.getItem('githubToken'); 
+  if(!token){ token=prompt("Enter your GitHub token:"); if(token)localStorage.setItem('githubToken',token); } 
+  return token; 
+}
+async function saveToGitHub(){ 
+  const token=getGitHubToken(); 
+  if(!token)return alert("GitHub token required"); 
+  const content=btoa(unescape(encodeURIComponent(JSON.stringify({groceryItems,checkedAisle},null,2)))); 
+  const apiUrl=`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`; 
+  try{ 
+    const res=await fetch(apiUrl,{headers:{Authorization:`token ${token}`, Accept:"application/vnd.github.v3+json"}}); 
+    const data=res.ok?await res.json():{}; 
+    const sha=data.sha||null; 
+    const response=await fetch(apiUrl,{method:'PUT',headers:{"Authorization":`token ${token}`,"Content-Type":"application/json"},body:JSON.stringify({message:"Update grocery list",content:content,sha:sha})}); 
+    if(response.ok) alert("✅ Uploaded to GitHub!"); else alert("❌ Failed to upload"); 
+  }catch(e){console.error(e);alert("❌ Error");} 
+}
+async function restoreFromGitHub(){ 
+  const token=getGitHubToken(); if(!token)return alert("GitHub token required"); 
+  try{ 
+    const response=await fetch(`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`,{headers:{Authorization:`token ${token}`,Accept:"application/vnd.github.v3+json"}}); 
+    if(!response.ok) throw new Error("Fetch failed"); 
+    const data=await response.json(); 
+    const decoded=atob(data.content); 
+    const jsonData=JSON.parse(decoded); 
+    groceryItems=jsonData.groceryItems||[]; 
+    checkedAisle=jsonData.checkedAisle||[]; 
+    saveData(); renderMaster(); renderChecked(); 
+    alert("✅ Restored from GitHub!"); 
+  }catch(e){console.error(e);alert("❌ Could not restore from GitHub");} 
+}
 
 // ---------------- MENU ----------------
 function showMaster(){ document.getElementById('masterPage').classList.remove('hidden'); document.getElementById('checkedPage').classList.add('hidden'); document.getElementById('addPage').classList.add('hidden'); }
