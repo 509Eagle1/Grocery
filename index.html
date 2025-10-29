@@ -148,14 +148,33 @@ document.addEventListener("DOMContentLoaded", () => {
   function showChecked(){ checkedAisle=groceryItems.filter(i=>i.checked).map(i=>({...i,done:false})); saveData(); renderChecked(); document.getElementById('checkedPage').classList.remove('hidden'); document.getElementById('masterPage').classList.add('hidden'); document.getElementById('addPage').classList.add('hidden'); }
   function showAdd(){ document.getElementById('addPage').classList.remove('hidden'); document.getElementById('masterPage').classList.add('hidden'); document.getElementById('checkedPage').classList.add('hidden'); }
 
-  // Export JSON to file (iPhone compatible)
-  function exportToFile(){
+  // Export JSON to file + GitHub push
+  async function pushToGitHub(token) {
+    const owner = "YOUR_USERNAME";     // keep quotes
+    const repo = "grocery-list";       // your repo
+    const path = "data/grocery.json";  // path in repo
+    const content = btoa(JSON.stringify({ groceryItems, checkedAisle }, null, 2));
+    let sha = null;
+    try {
+      const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`);
+      if (res.ok) { const data = await res.json(); sha = data.sha; }
+    } catch(e){}
+    const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+      method: 'PUT',
+      headers: { 'Authorization': `token ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: "Update grocery list", content: content, sha: sha })
+    });
+    if (!response.ok) { alert("GitHub push failed: " + response.statusText); } 
+    else { alert("Grocery list successfully pushed to GitHub!"); }
+  }
+
+  async function exportAndPush() {
+    // 1️⃣ Download JSON locally
     const blob=new Blob([JSON.stringify({groceryItems,checkedAisle},null,2)],{type:'application/json'});
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);
-    a.download='grocery-list.json';
-    a.click();
-    URL.revokeObjectURL(a.href);
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='grocery-list.json'; a.click(); URL.revokeObjectURL(a.href);
+    // 2️⃣ Push to GitHub
+    const token = prompt("Enter your GitHub Personal Access Token (with repo permissions)");
+    if(token) await pushToGitHub(token);
   }
 
   // Import from file
@@ -190,7 +209,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById('showCheckedBtn').onclick=showChecked;
   document.getElementById('showAddBtn').onclick=showAdd;
   document.getElementById('clearChecksBtn').onclick=clearAllChecks;
-  document.getElementById('exportListBtn').onclick=exportToFile;
+  document.getElementById('exportListBtn').onclick=exportAndPush;
   document.getElementById('importFileBtn').onclick=()=>document.getElementById('importFileInput').click();
   document.getElementById('importFileInput').onchange=e=>{ if(e.target.files.length) importFile(e.target.files[0]); };
   document.getElementById('searchInput').oninput=e=>renderMaster(e.target.value);
