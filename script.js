@@ -236,9 +236,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // 🔹 Save to GitHub (push JSON)
   async function saveToGitHub(token) {
-    const owner = 509Eagle1;
-    const repo = grocery;
-    const path = data/grocery.json;
+    const owner = "509Eagle1";
+    const repo = "grocery";
+    const path = "data/grocery.json";
     const message = "Update grocery list from app";
 
     try {
