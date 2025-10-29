@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Grocery Master List</title>
+<title>Albertsons Grocery List</title>
 <style>
 body { font-family: Arial, sans-serif; margin:10px; background:#f4f4f4; }
 h1 { text-align:center; margin-bottom:5px; }
@@ -22,7 +22,7 @@ h1 { text-align:center; margin-bottom:5px; }
 .dropdown-content button:hover { background:#ddd; }
 .dropdown:hover .dropdown-content { display:block; }
 .list-container { background:white; padding:15px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
-.item { display:flex; justify-content:space-between; align-items:center; padding:6px; border-bottom:1px solid #ddd; }
+.item { display:flex; justify-content:space-between; align-items:flex-start; padding:6px; border-bottom:1px solid #ddd; }
 .item.checked { text-decoration: line-through; color:gray; }
 input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; margin-bottom:5px; }
 #addPage { display:flex; gap:5px; flex-wrap:wrap; align-items:center; margin-top:10px; }
@@ -33,6 +33,10 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 #searchInput { width: 100%; padding-right: 25px; box-sizing: border-box; }
 .clear-search { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; font-weight: bold; color: #888; font-size: 16px; display: none; }
 .clear-search:hover { color: #333; }
+
+/* Stacked layout for master list items */
+.item-left { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+.item-left input[type="checkbox"] { margin-bottom: 2px; }
 </style>
 </head>
 <body>
@@ -111,13 +115,17 @@ function renderMaster(filter="") {
     if(filter && !item.name.toLowerCase().includes(filter.toLowerCase())) return;
     const li=document.createElement('li'); li.className='item';
 
-    const left=document.createElement('div');
+    const left=document.createElement('div'); left.className='item-left';
     const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=item.checked||false;
     cb.addEventListener('change',()=>{ item.checked=cb.checked; saveData(); });
 
-    const text=document.createElement('span'); text.textContent=`${item.name} (Aisle: ${item.aisle})`;
+    // Stack name and aisle vertically
+    const textName = document.createElement('span'); textName.textContent = item.name; textName.style.fontWeight='bold';
+    const textAisle = document.createElement('span'); textAisle.textContent = "Aisle: " + item.aisle; textAisle.style.fontSize='0.9em'; textAisle.style.color='#555';
 
-    left.appendChild(cb); left.appendChild(text);
+    left.appendChild(cb);
+    left.appendChild(textName);
+    left.appendChild(textAisle);
 
     const btns=document.createElement('div');
     const editBtn=document.createElement('button'); editBtn.textContent='Edit'; editBtn.className='edit';
@@ -270,7 +278,8 @@ document.getElementById('restoreGitHubBtn').addEventListener('click', restoreFro
 document.getElementById('itemInput').addEventListener('keypress', e => { if (e.key==='Enter') addItem(); });
 
 // ---------------- INIT ----------------
-document.addEventListener('DOMContentLoaded',()=>{ renderMaster(); renderChecked(); });
+document.addEventListener('DOMContentLoaded',()=>{ renderMaster(); });
 </script>
+
 </body>
 </html>
