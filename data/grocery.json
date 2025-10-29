@@ -28,7 +28,7 @@
     {
       "name": "Food Coloring",
       "aisle": "",
-      "checked": true
+      "checked": false
     },
     {
       "name": "French Fries",
@@ -43,7 +43,7 @@
     {
       "name": "Mash Potatoes",
       "aisle": "",
-      "checked": true
+      "checked": false
     },
     {
       "name": "Powdered Sugar",
@@ -53,7 +53,7 @@
     {
       "name": "Shampoo",
       "aisle": "",
-      "checked": true
+      "checked": false
     },
     {
       "name": "Tater Tots",
@@ -82,6 +82,11 @@
     },
     {
       "name": "Bbbbbb",
+      "aisle": "",
+      "checked": false
+    },
+    {
+      "name": "Asshole2",
       "aisle": "",
       "checked": false
     },
