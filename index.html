@@ -61,6 +61,7 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
         <button id="restoreGitHubBtn">Restore</button>
         <button id="importListBtn">Import List</button>
         <button id="setTokenBtn">Set GitHub Token</button>
+        <button id="loadTokenFileBtn">Load Token from File</button>
       </div>
     </div>
   </div>
@@ -95,6 +96,7 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 </div>
 
 <input type="file" id="importListInput" accept=".json,.csv" style="display:none;">
+<input type="file" id="tokenFileInput" accept=".txt" style="display:none;">
 
 <script>
 // GitHub config
@@ -167,29 +169,22 @@ function renderMaster(filter="") {
 function renderChecked() {
   const list = document.getElementById('checkedList');
   list.innerHTML = '';
-
-  // Move checked items to bottom
   const sortedItems = [...checkedAisle].sort((a,b) => (a.done === b.done ? 0 : (a.done ? 1 : -1)));
-
   sortedItems.forEach(item => {
     const li = document.createElement('li');
     li.className = 'item';
     if(item.done) li.classList.add('checked');
-
     const left = document.createElement('div');
     const cb = document.createElement('input');
     cb.type = 'checkbox';
     cb.checked = item.done || false;
-
     cb.addEventListener('change', () => {
       item.done = cb.checked;
       saveData();
-      renderChecked(); // re-render to move checked item
+      renderChecked();
     });
-
     const span = document.createElement('span');
     span.textContent = `${item.name} (Aisle: ${item.aisle})`;
-
     left.appendChild(cb);
     left.appendChild(span);
     li.appendChild(left);
@@ -270,12 +265,39 @@ async function restoreFromGitHub(){
   }catch(e){console.error(e);alert("❌ Could not restore from GitHub");} 
 }
 
+// ---------------- TOKEN FILE LOADING ----------------
+const tokenFileInput = document.getElementById('tokenFileInput');
+const loadTokenFileBtn = document.getElementById('loadTokenFileBtn');
+
+loadTokenFileBtn.addEventListener('click', () => {
+    tokenFileInput.click();
+});
+
+tokenFileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+        const token = reader.result.trim();
+        if(token){
+            localStorage.setItem('githubToken', token);
+            updateTokenStatus(token);
+            alert('✅ GitHub token loaded from file and saved locally! Restoring list...');
+            restoreFromGitHub();
+        } else {
+            alert('❌ Token file is empty.');
+        }
+    };
+    reader.readAsText(file);
+});
+
 // ---------------- MENU ----------------
 function showMaster(){ document.getElementById('masterPage').classList.remove('hidden'); document.getElementById('checkedPage').classList.add('hidden'); document.getElementById('addPage').classList.add('hidden'); }
-function showChecked(){ checkedAisle=groceryItems.filter(i=>i.checked).map(i=>({name:i.name, aisle:i.aisle, done:false})); saveData(); renderChecked(); document.getElementById('masterPage').classList.add('hidden'); document.getElementById('checkedPage').classList.remove('hidden'); document.getElementById('addPage').classList.add('hidden'); }
+function showChecked(){ checkedAisle=groceryItems.filter(i=>i.checked).map(i=>({name:i.name, aisle:i.ais
+e, done:false})); saveData(); renderChecked(); document.getElementById('masterPage').classList.add('hidden'); document.getElementById('checkedPage').classList.remove('hidden'); document.getElementById('addPage').classList.add('hidden'); }
 function showAdd(){ document.getElementById('addPage').classList.remove('hidden'); document.getElementById('masterPage').classList.add('hidden'); document.getElementById('checkedPage').classList.add('hidden'); }
 
-// ---------------- SEARCH ----------------
+// ---------------- SEARCH CLEAR ----------------
 const searchInput=document.getElementById('searchInput');
 const clearSearchBtn=document.getElementById('clearSearchBtn');
 searchInput.addEventListener('input', e => {
@@ -296,21 +318,16 @@ document.getElementById('showCheckedBtn').addEventListener('click', showChecked)
 document.getElementById('showAddBtn').addEventListener('click', showAdd);
 document.getElementById('exportJsonBtn').addEventListener('click', saveToGitHub);
 document.getElementById('restoreGitHubBtn').addEventListener('click', restoreFromGitHub);
-document.getElementById('setTokenBtn').addEventListener('click', async ()=>{
-    const token = prompt("Enter your GitHub token:");
-    if(token){
-        localStorage.setItem('githubToken', token);
-        updateTokenStatus(token);
-        alert("✅ Token saved. Restoring from GitHub...");
-        await restoreFromGitHub();
-    }
-});
+document.getElementById('setTokenBtn').addEventListener('click', promptGitHubToken);
 document.getElementById('itemInput').addEventListener('keypress', e => { if (e.key==='Enter') addItem(); });
 
 // ---------------- INIT ----------------
-document.addEventListener('DOMContentLoaded',()=>{
-    promptGitHubToken(); // prompt and restore if token missing
-    renderMaster(); 
+document.addEventListener('DOMContentLoaded',()=>{ 
+    const token = localStorage.getItem('githubToken');
+    updateTokenStatus(token);
+    if(token) restoreFromGitHub();
+    else promptGitHubToken();
+    renderMaster();
     renderChecked();
 });
 </script>
