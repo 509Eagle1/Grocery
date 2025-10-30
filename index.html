@@ -178,8 +178,10 @@ function renderMaster(filter="") {
     editBtn.textContent='Edit';
     editBtn.className = 'edit-btn';
     editBtn.addEventListener('click', ()=>{
-      const newName = prompt("Edit item:", item.name); if(newName!==null)item.name=newName.trim();
-      const newAisle = prompt("Edit aisle:", item.aisle); if(newAisle!==null)item.aisle=newAisle.trim();
+      const newName = prompt("Edit item:", item.name);
+      if(newName!==null) item.name = newName.trim();
+      const newAisle = prompt("Edit aisle:", item.aisle);
+      if(newAisle!==null) item.aisle = newAisle.trim();
       renderMaster(document.getElementById('searchInput').value);
     });
 
