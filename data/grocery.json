@@ -63,7 +63,7 @@
     {
       "name": "Toothpaste",
       "aisle": "",
-      "checked": true
+      "checked": false
     },
     {
       "name": "Trash Bags 39gal",
@@ -158,7 +158,7 @@
     {
       "name": "Green Grapes",
       "aisle": "1",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Hot Dogs",
