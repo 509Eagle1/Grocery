@@ -113,7 +113,23 @@ function saveData() {
 }
 function sortByAisle(arr){ return arr.sort((a,b)=>a.aisle.localeCompare(b.aisle, undefined, {numeric:true, sensitivity:'base'})); }
 
-// Render master
+// ---------------- GITHUB TOKEN LOGIC ----------------
+function promptGitHubToken() {
+    let token = localStorage.getItem('githubToken');
+    if(!token){
+        token = prompt("⚠️ GitHub token missing! Please enter your GitHub token:");
+        if(token) localStorage.setItem('githubToken', token);
+    }
+    updateTokenStatus(token);
+    return token;
+}
+
+function updateTokenStatus(token){
+    const el = document.getElementById('tokenStatus');
+    el.textContent = token ? "✅" : "⚠️";
+}
+
+// ---------------- MASTER LIST ----------------
 function renderMaster(filter="") {
   const list = document.getElementById('groceryList');
   list.innerHTML = '';
@@ -141,7 +157,7 @@ function renderMaster(filter="") {
   });
 }
 
-// Render checked
+// ---------------- SHOPPING LIST ----------------
 function renderChecked(){
   const list=document.getElementById('checkedList'); list.innerHTML='';
   sortByAisle(checkedAisle);
@@ -162,7 +178,7 @@ function renderChecked(){
   });
 }
 
-// Add item
+// ---------------- ADD ITEM ----------------
 function addItem(){
   const name=document.getElementById('itemInput').value.trim();
   const aisle=document.getElementById('aisleInput').value.trim();
@@ -173,10 +189,10 @@ function addItem(){
   saveData(); renderMaster(document.getElementById('searchInput').value);
 }
 
-// Clear checks
+// ---------------- CLEAR CHECKS ----------------
 function clearAllChecks(){ groceryItems.forEach(i=>i.checked=false); saveData(); renderMaster(document.getElementById('searchInput').value); }
 
-// Import
+// ---------------- IMPORT ----------------
 document.getElementById('importListBtn').addEventListener('click',()=>document.getElementById('importListInput').click());
 document.getElementById('importListInput').addEventListener('change', e=>{
   const file=e.target.files[0]; if(!file) return;
@@ -204,19 +220,9 @@ document.getElementById('importListInput').addEventListener('change', e=>{
   reader.readAsText(file);
 });
 
-// GitHub
-function getGitHubToken(){ 
-  let token=localStorage.getItem('githubToken'); 
-  updateTokenStatus(token);
-  if(!token){ token=prompt("Enter your GitHub token:"); if(token)localStorage.setItem('githubToken',token); updateTokenStatus(token); } 
-  return token; 
-}
-function updateTokenStatus(token){
-  const el = document.getElementById('tokenStatus');
-  el.textContent = token ? "✅" : "⚠️";
-}
+// ---------------- GITHUB FUNCTIONS ----------------
 async function saveToGitHub(){ 
-  const token=getGitHubToken(); 
+  const token = promptGitHubToken(); 
   if(!token)return alert("GitHub token required"); 
   const content=btoa(unescape(encodeURIComponent(JSON.stringify({groceryItems,checkedAisle},null,2)))); 
   const apiUrl=`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`; 
@@ -228,8 +234,10 @@ async function saveToGitHub(){
     if(response.ok) alert("✅ Uploaded to GitHub!"); else alert("❌ Failed to upload"); 
   }catch(e){console.error(e);alert("❌ Error");} 
 }
+
 async function restoreFromGitHub(){ 
-  const token=getGitHubToken(); if(!token)return alert("GitHub token required"); 
+  const token = promptGitHubToken(); 
+  if(!token)return alert("GitHub token required"); 
   try{ 
     const response=await fetch(`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`,{headers:{Authorization:`token ${token}`,Accept:"application/vnd.github.v3+json"}}); 
     if(!response.ok) throw new Error("Fetch failed"); 
@@ -243,12 +251,12 @@ async function restoreFromGitHub(){
   }catch(e){console.error(e);alert("❌ Could not restore from GitHub");} 
 }
 
-// Menu
+// ---------------- MENU ----------------
 function showMaster(){ document.getElementById('masterPage').classList.remove('hidden'); document.getElementById('checkedPage').classList.add('hidden'); document.getElementById('addPage').classList.add('hidden'); }
 function showChecked(){ checkedAisle=groceryItems.filter(i=>i.checked).map(i=>({name:i.name, aisle:i.aisle, done:false})); saveData(); renderChecked(); document.getElementById('masterPage').classList.add('hidden'); document.getElementById('checkedPage').classList.remove('hidden'); document.getElementById('addPage').classList.add('hidden'); }
 function showAdd(){ document.getElementById('addPage').classList.remove('hidden'); document.getElementById('masterPage').classList.add('hidden'); document.getElementById('checkedPage').classList.add('hidden'); }
 
-// Search
+// ---------------- SEARCH ----------------
 const searchInput=document.getElementById('searchInput');
 const clearSearchBtn=document.getElementById('clearSearchBtn');
 searchInput.addEventListener('input', e => {
@@ -261,27 +269,25 @@ clearSearchBtn.addEventListener('click', () => {
   clearSearchBtn.style.display='none';
 });
 
-// Events
+// ---------------- EVENTS ----------------
 document.getElementById('addItemBtn').addEventListener('click',addItem);
 document.getElementById('clearChecksBtn').addEventListener('click',clearAllChecks);
 document.getElementById('showMasterBtn').addEventListener('click', showMaster);
 document.getElementById('showCheckedBtn').addEventListener('click', showChecked);
 document.getElementById('showAddBtn').addEventListener('click', showAdd);
-document.getElementById('export
 document.getElementById('exportJsonBtn').addEventListener('click', saveToGitHub);
 document.getElementById('restoreGitHubBtn').addEventListener('click', restoreFromGitHub);
 document.getElementById('setTokenBtn').addEventListener('click', ()=>{
-  const token = prompt("Enter your GitHub token:");
-  if(token){ localStorage.setItem('githubToken', token); updateTokenStatus(token); alert("✅ Token saved"); }
+    const token = prompt("Enter your GitHub token:");
+    if(token){ localStorage.setItem('githubToken', token); updateTokenStatus(token); alert("✅ Token saved"); }
 });
 document.getElementById('itemInput').addEventListener('keypress', e => { if (e.key==='Enter') addItem(); });
 
-// INIT
+// ---------------- INIT ----------------
 document.addEventListener('DOMContentLoaded',()=>{
-  renderMaster(); renderChecked();
-  const token = localStorage.getItem('githubToken');
-  if(!token) alert("⚠️ GitHub token missing! Please set it via Admin > Set GitHub Token.");
-  updateTokenStatus(token);
+    promptGitHubToken(); // prompt on startup if missing
+    renderMaster(); 
+    renderChecked();
 });
 </script>
 </body>
