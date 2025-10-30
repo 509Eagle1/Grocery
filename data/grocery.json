@@ -173,7 +173,7 @@
     {
       "name": "Onion",
       "aisle": "1",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Peppers",
