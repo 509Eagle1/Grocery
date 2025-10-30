@@ -193,7 +193,7 @@
     {
       "name": "Salad",
       "aisle": "1",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Sausage Links",
@@ -218,7 +218,7 @@
     {
       "name": "Bsgs",
       "aisle": "1",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Bagels",
