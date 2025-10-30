@@ -213,7 +213,7 @@
     {
       "name": "Tomatos",
       "aisle": "1",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Bsgs",
