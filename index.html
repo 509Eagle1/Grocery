@@ -165,146 +165,118 @@ function renderMaster(filter="") {
     dropContent.appendChild(editBtn); dropContent.appendChild(removeBtn);
     dropdown.appendChild(dropBtn); dropdown.appendChild(dropContent);
     li.appendChild(dropdown);
-
-    dropBtn.addEventListener("click",(e)=>{
-      e.stopPropagation();
-      const isVisible = dropContent.style.display==="block";
-      document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none");
-      dropContent.style.display = isVisible ? "none" : "block";
-    });
-
     list.appendChild(li);
   });
 
+  // Make list sortable
   makeSortable();
 }
 
-// ===== Shopping List =====
-function renderChecked() {
-  const checkedList = document.getElementById("checkedList");
-  checkedList.innerHTML = "";
-  groceryItems.filter(i=>i.checked).forEach(item=>{
-    const li = document.createElement("li"); li.className="item";
-    const cb = document.createElement("input"); cb.type="checkbox";
-    cb.addEventListener("change",()=>{
-      li.classList.toggle("checked",cb.checked);
-      li.parentNode.appendChild(li);
-    });
-    const span = document.createElement("span"); span.textContent=`${item.name} (Aisle: ${item.aisle})`;
-    li.appendChild(cb); li.appendChild(span);
-    checkedList.appendChild(li);
-  });
-}
-
-// ===== Add Item =====
-function addItem() {
-  const name = document.getElementById("itemInput").value.trim();
-  const aisle = document.getElementById("aisleInput").value.trim();
-  if(!name) return;
-  groceryItems.push({name,aisle,checked:false});
-  document.getElementById("itemInput").value=""; document.getElementById("aisleInput").value="";
-  saveData(); renderMaster(); saveToGitHub();
-}
-
-// ===== Drag & Drop Sorting =====
+// ===== Drag-and-Drop =====
 function makeSortable() {
   const list = document.getElementById("groceryList");
   const items = Array.from(list.children);
   let dragSrcEl = null;
 
-  items.forEach(item=>{
-    item.setAttribute("draggable","true");
+  items.forEach(item => {
+    item.setAttribute("draggable", true);
 
-    item.addEventListener("dragstart", function(e){
+    item.addEventListener("dragstart", function(e) {
       dragSrcEl = this;
       e.dataTransfer.effectAllowed = "move";
-      e.dataTransfer.setData("text/html", this.innerHTML);
-      this.style.opacity='0.5';
+      this.style.opacity = "0.5";
     });
 
-    item.addEventListener("dragover", function(e){ e.preventDefault(); e.dataTransfer.dropEffect="move"; return false; });
-    item.addEventListener("dragenter", function(){ this.classList.add("over"); });
-    item.addEventListener("dragleave", function(){ this.classList.remove("over"); });
+    item.addEventListener("dragover", function(e) {
+      e.preventDefault();
+      return false;
+    });
 
-    item.addEventListener("drop", function(e){
+    item.addEventListener("dragenter", function() { this.classList.add("over"); });
+    item.addEventListener("dragleave", function() { this.classList.remove("over"); });
+
+    item.addEventListener("drop", function(e) {
       e.stopPropagation();
-      if(dragSrcEl!=this){
+      if (dragSrcEl !== this) {
         const nodes = Array.from(list.children);
         const fromIndex = nodes.indexOf(dragSrcEl);
         const toIndex = nodes.indexOf(this);
-        list.insertBefore(dragSrcEl,(fromIndex<toIndex)?this.nextSibling:this);
-        const movedItem = groceryItems.splice(fromIndex,1)[0];
-        groceryItems.splice(toIndex,0,movedItem);
-        saveData(); saveToGitHub();
+
+        list.insertBefore(dragSrcEl, fromIndex < toIndex ? this.nextSibling : this);
+
+        const movedItem = groceryItems.splice(fromIndex, 1)[0];
+        groceryItems.splice(toIndex, 0, movedItem);
+
+        saveData();
+        saveToGitHub();
       }
       return false;
     });
 
-    item.addEventListener("dragend", function(){ this.style.opacity='1'; list.querySelectorAll(".item").forEach(i=>i.classList.remove("over")); });
+    item.addEventListener("dragend", function() {
+      this.style.opacity = "1";
+      list.querySelectorAll(".item").forEach(i => i.classList.remove("over"));
+    });
   });
 }
 
-// ===== Show / Hide Tabs =====
+// ===== Shopping List =====
+function renderChecked() {
+  const list = document.getElementById("checkedList"); list.innerHTML="";
+  groceryItems.filter(i=>i.checked).forEach((item)=>{
+    const li = document.createElement("li"); li.className="item";
+    const cb = document.createElement("input"); cb.type="checkbox"; cb.checked=false;
+        const span = document.createElement("span"); 
+    span.textContent = `${item.name} (Aisle: ${item.aisle})`;
+    cb.addEventListener("change", ()=>{
+      if(cb.checked){
+        li.classList.add("checked");
+        list.appendChild(li); // move to bottom
+      } else {
+        li.classList.remove("checked");
+      }
+    });
+    li.appendChild(cb); li.appendChild(span);
+    list.appendChild(li);
+  });
+}
+
+// ===== Add Item =====
+async function addItem() {
+  const name = document.getElementById("itemInput").value.trim();
+  const aisle = document.getElementById("aisleInput").value.trim();
+  if(!name) return;
+  if(groceryItems.some(i=>i.name.toLowerCase()===name.toLowerCase())) return alert("Item already exists!");
+  groceryItems.push({name, aisle, checked:false});
+  document.getElementById("itemInput").value=""; document.getElementById("aisleInput").value="";
+  saveData(); renderMaster(document.getElementById("searchInput").value);
+  const token = localStorage.getItem("githubToken"); if(token) await saveToGitHub();
+}
+
+// ===== Tab Navigation =====
 function showMaster(){ document.getElementById("masterPage").classList.remove("hidden"); document.getElementById("checkedPage").classList.add("hidden"); document.getElementById("addPage").classList.add("hidden"); }
-function showChecked(){ renderChecked(); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.remove("hidden"); document.getElementById("addPage").classList.add("hidden"); }
+function showChecked(){ document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.remove("hidden"); document.getElementById("addPage").classList.add("hidden"); renderChecked(); }
 function showAdd(){ document.getElementById("addPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.add("hidden"); }
 
 // ===== Init =====
-document.addEventListener("DOMContentLoaded",()=>{
-  promptGitHubToken();
-  renderMaster(); renderChecked();
-
-  document.getElementById("addItemBtn").addEventListener("click",addItem);
-  document.getElementById("clearChecksBtn").addEventListener("click",()=>{ groceryItems.forEach(i=>i.checked=false); saveData(); renderChecked(); renderMaster(); });
-  document.getElementById("showMasterBtn").addEventListener("click
-    document.getElementById("showMasterBtn").addEventListener("click", showMaster);
+document.addEventListener("DOMContentLoaded", ()=>{
+  document.getElementById("addItemBtn").addEventListener("click", addItem);
+  document.getElementById("clearChecksBtn").addEventListener("click", ()=>{
+    groceryItems.forEach(i=>i.checked=false); saveData(); renderMaster();
+  });
+  document.getElementById("showMasterBtn").addEventListener("click", showMaster);
   document.getElementById("showCheckedBtn").addEventListener("click", showChecked);
   document.getElementById("showAddBtn").addEventListener("click", showAdd);
 
-  // Search functionality
   const searchInput = document.getElementById("searchInput");
   const clearSearchBtn = document.getElementById("clearSearchBtn");
-  searchInput.addEventListener("input", ()=>{
-    renderMaster(searchInput.value);
-    clearSearchBtn.style.display = searchInput.value ? "inline" : "none";
-  });
-  clearSearchBtn.addEventListener("click", ()=>{
-    searchInput.value="";
-    renderMaster();
-    clearSearchBtn.style.display="none";
-  });
+  searchInput.addEventListener("input", ()=>{ renderMaster(searchInput.value); clearSearchBtn.style.display = searchInput.value ? "inline" : "none"; });
+  clearSearchBtn.addEventListener("click", ()=>{ searchInput.value=""; renderMaster(); clearSearchBtn.style.display="none"; });
 
-  // Admin dropdown buttons
-  document.getElementById("setTokenBtn").addEventListener("click", promptGitHubToken);
-  document.getElementById("loadTokenFileBtn").addEventListener("click", ()=>{ document.getElementById("tokenFileInput").click(); });
-  document.getElementById("tokenFileInput").addEventListener("change", (e)=>{
-    const file = e.target.files[0];
-    if(file){ file.text().then(t=>{ localStorage.setItem("githubToken", t.trim()); promptGitHubToken(); }); }
-  });
-
-  document.getElementById("exportJsonBtn").addEventListener("click", ()=>{
-    const blob = new Blob([JSON.stringify(groceryItems,null,2)], {type:"application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href=url; a.download="grocery.json"; a.click(); URL.revokeObjectURL(url);
-  });
-
-  document.getElementById("importListBtn").addEventListener("click", ()=>{ document.getElementById("importListInput").click(); });
-  document.getElementById("importListInput").addEventListener("change", (e)=>{
-    const file = e.target.files[0];
-    if(file){ file.text().then(t=>{
-      try{
-        const imported = JSON.parse(t);
-        if(Array.isArray(imported)){
-          groceryItems = imported.sort((a,b)=>a.aisle.localeCompare(b.aisle));
-          saveData(); renderMaster(); saveToGitHub();
-        } else { alert("Invalid JSON format."); }
-      } catch(err){ alert("Error parsing JSON."); }
-    }); }
-  });
-
-  // Close dropdown if click outside
-  window.addEventListener("click", ()=>{ document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none"); });
+  const token = localStorage.getItem("githubToken");
+  if(token) promptGitHubToken();
+  renderMaster(); renderChecked();
 });
 </script>
 </body>
-</html>                                                          
+</html>
