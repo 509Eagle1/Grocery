@@ -26,11 +26,14 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 .dropdown { position: relative; display:inline-block; }
 .dropdown-btn { background:#007bff; color:white; border:none; padding:4px 8px; border-radius:5px; cursor:pointer; font-size:12px; }
 .dropdown-btn:hover { background:#0056b3; }
-.dropdown-content { display:none; position:absolute; right:0; background-color:#f9f9f9; min-width:100px; box-shadow:0 8px 16px rgba(0,0,0,0.2); z-index:1; border-radius:5px; }
-.dropdown-content button { width:100%; text-align:left; border:none; padding:6px 10px; cursor:pointer; font-size:12px; margin:0; border-radius:0; }
+.dropdown-content { display:none; position:absolute; right:0; background-color:#f9f9f9; min-width:140px; box-shadow:0 8px 16px rgba(0,0,0,0.2); z-index:1; border-radius:5px; }
+.dropdown-content button { width:100%; text-align:left; border:none; padding:6px 10px; cursor:pointer; font-size:12px; margin:0; border-radius:0; white-space:normal; word-wrap:break-word; }
 .dropdown-content button:hover { opacity:0.9; }
-.dropdown-content .edit { background:#28a745; color:white; margin-bottom:5px; } /* spacing added */
+.dropdown-content .edit { background:#28a745; color:white; margin-bottom:5px; }
 .dropdown-content .remove { background:#dc3545; color:white; }
+
+/* Show dropdown on hover */
+.dropdown:hover .dropdown-content { display:block; }
 
 /* Search */
 .search-container { position: relative; flex:1; max-width:300px; }
@@ -87,7 +90,8 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 <input type="file" id="tokenFileInput" accept=".txt" style="display:none;">
 
 <script>
-let groceryItems = [];
+let groceryItems = JSON.parse(localStorage.getItem('groceryItems') || "[]");
+let checkedAisle = [];
 
 // ===== GitHub =====
 async function saveToGitHub() {
@@ -111,15 +115,23 @@ async function restoreFromGitHub() {
     if (!res.ok) return;
     const data = await res.json();
     const jsonData = JSON.parse(atob(data.content));
-    groceryItems = jsonData.groceryItems.map(i => ({ ...i, checked: false, done: false }));
-    renderMaster(); renderChecked();
+    groceryItems = jsonData.groceryItems.map(i => ({ ...i, checked: false }));
+    saveData(); renderMaster(); renderChecked();
   } catch(e){ console.error(e); }
 }
 
+// ===== Save / Load =====
+function saveData() {
+  localStorage.setItem('groceryItems', JSON.stringify(groceryItems));
+}
+
 // ===== Token =====
-function promptTokenIfMissing() {
+function promptGitHubToken() {
   let token = localStorage.getItem("githubToken");
-  if (!token) { token = prompt("⚠️ GitHub token missing! Enter token:"); if(token) localStorage.setItem("githubToken", token); }
+  if (!token) {
+    token = prompt("⚠️ GitHub token missing! Enter token:");
+    if(token) localStorage.setItem("githubToken", token);
+  }
   document.getElementById("tokenStatus").textContent = token ? "✅ GitHub Token Set" : "⚠️ No GitHub Token";
   if(token) restoreFromGitHub();
 }
@@ -137,13 +149,15 @@ function renderMaster(filter="") {
     leftDiv.style.display="flex"; leftDiv.style.alignItems="center"; leftDiv.style.gap="5px";
 
     const checkbox = document.createElement("input"); checkbox.type="checkbox"; checkbox.checked=item.checked || false;
-    checkbox.addEventListener("change",()=>{ item.checked = checkbox.checked; renderChecked(); });
+    checkbox.addEventListener("change",()=>{
+      item.checked = checkbox.checked;
+      renderChecked();
+    });
 
     const span = document.createElement("span"); span.textContent=`${item.name} (Aisle: ${item.aisle})`;
     leftDiv.appendChild(checkbox); leftDiv.appendChild(span);
     li.appendChild(leftDiv);
 
-    // Dropdown menu for Edit/Remove with confirmation on click
     const dropdown = document.createElement("div"); dropdown.className="dropdown";
     const dropBtn = document.createElement("button"); dropBtn.className="dropdown-btn"; dropBtn.textContent="Options ⏷";
 
@@ -154,15 +168,15 @@ function renderMaster(filter="") {
       const newName = prompt("Edit item:",item.name); if(newName!==null)item.name=newName.trim();
       const newAisle = prompt("Edit aisle:",item.aisle); if(newAisle!==null)item.aisle=newAisle.trim();
       renderMaster(document.getElementById("searchInput").value);
+      saveData();
     });
 
     const removeBtn = document.createElement("button"); removeBtn.className="remove"; removeBtn.textContent="Remove";
-    removeBtn.addEventListener("click",(e)=>{
-      e.stopPropagation();
-      if(confirm("Are you sure you want to remove this item?")) {
-        groceryItems.splice(index,1); 
-        renderMaster(document.getElementById("searchInput").value); 
-        renderChecked();
+    removeBtn.addEventListener("click",()=>{
+      if(confirm(`Are you sure you want to remove "${item.name}"?`)) {
+        groceryItems.splice(index,1);
+        saveData();
+        renderMaster(document.getElementById("searchInput").value);
       }
     });
 
@@ -170,70 +184,80 @@ function renderMaster(filter="") {
     dropdown.appendChild(dropBtn); dropdown.appendChild(dropContent);
     li.appendChild(dropdown);
 
-    dropBtn.addEventListener("click", e => {
-      e.stopPropagation();
-      const allDropdowns = document.querySelectorAll(".dropdown-content");
-      allDropdowns.forEach(dc => { if(dc !== dropContent) dc.style.display="none"; });
-      dropContent.style.display = dropContent.style.display==="block" ? "none" : "block";
-    });
-
     list.appendChild(li);
   });
-
-  document.addEventListener("click", ()=>{ document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none"); });
 }
 
-// ===== Render Checked =====
+// ===== Render Checked / Shopping List =====
 function renderChecked() {
-  const list = document.getElementById("checkedList"); list.innerHTML="";
-  const active = groceryItems.filter(i=>i.checked && !i.done);
-  const done = groceryItems.filter(i=>i.checked && i.done);
-  [...active,...done].forEach(item=>{
+  const list = document.getElementById("checkedList");
+  list.innerHTML = "";
+  groceryItems.filter(i=>i.checked).forEach((item,i)=>{
     const li = document.createElement("li"); li.className="item";
-    if(item.done) li.classList.add("checked");
-    const leftDiv=document.createElement("div"); leftDiv.style.display="flex"; leftDiv.style.alignItems="center"; leftDiv.style.gap="5px";
-    const checkbox = document.createElement("input"); checkbox.type="checkbox"; checkbox.checked=item.done||false;
-    checkbox.addEventListener("change",()=>{ item.done=checkbox.checked; renderChecked(); });
-    const span=document.createElement("span"); span.textContent=`${item.name} (Aisle: ${item.aisle})`;
-    leftDiv.appendChild(checkbox); leftDiv.appendChild(span); li.appendChild(leftDiv); list.appendChild(li);
+    const leftDiv = document.createElement("div");
+    const cb = document.createElement("input"); cb.type="checkbox"; cb.checked=false;
+    cb.addEventListener("change",()=>{
+      if(cb.checked){ li.classList.add("checked"); list.appendChild(li); }
+      else { li.classList.remove("checked"); }
+    });
+    const span = document.createElement("span"); span.textContent=`${item.name} (Aisle: ${item.aisle})`;
+    leftDiv.appendChild(cb); leftDiv.appendChild(span);
+    li.appendChild(leftDiv);
+    list.appendChild(li);
   });
 }
 
 // ===== Add Item =====
-document.getElementById("addItemBtn").onclick = ()=>{
+async function addItem(){
   const name = document.getElementById("itemInput").value.trim();
   const aisle = document.getElementById("aisleInput").value.trim();
   if(!name) return;
-  if(!groceryItems.some(i=>i.name.toLowerCase()===name.toLowerCase())){
-    groceryItems.push({name,aisle,checked:false,done:false}); renderMaster(); renderChecked(); saveToGitHub();
-  } else alert("Item already exists!");
-  document.getElementById("itemInput").value=""; document.getElementById("aisleInput").value="";
-};
+  groceryItems.push({name, aisle, checked:false});
+  document.getElementById("itemInput").value=''; document.getElementById("aisleInput").value='';
+  saveData(); renderMaster(document.getElementById("searchInput").value);
+  const token = localStorage.getItem("githubToken") || promptGitHubToken();
+  if(token) saveToGitHub();
+}
 
-// ===== Menu Buttons =====
-document.getElementById("clearChecksBtn").onclick = ()=>{
-  groceryItems.forEach(i=>i.checked=false); renderMaster(); renderChecked();
-};
-document.getElementById("showMasterBtn").onclick = ()=>{ document.getElementById("masterPage").classList.remove("hidden"); document.getElementById("checkedPage").classList.add("hidden"); document.getElementById("addPage").classList.add("hidden"); };
-document.getElementById("showCheckedBtn").onclick = ()=>{ document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.remove("hidden"); document.getElementById("addPage").classList.add("hidden"); renderChecked(); };
-document.getElementById("showAddBtn").onclick = ()=>{ document.getElementById("addPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.add("hidden"); };
-document.getElementById("setTokenBtn").onclick = promptTokenIfMissing;
-document.getElementById("loadTokenFileBtn").onclick = ()=>document.getElementById("tokenFileInput").click();
-document.getElementById("tokenFileInput").addEventListener("change",e=>{
-  const file=e.target.files[0]; if(!file) return;
-  const reader=new FileReader(); reader.onload=()=>{
-    const token = reader.result.trim(); if(token){ localStorage.setItem("githubToken",token); promptTokenIfMissing(); } else alert("Empty token file");
-  }; reader.readAsText(file);
+// ===== Show Pages =====
+function showMaster(){ document.getElementById("masterPage").classList.remove("hidden"); document.getElementById("checkedPage").classList.add("hidden"); document.getElementById("addPage").classList.add("hidden"); }
+function showChecked(){ document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.remove("hidden"); document.getElementById("addPage").classList.add("hidden"); }
+function showAdd(){ document.getElementById("addPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.add("hidden"); }
+
+document.addEventListener("DOMContentLoaded",()=>{
+  promptGitHubToken();
+  document.getElementById("addItemBtn").addEventListener("click",addItem);
+  document.getElementById("clearChecksBtn").addEventListener("click",()=>{ groceryItems.forEach(i=>i.checked=false); saveData(); renderMaster(); renderChecked(); });
+  document.getElementById("showMasterBtn").addEventListener("click",showMaster);
+  document.getElementById("showCheckedBtn").addEventListener("click",showChecked);
+  document.getElementById("showAddBtn").addEventListener("click",showAdd);
+  document.getElementById("exportJsonBtn").addEventListener("click",saveToGitHub);
+  document.getElementById("restoreGitHubBtn").addEventListener("click",restoreFromGitHub);
+  document.getElementById("importListBtn").addEventListener("click",()=>document.getElementById("importListInput").click());
+  document.getElementById("importListInput").addEventListener("change",(e)=>{
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev)=>{
+      let newItems=[]; try{ const data=JSON.parse(ev.target.result); if(Array.isArray(data.groceryItems)) newItems=data.groceryItems; } catch(err){ return alert("Invalid JSON"); }
+      newItems.forEach(item=>groceryItems.push({...item,checked:false}));
+      saveData(); renderMaster();
+    };
+    reader.readAsText(file);
+  });
+  document.getElementById("setTokenBtn").addEventListener("click",promptGitHubToken);
+  document.getElementById("loadTokenFileBtn").addEventListener("click",()=>document.getElementById("tokenFileInput").click());
+  document.getElementById("tokenFileInput").addEventListener("change",(e)=>{
+    const file=e.target.files[0]; if(!file) return;
+    const reader=new FileReader();
+    reader.onload = ()=>{ localStorage.setItem("githubToken",reader.result.trim()); promptGitHubToken(); };
+    reader.readAsText(file);
+  });
+  const searchInput=document.getElementById("searchInput");
+  const clearSearchBtn=document.getElementById("clearSearchBtn");
+  searchInput.addEventListener("input",()=>{ renderMaster(searchInput.value); clearSearchBtn.style.display=searchInput.value?'block':'none'; });
+  clearSearchBtn.addEventListener("click",()=>{ searchInput.value=''; renderMaster(); clearSearchBtn.style.display='none'; });
+  renderMaster(); renderChecked();
 });
-
-// ===== Search =====
-const searchInput=document.getElementById("searchInput");
-const clearSearchBtn=document.getElementById("clearSearchBtn");
-searchInput.addEventListener("input", e=>{ renderMaster(e.target.value); clearSearchBtn.style.display=e.target.value?'block':'none'; });
-clearSearchBtn.addEventListener("click", ()=>{ searchInput.value=''; renderMaster(); clearSearchBtn.style.display='none'; });
-
-// ===== Init =====
-document.addEventListener("DOMContentLoaded", ()=>{ promptTokenIfMissing(); renderMaster(); renderChecked(); });
 </script>
 </body>
 </html>
