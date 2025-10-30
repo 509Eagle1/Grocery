@@ -11,9 +11,20 @@ h1 { text-align:center; margin-bottom:5px; }
 .menu button, .menu .dropdown-btn { padding:8px 12px; border-radius:8px; border:none; background:#007bff; color:white; font-size:14px; cursor:pointer; }
 .menu button:hover, .menu .dropdown-btn:hover { background:#0056b3; }
 .status-icon { text-align:center; font-size:12px; color:#333; margin-bottom:2px; }
-.button-bar { display:flex; flex-wrap:wrap; gap:5px; justify-content:flex-start; align-items:center; margin-bottom:10px; }
-.button-bar button { padding:6px 10px; border-radius:6px; border:none; color:white; cursor:pointer; }
-.button-bar .clear { background:#ffc107; color:#000; }
+
+/* Button bar and search inline */
+.button-bar {
+  display: flex;
+  gap:5px;
+  align-items: center;
+  margin-bottom:10px;
+}
+.button-bar button.clear { background:#ffc107; color:#000; border-radius:6px; border:none; padding:6px 10px; cursor:pointer; }
+.button-bar .search-container { flex:1; position:relative; }
+#searchInput { width:100%; padding:5px 25px 5px 5px; border-radius:5px; border:1px solid #ccc; box-sizing:border-box; }
+.clear-search { position:absolute; right:5px; top:50%; transform:translateY(-50%); cursor:pointer; font-weight:bold; color:#888; font-size:16px; display:none; }
+.clear-search:hover { color:#333; }
+
 .button-bar .add { background:#17a2b8; }
 .dropdown { position:relative; display:inline-block; }
 .dropdown-content { display:none; position:absolute; background-color:#f9f9f9; min-width:160px; box-shadow:0 8px 16px rgba(0,0,0,0.2); z-index:1; border-radius:5px; }
@@ -26,12 +37,6 @@ h1 { text-align:center; margin-bottom:5px; }
 input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; margin-bottom:5px; }
 #addPage { display:flex; gap:5px; flex-wrap:wrap; align-items:center; margin-top:10px; }
 .hidden { display:none; }
-
-/* Search field with clear button */
-.search-container { position: relative; flex:1; max-width:300px; }
-#searchInput { width:100%; padding-right: 25px; box-sizing: border-box; }
-.clear-search { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; font-weight: bold; color: #888; font-size: 16px; display: none; }
-.clear-search:hover { color: #333; }
 </style>
 </head>
 <body>
@@ -83,7 +88,7 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 <input type="file" id="tokenFileInput" accept=".txt" style="display:none;">
 
 <script>
-// --- All your previous JS goes here ---
+// --- JS Code ---
 const githubUser = "509Eagle1";
 const repoName = "Grocery";
 const filePath = "data/grocery.json";
@@ -95,6 +100,7 @@ function saveData() {
   localStorage.setItem('groceryItems', JSON.stringify(groceryItems));
   localStorage.setItem('checkedAisle', JSON.stringify(checkedAisle));
 }
+
 function sortByAisle(arr){ return arr.sort((a,b)=>a.aisle.localeCompare(b.aisle, undefined, {numeric:true,sensitivity:'base'})); }
 
 function updateTokenStatus(token) {
@@ -103,7 +109,6 @@ function updateTokenStatus(token) {
   else status.textContent = "⚠️ No GitHub Token";
 }
 
-// --- Prompt Token ---
 function promptGitHubToken() {
   let token = localStorage.getItem('githubToken');
   if (!token) {
@@ -118,7 +123,6 @@ function promptGitHubToken() {
   return token;
 }
 
-// --- Token from file ---
 function handleLoadTokenFile(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -135,7 +139,6 @@ function handleLoadTokenFile(e) {
   reader.readAsText(file);
 }
 
-// --- GitHub Save/Restore ---
 async function saveToGitHub() {
   const token = localStorage.getItem('githubToken');
   if (!token) return alert("GitHub token required");
@@ -150,6 +153,7 @@ async function saveToGitHub() {
     else alert("❌ Failed to upload");
   } catch(e){ console.error(e); alert("❌ Error uploading"); }
 }
+
 async function restoreFromGitHub(){
   const token=localStorage.getItem('githubToken');
   if(!token)return;
@@ -166,7 +170,6 @@ async function restoreFromGitHub(){
   }catch(e){console.error(e);alert("❌ Could not restore from GitHub");}
 }
 
-// --- Render Lists ---
 function renderMaster(filter=""){
   const list=document.getElementById('groceryList');
   list.innerHTML='';
@@ -175,106 +178,132 @@ function renderMaster(filter=""){
     if(filter && !item.name.toLowerCase().includes(filter.toLowerCase())) return;
     const li=document.createElement('li'); li.className='item';
     const left=document.createElement('div');
-    const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=item.checked||false;
-    cb.addEventListener('change',()=>{ item.checked=cb.checked; saveData(); });
-    const text=document.createElement('span'); text.textContent=`${item.name} (Aisle: ${item.aisle})`;
-    left.appendChild(cb); left.appendChild(text);
-    const btns=document.createElement('div');
-    const editBtn=document.createElement('button'); editBtn.textContent='Edit';
-    editBtn.addEventListener('click',()=>{
-      const newName=prompt("Edit item:",item.name); if(newName!==null)item.name=newName.trim();
-      const newAisle=prompt("Edit aisle:",item.aisle); if(newAisle!==null)item.aisle=newAisle.trim();
+    const cb=document.createElement('input'); cb.type='checkbox
+        cb.checked = item.checked || false;
+    cb.addEventListener('change', () => { item.checked = cb.checked; saveData(); });
+    const text = document.createElement('span'); 
+    text.textContent = `${item.name} (Aisle: ${item.aisle})`;
+    left.appendChild(cb); 
+    left.appendChild(text);
+
+    const btns = document.createElement('div');
+    const editBtn = document.createElement('button'); editBtn.textContent = 'Edit';
+    editBtn.addEventListener('click', () => {
+      const newName = prompt("Edit item:", item.name); if (newName !== null) item.name = newName.trim();
+      const newAisle = prompt("Edit aisle:", item.aisle); if (newAisle !== null) item.aisle = newAisle.trim();
       renderMaster(document.getElementById('searchInput').value); saveData();
     });
-    const removeBtn=document.createElement('button'); removeBtn.textContent='Remove';
-    removeBtn.addEventListener('click',()=>{ groceryItems.splice(index,1); saveData(); renderMaster(document.getElementById('searchInput').value); });
+    const removeBtn = document.createElement('button'); removeBtn.textContent = 'Remove';
+    removeBtn.addEventListener('click', () => { groceryItems.splice(index, 1); saveData(); renderMaster(document.getElementById('searchInput').value); });
     btns.appendChild(editBtn); btns.appendChild(removeBtn);
-    li.appendChild(left); li.appendChild(btns);
+
+    li.appendChild(left); 
+    li.appendChild(btns);
     list.appendChild(li);
   });
 }
 
 function renderChecked(){
-  const list=document.getElementById('checkedList'); list.innerHTML='';
+  const list = document.getElementById('checkedList'); list.innerHTML='';
   sortByAisle(checkedAisle);
   checkedAisle.forEach((item,i)=>{
-    const li=document.createElement('li'); li.className='item';
+    const li = document.createElement('li'); li.className='item';
     if(item.done) li.classList.add('checked');
-    const left=document.createElement('div');
-    const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=item.done||false;
-    cb.addEventListener('change',()=>{
-      item.done=cb.checked;
+    const left = document.createElement('div');
+    const cb = document.createElement('input'); cb.type='checkbox'; cb.checked = item.done || false;
+    cb.addEventListener('change', ()=>{
+      item.done = cb.checked;
       if(cb.checked){ li.classList.add('checked'); checkedAisle.push(checkedAisle.splice(i,1)[0]); }
       else { li.classList.remove('checked'); }
       saveData(); renderChecked();
     });
-    const span=document.createElement('span'); span.textContent=`${item.name} (Aisle: ${item.aisle})`;
+    const span = document.createElement('span'); span.textContent = `${item.name} (Aisle: ${item.aisle})`;
     left.appendChild(cb); left.appendChild(span);
     li.appendChild(left); list.appendChild(li);
   });
 }
 
-// --- Add Item (auto export) ---
 async function addItem(){
-  const name=document.getElementById('itemInput').value.trim();
-  const aisle=document.getElementById('aisleInput').value.trim();
-  if(!name)return;
-  if(groceryItems.some(i=>i.name.toLowerCase()===name.toLowerCase()))return alert("Item already exists!");
-  groceryItems.push({name,aisle,checked:false});
+  const name = document.getElementById('itemInput').value.trim();
+  const aisle = document.getElementById('aisleInput').value.trim();
+  if(!name) return;
+  if(groceryItems.some(i => i.name.toLowerCase() === name.toLowerCase())) return alert("Item already exists!");
+  groceryItems.push({name, aisle, checked:false});
   document.getElementById('itemInput').value=''; document.getElementById('aisleInput').value='';
   saveData(); renderMaster(document.getElementById('searchInput').value);
-  const token=localStorage.getItem('githubToken')||promptGitHubToken();
-  if(token){ try{ await saveToGitHub(); }catch(e){console.error(e);alert("⚠️ Added locally, upload failed.");} }
+  const token = localStorage.getItem('githubToken') || promptGitHubToken();
+  if(token){ try{ await saveToGitHub(); }catch(e){console.error(e); alert("⚠️ Added locally, upload failed.");} }
 }
 
 function clearAllChecks(){ groceryItems.forEach(i=>i.checked=false); saveData(); renderMaster(document.getElementById('searchInput').value); }
 
 function handleImportList(e){
-  const file=e.target.files[0]; if(!file)return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    let newItems=[]; const content=e.target.result;
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    let newItems = []; const content = e.target.result;
     if(file.name.endsWith('.json')){
-      try{ const data=JSON.parse(content); if(Array.isArray(data.groceryItems)) newItems=data.groceryItems; }
+      try{ const data = JSON.parse(content); if(Array.isArray(data.groceryItems)) newItems = data.groceryItems; }
       catch(err){ alert("Invalid JSON file"); return; }
     } else if(file.name.endsWith('.csv')){
-      const lines=content.split(/\r?\n/).filter(Boolean);
-      lines.forEach(line=>{ const [name,aisle]=line.split(',').map(s=>s.trim()); if(name)newItems.push({name,aisle}); });
+      const lines = content.split(/\r?\n/).filter(Boolean);
+      lines.forEach(line => { const [name, aisle] = line.split(',').map(s => s.trim()); if(name) newItems.push({name, aisle}); });
     } else return alert("Unsupported file");
-    const existingNames=new Set(groceryItems.map(i=>i.name.toLowerCase()));
-    newItems.forEach(item=>{ if(!existingNames.has(item.name.toLowerCase())) groceryItems.push({name:item.name,aisle:item.aisle||"",checked:false}); });
+    const existingNames = new Set(groceryItems.map(i => i.name.toLowerCase()));
+    newItems.forEach(item => { if(!existingNames.has(item.name.toLowerCase())) groceryItems.push({name:item.name, aisle:item.aisle||"", checked:false}); });
     sortByAisle(groceryItems); saveData(); renderMaster(document.getElementById('searchInput').value);
     alert(`✅ Imported ${newItems.length} new items.`);
   };
   reader.readAsText(file);
 }
 
-function showMaster(){ document.getElementById('masterPage').classList.remove('hidden'); document.getElementById('checkedPage').classList.add('hidden'); document.getElementById('addPage').classList.add('hidden'); }
-function showChecked(){ checkedAisle=groceryItems.filter(i=>i.checked).map(i=>({name:i.name,aisle:i.aisle,done:false})); saveData(); renderChecked(); document.getElementById('masterPage').classList.add('hidden'); document.getElementById('checkedPage').classList.remove('hidden'); document.getElementById('addPage').classList.add('hidden'); }
-function showAdd(){ document.getElementById('addPage').classList.remove('hidden'); document.getElementById('masterPage').classList.add('hidden'); document.getElementById('checkedPage').classList.add('hidden'); }
+function showMaster(){ 
+  document.getElementById('masterPage').classList.remove('hidden'); 
+  document.getElementById('checkedPage').classList.add('hidden'); 
+  document.getElementById('addPage').classList.add('hidden'); 
+}
+
+function showChecked(){ 
+  checkedAisle = groceryItems.filter(i => i.checked).map(i => ({name:i.name, aisle:i.aisle, done:false})); 
+  saveData(); renderChecked(); 
+  document.getElementById('masterPage').classList.add('hidden'); 
+  document.getElementById('checkedPage').classList.remove('hidden'); 
+  document.getElementById('addPage').classList.add('hidden'); 
+}
+
+function showAdd(){ 
+  document.getElementById('addPage').classList.remove('hidden'); 
+  document.getElementById('masterPage').classList.add('hidden'); 
+  document.getElementById('checkedPage').classList.add('hidden'); 
+}
 
 document.addEventListener('DOMContentLoaded',()=>{
-  const token=localStorage.getItem('githubToken');
+  const token = localStorage.getItem('githubToken');
   updateTokenStatus(token);
   if(token) restoreFromGitHub(); else promptGitHubToken();
-  document.getElementById('addItemBtn').addEventListener('click',addItem);
-  document.getElementById('clearChecksBtn').addEventListener('click',clearAllChecks);
-  document.getElementById('showMasterBtn').addEventListener('click',showMaster);
-  document.getElementById('showCheckedBtn').addEventListener('click',showChecked);
-  document.getElementById('showAddBtn').addEventListener('click',showAdd);
-  document.getElementById('exportJsonBtn').addEventListener('click',saveToGitHub);
-  document.getElementById('restoreGitHubBtn').addEventListener('click',restoreFromGitHub);
-  document.getElementById('importListBtn').addEventListener('click',()=>document.getElementById('importListInput').click());
-  document.getElementById('importListInput').addEventListener('change',handleImportList);
-  document.getElementById('setTokenBtn').addEventListener('click',promptGitHubToken);
-  document.getElementById('loadTokenFileBtn').addEventListener('click',()=>document.getElementById('tokenFileInput').click());
-  document.getElementById('tokenFileInput').addEventListener('change',handleLoadTokenFile);
-  document.getElementById('itemInput').addEventListener('keypress',e=>{ if(e.key==='Enter') addItem(); });
-  const searchInput=document.getElementById('searchInput'); const clearSearchBtn=document.getElementById('clearSearchBtn');
-  searchInput.addEventListener('input',e=>{ renderMaster(e.target.value); clearSearchBtn.style.display=e.target.value?'block':'none'; });
-  clearSearchBtn.addEventListener('click',()=>{ searchInput.value=''; renderMaster(); clearSearchBtn.style.display='none'; });
+
+  document.getElementById('addItemBtn').addEventListener('click', addItem);
+  document.getElementById('clearChecksBtn').addEventListener('click', clearAllChecks);
+  document.getElementById('showMasterBtn').addEventListener('click', showMaster);
+  document.getElementById('showCheckedBtn').addEventListener('click', showChecked);
+  document.getElementById('showAddBtn').addEventListener('click', showAdd);
+  document.getElementById('exportJsonBtn').addEventListener('click', saveToGitHub);
+  document.getElementById('restoreGitHubBtn').addEventListener('click', restoreFromGitHub);
+  document.getElementById('importListBtn').addEventListener('click', ()=>document.getElementById('importListInput').click());
+  document.getElementById('importListInput').addEventListener('change', handleImportList);
+  document.getElementById('setTokenBtn').addEventListener('click', promptGitHubToken);
+  document.getElementById('loadTokenFileBtn').addEventListener('click', ()=>document.getElementById('tokenFileInput').click());
+  document.getElementById('tokenFileInput').addEventListener('change', handleLoadTokenFile);
+  document.getElementById('itemInput').addEventListener('keypress', e => { if(e.key==='Enter') addItem(); });
+
+  const searchInput = document.getElementById('searchInput'); 
+  const clearSearchBtn = document.getElementById('clearSearchBtn');
+  searchInput.addEventListener('input', e => { renderMaster(e.target.value); clearSearchBtn.style.display = e.target.value ? 'block' : 'none'; });
+  clearSearchBtn.addEventListener('click', ()=>{ searchInput.value=''; renderMaster(); clearSearchBtn.style.display='none'; });
+
   renderMaster(); renderChecked();
 });
 </script>
+
 </body>
 </html>
