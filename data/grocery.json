@@ -619,6 +619,11 @@
       "name": "Bbbbbbb",
       "aisle": "12",
       "checked": false
+    },
+    {
+      "name": "Cccccc",
+      "aisle": "12",
+      "checked": false
     }
   ],
   "checkedAisle": [
