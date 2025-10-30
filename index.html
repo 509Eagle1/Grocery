@@ -140,13 +140,13 @@ function renderMaster(filter="") {
 
     const removeBtn = document.createElement("button"); removeBtn.className="remove"; removeBtn.textContent="Remove";
     removeBtn.addEventListener("click",(e)=>{
-      e.stopPropagation(); // Prevent dropdown closing first
+      e.stopPropagation(); // stop dropdown toggle
       if(confirm(`Are you sure you want to remove "${item.name}"?`)){
         groceryItems.splice(index,1);
         saveData();
         renderMaster(document.getElementById("searchInput").value);
       }
-      // If canceled, dropdown remains open
+      // Cancel keeps dropdown open
     });
 
     dropContent.appendChild(editBtn); dropContent.appendChild(removeBtn);
