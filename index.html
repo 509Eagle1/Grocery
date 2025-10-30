@@ -11,7 +11,7 @@ h1 { text-align:center; margin-bottom:5px; }
 .menu button, .menu .dropdown-btn { padding:8px 12px; border-radius:8px; border:none; background:#007bff; color:white; font-size:14px; cursor:pointer; }
 .menu button:hover, .menu .dropdown-btn:hover { background:#0056b3; }
 .status-icon { text-align:center; font-size:12px; color:#333; margin-bottom:2px; }
-.button-bar { display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-bottom:10px; }
+.button-bar { display:flex; flex-wrap:wrap; gap:5px; justify-content:flex-start; align-items:center; margin-bottom:10px; }
 .button-bar button { padding:6px 10px; border-radius:6px; border:none; color:white; cursor:pointer; }
 .button-bar .clear { background:#ffc107; color:#000; }
 .button-bar .add { background:#17a2b8; }
@@ -28,10 +28,10 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 .hidden { display:none; }
 
 /* Search field with clear button */
-.search-container { position: relative; }
-#searchInput { width: 100%; padding-right: 25px; box-sizing: border-box; }
-.clear-search { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; font-weight: bold; color: #888; font-size: 16px; display: none; }
-.clear-search:hover { color: #333; }
+.search-container { position: relative; flex-grow:1; margin-left:auto; max-width:300px; }
+#searchInput { width:100%; padding-right:25px; box-sizing:border-box; }
+.clear-search { position:absolute; right:5px; top:50%; transform:translateY(-50%); cursor:pointer; font-weight:bold; color:#888; font-size:16px; display:none; }
+.clear-search:hover { color:#333; }
 </style>
 </head>
 <body>
@@ -59,10 +59,10 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
   <div id="masterPage">
     <div class="button-bar">
       <button id="clearChecksBtn" class="clear">Clear All Checks</button>
-    </div>
-    <div class="search-container">
-      <input type="text" id="searchInput" placeholder="Search items...">
-      <span id="clearSearchBtn" class="clear-search">×</span>
+      <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search items...">
+        <span id="clearSearchBtn" class="clear-search">×</span>
+      </div>
     </div>
     <ul id="groceryList"></ul>
   </div>
@@ -78,7 +78,6 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
   </div>
 </div>
 
-<!-- Hidden inputs -->
 <input type="file" id="importListInput" accept=".json,.csv" style="display:none;">
 <input type="file" id="tokenFileInput" accept=".txt" style="display:none;">
 
@@ -135,20 +134,27 @@ function handleLoadTokenFile(e) {
 }
 
 // --- GitHub Save/Restore ---
-async function saveToGitHub() {
+async function saveToGitHub(silent=false) {
   const token = localStorage.getItem('githubToken');
-  if (!token) return alert("GitHub token required");
+  if (!token) return;
   const content = btoa(unescape(encodeURIComponent(JSON.stringify({groceryItems,checkedAisle},null,2))));
   const apiUrl = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`;
   try {
     const res = await fetch(apiUrl,{headers:{Authorization:`token ${token}`,Accept:"application/vnd.github.v3+json"}});
     const data = res.ok ? await res.json() : {};
     const sha = data.sha || null;
-    const response = await fetch(apiUrl,{method:'PUT',headers:{"Authorization":`token ${token}`,"Content-Type":"application/json"},body:JSON.stringify({message:"Update grocery list",content,sha})});
-    if(response.ok) alert("✅ Uploaded to GitHub!");
-    else alert("❌ Failed to upload");
-  } catch(e){ console.error(e); alert("❌ Error uploading"); }
+    const response = await fetch(apiUrl,{
+      method:'PUT',
+      headers:{"Authorization":`token ${token}`,"Content-Type":"application/json"},
+      body:JSON.stringify({message:"Update grocery list",content,sha})
+    });
+    if(!silent){
+      if(response.ok) alert("✅ Uploaded to GitHub!");
+      else alert("❌ Failed to upload");
+    }
+  } catch(e){ console.error(e); if(!silent) alert("❌ Error uploading"); }
 }
+
 async function restoreFromGitHub(){
   const token=localStorage.getItem('githubToken');
   if(!token)return;
@@ -213,66 +219,60 @@ function renderChecked(){
   });
 }
 
-// --- Add Item (auto export) ---
+// --- Add Item (auto silent export) ---
 async function addItem(){
   const name=document.getElementById('itemInput').value.trim();
   const aisle=document.getElementById('aisleInput').value.trim();
   if(!name)return;
-  if(groceryItems.some(i=>i.name.toLowerCase()===name.toLowerCase()))return alert("Item already exists!");
+  if(groceryItems.some(i=>i.name.toLowerCase()===name.toLowerCase())) return alert("Item already exists!");
   groceryItems.push({name,aisle,checked:false});
   document.getElementById('itemInput').value=''; document.getElementById('aisleInput').value='';
   saveData(); renderMaster(document.getElementById('searchInput').value);
-  const token=localStorage.getItem('githubToken')||promptGitHubToken();
-  if(token){ try{ await saveToGitHub(); }catch(e){console.error(e);alert("⚠️ Added locally, upload failed.");} }
+  const token = localStorage.getItem('githubToken') || promptGitHubToken();
+  if(token) saveToGitHub(true); // silent
 }
 
+// --- Other Helpers ---
 function clearAllChecks(){ groceryItems.forEach(i=>i.checked=false); saveData(); renderMaster(document.getElementById('searchInput').value); }
-
-function handleImportList(e){
-  const file=e.target.files[0]; if(!file)return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    let newItems=[]; const content=e.target.result;
-    if(file.name.endsWith('.json')){
-      try{ const data=JSON.parse(content); if(Array.isArray(data.groceryItems)) newItems=data.groceryItems; }
-      catch(err){ alert("Invalid JSON file"); return; }
-    } else if(file.name.endsWith('.csv')){
-      const lines=content.split(/\r?\n/).filter(Boolean);
-      lines.forEach(line=>{ const [name,aisle]=line.split(',').map(s=>s.trim()); if(name)newItems.push({name,aisle}); });
-    } else return alert("Unsupported file");
-    const existingNames=new Set(groceryItems.map(i=>i.name.toLowerCase()));
-    newItems.forEach(item=>{ if(!existingNames.has(item.name.toLowerCase())) groceryItems.push({name:item.name,aisle:item.aisle||"",checked:false}); });
-    sortByAisle(groceryItems); saveData(); renderMaster(document.getElementById('searchInput').value);
-    alert(`✅ Imported ${newItems.length} new items.`);
-  };
-  reader.readAsText(file);
-}
 
 function showMaster(){ document.getElementById('masterPage').classList.remove('hidden'); document.getElementById('checkedPage').classList.add('hidden'); document.getElementById('addPage').classList.add('hidden'); }
 function showChecked(){ checkedAisle=groceryItems.filter(i=>i.checked).map(i=>({name:i.name,aisle:i.aisle,done:false})); saveData(); renderChecked(); document.getElementById('masterPage').classList.add('hidden'); document.getElementById('checkedPage').classList.remove('hidden'); document.getElementById('addPage').classList.add('hidden'); }
 function showAdd(){ document.getElementById('addPage').classList.remove('hidden'); document.getElementById('masterPage').classList.add('hidden'); document.getElementById('checkedPage').classList.add('hidden'); }
 
+const searchInput=document.getElementById('searchInput');
+const clearSearchBtn=document.getElementById('clearSearchBtn');
+searchInput.addEventListener('input', e=>{
+  renderMaster(e.target.value);
+  clearSearchBtn.style.display = e.target.value ? 'block' : 'none';
+});
+clearSearchBtn.addEventListener('click', ()=>{
+  searchInput.value='';
+  renderMaster();
+  clearSearchBtn.style.display='none';
+});
+
+document.getElementById('addItemBtn').addEventListener('click', addItem);
+document.getElementById('clearChecksBtn').addEventListener('click', clearAllChecks);
+document.getElementById('showMasterBtn').addEventListener('click', showMaster);
+document.getElementById('showCheckedBtn').addEventListener('click', showChecked);
+document.getElementById('showAddBtn').addEventListener('click', showAdd);
+
+document.getElementById('importListBtn').addEventListener('click',()=>document.getElementById('importListInput').click());
+document.getElementById('importListInput').addEventListener('change',handleImportList);
+
+document.getElementById('exportJsonBtn').addEventListener('click',()=>saveToGitHub(false));
+document.getElementById('restoreGitHubBtn').addEventListener('click',restoreFromGitHub);
+
+document.getElementById('setTokenBtn').addEventListener('click', promptGitHubToken);
+document.getElementById('loadTokenFileBtn').addEventListener('click',()=>document.getElementById('tokenFileInput').click());
+document.getElementById('tokenFileInput').addEventListener('change', handleLoadTokenFile);
+
 document.addEventListener('DOMContentLoaded',()=>{
-  const token=localStorage.getItem('githubToken');
+  const token = localStorage.getItem('githubToken');
   updateTokenStatus(token);
   if(token) restoreFromGitHub(); else promptGitHubToken();
-  document.getElementById('addItemBtn').addEventListener('click',addItem);
-  document.getElementById('clearChecksBtn').addEventListener('click',clearAllChecks);
-  document.getElementById('showMasterBtn').addEventListener('click',showMaster);
-  document.getElementById('showCheckedBtn').addEventListener('click',showChecked);
-  document.getElementById('showAddBtn').addEventListener('click',showAdd);
-  document.getElementById('exportJsonBtn').addEventListener('click',saveToGitHub);
-  document.getElementById('restoreGitHubBtn').addEventListener('click',restoreFromGitHub);
-  document.getElementById('importListBtn').addEventListener('click',()=>document.getElementById('importListInput').click());
-  document.getElementById('importListInput').addEventListener('change',handleImportList);
-  document.getElementById('setTokenBtn').addEventListener('click',promptGitHubToken);
-  document.getElementById('loadTokenFileBtn').addEventListener('click',()=>document.getElementById('tokenFileInput').click());
-  document.getElementById('tokenFileInput').addEventListener('change',handleLoadTokenFile);
-  document.getElementById('itemInput').addEventListener('keypress',e=>{ if(e.key==='Enter') addItem(); });
-  const searchInput=document.getElementById('searchInput'); const clearSearchBtn=document.getElementById('clearSearchBtn');
-  searchInput.addEventListener('input',e=>{ renderMaster(e.target.value); clearSearchBtn.style.display=e.target.value?'block':'none'; });
-  clearSearchBtn.addEventListener('click',()=>{ searchInput.value=''; renderMaster(); clearSearchBtn.style.display='none'; });
-  renderMaster(); renderChecked();
+  renderMaster();
+  renderChecked();
 });
 </script>
 </body>
