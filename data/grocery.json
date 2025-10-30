@@ -654,6 +654,10 @@
       "name": "Zzzzz",
       "aisle": "12",
       "checked": false
+    },
+    {
+      "name": "Zebres",
+      "aisle": "13"
     }
   ],
   "checkedAisle": [
