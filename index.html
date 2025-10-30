@@ -15,17 +15,25 @@ h1 { text-align:center; margin-bottom:5px; }
 .button-bar button { padding:6px 10px; border-radius:6px; border:none; color:white; cursor:pointer; }
 .button-bar .clear { background:#ffc107; color:#000; }
 .button-bar .add { background:#17a2b8; }
-.dropdown { position:relative; display:inline-block; }
-.dropdown-content { display:none; position:absolute; background-color:#f9f9f9; min-width:100px; box-shadow:0 8px 16px rgba(0,0,0,0.2); z-index:1; border-radius:5px; }
-.dropdown-content button { color:black; background:white; padding:8px 12px; width:100%; text-align:left; border:none; cursor:pointer; font-size:12px; }
-.dropdown-content button:hover { background:#ddd; }
-.dropdown:hover .dropdown-content { display:block; }
 .list-container { background:white; padding:15px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
 .item { display:flex; justify-content:space-between; align-items:center; padding:6px; border-bottom:1px solid #ddd; }
 .item.checked { text-decoration: line-through; color:gray; }
 input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; margin-bottom:5px; }
 #addPage { display:flex; flex-direction:column; gap:5px; flex-wrap:wrap; align-items:flex-start; margin-top:10px; }
 .hidden { display:none; }
+
+/* Dropdown styling */
+.dropdown { position:relative; display:inline-block; }
+.dropdown-btn { background:#007bff; color:white; border:none; padding:4px 8px; border-radius:5px; cursor:pointer; font-size:12px; }
+.dropdown-btn:hover { background:#0056b3; }
+.dropdown-content { display:none; position:absolute; right:0; background-color:#f9f9f9; min-width:100px; box-shadow:0 8px 16px rgba(0,0,0,0.2); z-index:1; border-radius:5px; }
+.dropdown-content button { width:100%; text-align:left; border:none; padding:6px 10px; cursor:pointer; font-size:12px; margin:0; border-radius:0; }
+.dropdown-content button:hover { opacity:0.9; }
+.dropdown-content .edit { background:#28a745; color:white; }
+.dropdown-content .remove { background:#dc3545; color:white; }
+.dropdown:hover .dropdown-content { display:block; }
+
+/* Search */
 .search-container { position: relative; flex:1; max-width:300px; }
 #searchInput { width:100%; padding-right: 25px; box-sizing: border-box; }
 .clear-search { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; font-weight: bold; color: #888; font-size: 16px; display: none; }
@@ -81,9 +89,6 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 
 <script>
 let groceryItems = [];
-const githubUser = "509Eagle1";
-const repoName = "Grocery";
-const filePath = "data/grocery.json";
 
 // ===== GitHub =====
 async function saveToGitHub() {
@@ -91,191 +96,124 @@ async function saveToGitHub() {
   if (!token) return;
   const uploadItems = groceryItems.map(({ name, aisle }) => ({ name, aisle }));
   const content = btoa(unescape(encodeURIComponent(JSON.stringify({ groceryItems: uploadItems }, null, 2))));
-  const apiUrl = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`;
+  const apiUrl = `https://api.github.com/repos/509Eagle1/Grocery/contents/data/grocery.json`;
   let sha = null;
   try {
-    const check = await fetch(apiUrl, {
-      headers: { Authorization: `token ${token}`, Accept: "application/vnd.github.v3+json" }
-    });
+    const check = await fetch(apiUrl, { headers: { Authorization: `token ${token}`, Accept: "application/vnd.github.v3+json" } });
     if (check.ok) sha = (await check.json()).sha;
-    await fetch(apiUrl, {
-      method: "PUT",
-      headers: { Authorization: `token ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ message: "Update grocery list", content, sha })
-    });
+    await fetch(apiUrl, { method: "PUT", headers: { Authorization: `token ${token}`, "Content-Type": "application/json" }, body: JSON.stringify({ message: "Update grocery list", content, sha }) });
   } catch (e) { console.error(e); }
 }
-
 async function restoreFromGitHub() {
-  const token = localStorage.getItem('githubToken');
-  if (!token) return;
-  const apiUrl = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`;
+  const token = localStorage.getItem('githubToken'); if (!token) return;
+  const apiUrl = `https://api.github.com/repos/509Eagle1/Grocery/contents/data/grocery.json`;
   try {
-    const res = await fetch(apiUrl, {
-      headers: { Authorization: `token ${token}`, Accept: "application/vnd.github.v3+json" }
-    });
+    const res = await fetch(apiUrl, { headers: { Authorization: `token ${token}`, Accept: "application/vnd.github.v3+json" } });
     if (!res.ok) return;
     const data = await res.json();
     const jsonData = JSON.parse(atob(data.content));
     groceryItems = jsonData.groceryItems.map(i => ({ ...i, checked: false, done: false }));
-    renderMaster();
-    renderChecked();
+    renderMaster(); renderChecked();
   } catch(e){ console.error(e); }
 }
 
-// ===== Token handling =====
+// ===== Token =====
 function promptTokenIfMissing() {
   let token = localStorage.getItem("githubToken");
-  if (!token) {
-    token = prompt("⚠️ GitHub token missing! Enter token:");
-    if (token) localStorage.setItem("githubToken", token);
-  }
+  if (!token) { token = prompt("⚠️ GitHub token missing! Enter token:"); if(token) localStorage.setItem("githubToken", token); }
   document.getElementById("tokenStatus").textContent = token ? "✅ GitHub Token Set" : "⚠️ No GitHub Token";
-  if (token) restoreFromGitHub();
+  if(token) restoreFromGitHub();
 }
 
 // ===== Render Master =====
 function renderMaster(filter="") {
   const list = document.getElementById("groceryList");
   list.innerHTML = "";
-  groceryItems.forEach((item, index) => {
+  groceryItems.forEach((item,index)=>{
     if(filter && !item.name.toLowerCase().includes(filter.toLowerCase())) return;
 
-    const li = document.createElement("li");
-    li.className = "item";
+    const li = document.createElement("li"); li.className="item";
 
     const leftDiv = document.createElement("div");
-    leftDiv.style.display = "flex"; leftDiv.style.alignItems = "center"; leftDiv.style.gap = "5px";
+    leftDiv.style.display="flex"; leftDiv.style.alignItems="center"; leftDiv.style.gap="5px";
 
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.checked = item.checked || false;
-    checkbox.addEventListener("change", () => {
-      item.checked = checkbox.checked;
-      renderChecked();
-    });
+    const checkbox = document.createElement("input"); checkbox.type="checkbox"; checkbox.checked=item.checked || false;
+    checkbox.addEventListener("change",()=>{ item.checked = checkbox.checked; renderChecked(); });
 
-    const span = document.createElement("span");
-    span.textContent = `${item.name} (Aisle: ${item.aisle})`;
-
-    leftDiv.appendChild(checkbox);
-    leftDiv.appendChild(span);
+    const span = document.createElement("span"); span.textContent=`${item.name} (Aisle: ${item.aisle})`;
+    leftDiv.appendChild(checkbox); leftDiv.appendChild(span);
     li.appendChild(leftDiv);
 
-    // Dropdown for Edit/Remove
-    const dropdown = document.createElement("div");
-    dropdown.className = "dropdown";
-    const dropBtn = document.createElement("button");
-    dropBtn.className = "dropdown-btn";
-    dropBtn.textContent = "Options ⏷";
-    const dropContent = document.createElement("div");
-    dropContent.className = "dropdown-content";
+    // Dropdown menu for Edit/Remove
+    const dropdown = document.createElement("div"); dropdown.className="dropdown";
+    const dropBtn = document.createElement("button"); dropBtn.className="dropdown-btn"; dropBtn.textContent="Options ⏷";
+    const dropContent = document.createElement("div"); dropContent.className="dropdown-content";
 
-    const editOpt = document.createElement("button");
-    editOpt.textContent = "Edit";
-    editOpt.addEventListener("click", ()=>{
-      const newName = prompt("Edit item:", item.name);
-      if(newName!==null) item.name = newName.trim();
-      const newAisle = prompt("Edit aisle:", item.aisle);
-      if(newAisle!==null) item.aisle = newAisle.trim();
-      renderMaster(document.getElementById('searchInput').value);
+    const editBtn = document.createElement("button"); editBtn.className="edit"; editBtn.textContent="Edit";
+    editBtn.addEventListener("click",()=>{
+      const newName = prompt("Edit item:",item.name); if(newName!==null)item.name=newName.trim();
+      const newAisle = prompt("Edit aisle:",item.aisle); if(newAisle!==null)item.aisle=newAisle.trim();
+      renderMaster(document.getElementById("searchInput").value);
     });
 
-    const removeOpt = document.createElement("button");
-    removeOpt.textContent = "Remove";
-    removeOpt.addEventListener("click", ()=>{
-      groceryItems.splice(index,1);
-      renderMaster(document.getElementById('searchInput').value);
-      renderChecked();
-    });
+    const removeBtn = document.createElement("button"); removeBtn.className="remove"; removeBtn.textContent="Remove";
+    removeBtn.addEventListener("click",()=>{ groceryItems.splice(index,1); renderMaster(document.getElementById("searchInput").value); renderChecked(); });
 
-    dropContent.appendChild(editOpt);
-    dropContent.appendChild(removeOpt);
-    dropdown.appendChild(dropBtn);
-    dropdown.appendChild(dropContent);
+    dropContent.appendChild(editBtn); dropContent.appendChild(removeBtn);
+    dropdown.appendChild(dropBtn); dropdown.appendChild(dropContent);
     li.appendChild(dropdown);
 
     list.appendChild(li);
   });
 }
 
-// ===== Render Checked (Shopping List) =====
+// ===== Render Checked =====
 function renderChecked() {
-  const list = document.getElementById("checkedList");
-  list.innerHTML = "";
-  const active = groceryItems.filter(item => item.checked && !item.done);
-  const done = groceryItems.filter(item => item.checked && item.done);
-
-  [...active, ...done].forEach(item => {
-    const li = document.createElement("li");
-    li.className = "item";
+  const list = document.getElementById("checkedList"); list.innerHTML="";
+  const active = groceryItems.filter(i=>i.checked && !i.done);
+  const done = groceryItems.filter(i=>i.checked && i.done);
+  [...active,...done].forEach(item=>{
+    const li = document.createElement("li"); li.className="item";
     if(item.done) li.classList.add("checked");
-
-    const leftDiv = document.createElement("div");
-    leftDiv.style.display = "flex"; 
-    leftDiv.style.alignItems = "center"; 
-    leftDiv.style.gap = "5px";
-
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.checked = item.done || false;
-    checkbox.addEventListener("change", () => {
-      item.done = checkbox.checked;
-      renderChecked();
-    });
-
-    const span = document.createElement("span");
-    span.textContent = `${item.name} (Aisle: ${item.aisle})`;
-
-    leftDiv.appendChild(checkbox);
-    leftDiv.appendChild(span);
-    li.appendChild(leftDiv);
-    list.appendChild(li);
+    const leftDiv=document.createElement("div"); leftDiv.style.display="flex"; leftDiv.style.alignItems="center"; leftDiv.style.gap="5px";
+    const checkbox = document.createElement("input"); checkbox.type="checkbox"; checkbox.checked=item.done||false;
+    checkbox.addEventListener("change",()=>{ item.done=checkbox.checked; renderChecked(); });
+    const span=document.createElement("span"); span.textContent=`${item.name} (Aisle: ${item.aisle})`;
+    leftDiv.appendChild(checkbox); leftDiv.appendChild(span); li.appendChild(leftDiv); list.appendChild(li);
   });
 }
 
 // ===== Add Item =====
-document.getElementById("addItemBtn").onclick = () => {
+document.getElementById("addItemBtn").onclick = ()=>{
   const name = document.getElementById("itemInput").value.trim();
   const aisle = document.getElementById("aisleInput").value.trim();
-  if (!name) return;
-  if (!groceryItems.some(i=>i.name.toLowerCase()===name.toLowerCase())){
-    groceryItems.push({ name, aisle, checked:false, done:false });
-    renderMaster(); renderChecked();
-    saveToGitHub();
+  if(!name) return;
+  if(!groceryItems.some(i=>i.name.toLowerCase()===name.toLowerCase())){
+    groceryItems.push({name,aisle,checked:false,done:false}); renderMaster(); renderChecked(); saveToGitHub();
   } else alert("Item already exists!");
-  document.getElementById("itemInput").value = "";
-  document.getElementById("aisleInput").value = "";
+  document.getElementById("itemInput").value=""; document.getElementById("aisleInput").value="";
 };
 
 // ===== Menu Buttons =====
-document.getElementById("clearChecksBtn").onclick = () => {
-  groceryItems.forEach(i=>i.checked=false);
-  renderMaster(); renderChecked();
+document.getElementById("clearChecksBtn").onclick = ()=>{
+  groceryItems.forEach(i=>i.checked=false); renderMaster(); renderChecked();
 };
-document.getElementById("showMasterBtn").onclick = () => { document.getElementById('masterPage').classList.remove('hidden'); document.getElementById('checkedPage').classList.add('hidden'); document.getElementById('addPage').classList.add('hidden'); };
-document.getElementById("showCheckedBtn").onclick = () => { document.getElementById('masterPage').classList.add('hidden'); document.getElementById('checkedPage').classList.remove('hidden'); document.getElementById('addPage').classList.add('hidden'); renderChecked(); };
-document.getElementById("showAddBtn").onclick = () => { document.getElementById('addPage').classList.remove('hidden'); document.getElementById('masterPage').classList.add('hidden'); document.getElementById('checkedPage').classList.add('hidden'); };
+document.getElementById("showMasterBtn").onclick = ()=>{ document.getElementById("masterPage").classList.remove("hidden"); document.getElementById("checkedPage").classList.add("hidden"); document.getElementById("addPage").classList.add("hidden"); };
+document.getElementById("showCheckedBtn").onclick = ()=>{ document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.remove("hidden"); document.getElementById("addPage").classList.add("hidden"); renderChecked(); };
+document.getElementById("showAddBtn").onclick = ()=>{ document.getElementById("addPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.add("hidden"); };
 document.getElementById("setTokenBtn").onclick = promptTokenIfMissing;
-document.getElementById("loadTokenFileBtn").onclick = () => document.getElementById("tokenFileInput").click();
-document.getElementById("tokenFileInput").addEventListener("change", e => {
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    const token = reader.result.trim();
-    if(token){
-      localStorage.setItem("githubToken", token);
-      promptTokenIfMissing();
-    } else alert("Empty token file");
-  };
-  reader.readAsText(file);
+document.getElementById("loadTokenFileBtn").onclick = ()=>document.getElementById("tokenFileInput").click();
+document.getElementById("tokenFileInput").addEventListener("change",e=>{
+  const file=e.target.files[0]; if(!file) return;
+  const reader=new FileReader(); reader.onload=()=>{
+    const token = reader.result.trim(); if(token){ localStorage.setItem("githubToken",token); promptTokenIfMissing(); } else alert("Empty token file");
+  }; reader.readAsText(file);
 });
 
 // ===== Search =====
-const searchInput = document.getElementById("searchInput");
-const clearSearchBtn = document.getElementById("clearSearchBtn");
-searchInput.addEventListener("input", e => { renderMaster(e.target.value); clearSearchBtn.style.display=e.target.value?'block':'none'; });
+const searchInput=document.getElementById("searchInput");
+const clearSearchBtn=document.getElementById("clearSearchBtn");
+searchInput.addEventListener("input", e=>{ renderMaster(e.target.value); clearSearchBtn.style.display=e.target.value?'block':'none'; });
 clearSearchBtn.addEventListener("click", ()=>{ searchInput.value=''; renderMaster(); clearSearchBtn.style.display='none'; });
 
 // ===== Init =====
