@@ -90,8 +90,8 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 let groceryItems = JSON.parse(localStorage.getItem('groceryItems') || "[]");
 
 // ===== GitHub =====
-async function saveToGitHub() { /* same as before */ }
-async function restoreFromGitHub() { /* same as before */ }
+async function saveToGitHub() { /* your GitHub code */ }
+async function restoreFromGitHub() { /* your GitHub code */ }
 
 // ===== Save / Load =====
 function saveData() { localStorage.setItem('groceryItems', JSON.stringify(groceryItems)); }
@@ -139,13 +139,14 @@ function renderMaster(filter="") {
     });
 
     const removeBtn = document.createElement("button"); removeBtn.className="remove"; removeBtn.textContent="Remove";
-    removeBtn.addEventListener("click",()=>{
+    removeBtn.addEventListener("click",(e)=>{
+      e.stopPropagation(); // Prevent dropdown closing first
       if(confirm(`Are you sure you want to remove "${item.name}"?`)){
         groceryItems.splice(index,1);
         saveData();
         renderMaster(document.getElementById("searchInput").value);
       }
-      // if cancelled, do nothing; dropdown stays open
+      // If canceled, dropdown remains open
     });
 
     dropContent.appendChild(editBtn); dropContent.appendChild(removeBtn);
