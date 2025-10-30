@@ -118,9 +118,15 @@ function promptGitHubToken() {
     let token = localStorage.getItem('githubToken');
     if(!token){
         token = prompt("⚠️ GitHub token missing! Please enter your GitHub token:");
-        if(token) localStorage.setItem('githubToken', token);
+        if(token) {
+            localStorage.setItem('githubToken', token);
+            updateTokenStatus(token);
+            alert("✅ Token saved. Restoring from GitHub...");
+            restoreFromGitHub();
+        }
+    } else {
+        updateTokenStatus(token);
     }
-    updateTokenStatus(token);
     return token;
 }
 
@@ -277,15 +283,20 @@ document.getElementById('showCheckedBtn').addEventListener('click', showChecked)
 document.getElementById('showAddBtn').addEventListener('click', showAdd);
 document.getElementById('exportJsonBtn').addEventListener('click', saveToGitHub);
 document.getElementById('restoreGitHubBtn').addEventListener('click', restoreFromGitHub);
-document.getElementById('setTokenBtn').addEventListener('click', ()=>{
+document.getElementById('setTokenBtn').addEventListener('click', async ()=>{
     const token = prompt("Enter your GitHub token:");
-    if(token){ localStorage.setItem('githubToken', token); updateTokenStatus(token); alert("✅ Token saved"); }
+    if(token){
+        localStorage.setItem('githubToken', token);
+        updateTokenStatus(token);
+        alert("✅ Token saved. Restoring from GitHub...");
+        await restoreFromGitHub();
+    }
 });
 document.getElementById('itemInput').addEventListener('keypress', e => { if (e.key==='Enter') addItem(); });
 
 // ---------------- INIT ----------------
 document.addEventListener('DOMContentLoaded',()=>{
-    promptGitHubToken(); // prompt on startup if missing
+    promptGitHubToken(); // prompt and restore if token missing
     renderMaster(); 
     renderChecked();
 });
