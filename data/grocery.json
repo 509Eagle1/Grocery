@@ -203,7 +203,7 @@
     {
       "name": "Sour Cream",
       "aisle": "1",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Sweet Tea",
