@@ -68,7 +68,7 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
     <ul id="groceryList"></ul>
   </div>
 
-  <!-- Shopping List Page -->
+  <!-- Shopping List Page (Read-Only except checkboxes) -->
   <div id="checkedPage" class="hidden">
     <ul id="checkedList"></ul>
   </div>
@@ -223,7 +223,7 @@ function renderChecked() {
     leftDiv.appendChild(checkbox);
     leftDiv.appendChild(span);
     li.appendChild(leftDiv);
-    list.appendChild(li);
+    list.appendChild(li); // No edit/remove buttons
   });
 }
 
