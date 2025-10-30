@@ -213,12 +213,12 @@
     {
       "name": "Tomatos",
       "aisle": "1",
-      "checked": true
+      "checked": false
     },
     {
       "name": "Bsgs",
       "aisle": "1",
-      "checked": true
+      "checked": false
     },
     {
       "name": "Bagels",
