@@ -218,7 +218,7 @@
     {
       "name": "Bsgs",
       "aisle": "1",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Bagels",
@@ -243,7 +243,7 @@
     {
       "name": "Chicken",
       "aisle": "2",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Egg White",
