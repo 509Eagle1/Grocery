@@ -3,190 +3,191 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Grocery Master List - Albertsons</title>
+<title>Grocery Master List</title>
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background: #f4f4f4;
-  margin: 10px;
-}
-h1 {
-  text-align: center;
-  margin-bottom: 5px;
-}
-.menu {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-button {
-  padding: 5px 10px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  background-color: #4CAF50;
-  color: white;
-}
-button:hover {
-  background-color: #45a049;
-}
-#searchContainer {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-#search {
-  padding: 5px;
-  font-size: 14px;
-  width: 150px;
-}
-#storeSelect {
-  margin-bottom: 10px;
-  padding: 5px;
-}
-.item-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: white;
-  margin: 3px 0;
-  padding: 5px;
-  border-radius: 6px;
-}
-.item-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.item-actions {
-  position: relative;
-}
-.dropdown {
-  position: absolute;
-  right: 0;
-  top: 100%;
-  background: #fff;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  display: none;
-  flex-direction: column;
-  z-index: 10;
-}
-.dropdown button {
-  background: none;
-  color: black;
-  padding: 6px;
-  text-align: left;
-  border: none;
-  border-bottom: 1px solid #eee;
-  width: 100%;
-}
-.dropdown button:last-child {
-  border-bottom: none;
-}
-.dropdown button:hover {
-  background: #eee;
-}
+body { font-family: Arial, sans-serif; margin:10px; background:#f4f4f4; }
+h1 { text-align:center; margin-bottom:5px; }
+.menu { display:flex; gap:5px; justify-content:center; margin-bottom:10px; flex-wrap:wrap; }
+.menu button, .menu .dropdown-btn { padding:8px 12px; border-radius:8px; border:none; background:#007bff; color:white; font-size:14px; cursor:pointer; }
+.menu button:hover, .menu .dropdown-btn:hover { background:#0056b3; }
+.status-icon { text-align:center; font-size:12px; color:#333; margin-bottom:2px; }
+.button-bar { display:flex; flex-wrap:wrap; gap:5px; justify-content:flex-start; align-items:center; margin-bottom:10px; }
+.button-bar button { padding:6px 10px; border-radius:6px; border:none; color:white; cursor:pointer; }
+.button-bar .clear { background:#ffc107; color:#000; }
+.button-bar .add { background:#17a2b8; }
+.dropdown { position:relative; display:inline-block; }
+.dropdown-content { display:none; position:absolute; background-color:#f9f9f9; min-width:160px; box-shadow:0 8px 16px rgba(0,0,0,0.2); z-index:1; border-radius:5px; }
+.dropdown-content button { color:black; background:white; padding:8px 12px; width:100%; text-align:left; border:none; cursor:pointer; }
+.dropdown-content button:hover { background:#ddd; }
+.dropdown:hover .dropdown-content { display:block; }
+.list-container { background:white; padding:15px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
+.item { display:flex; justify-content:space-between; align-items:center; padding:6px; border-bottom:1px solid #ddd; }
+.item.checked { text-decoration: line-through; color:gray; }
+input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; margin-bottom:5px; }
+#addPage { display:flex; flex-direction:column; gap:5px; flex-wrap:wrap; align-items:flex-start; margin-top:10px; }
+.hidden { display:none; }
+.search-container { position: relative; flex:1; max-width:300px; }
+#searchInput { width:100%; padding-right: 25px; box-sizing: border-box; }
+.clear-search { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; font-weight: bold; color: #888; font-size: 16px; display: none; }
+.clear-search:hover { color: #333; }
 </style>
 </head>
 <body>
-  <h1>Albertsons Grocery Master List</h1>
-  
-  <div class="menu">
-    <div id="searchContainer">
-      <input type="text" id="search" placeholder="Search...">
-      <button id="clearChecks">Clear All Checks</button>
+
+<h1>Albertsons</h1>
+<div id="tokenStatus" class="status-icon">⚠️ No GitHub Token</div>
+
+<div class="menu">
+  <button id="showMasterBtn">Albertsons</button>
+  <button id="showCheckedBtn">Shopping List</button>
+  <button id="showAddBtn">Add Items</button>
+  <div class="dropdown">
+    <button class="dropdown-btn">Admin ⏷</button>
+    <div class="dropdown-content">
+      <button id="exportJsonBtn">Export</button>
+      <button id="restoreGitHubBtn">Restore</button>
+      <button id="importListBtn">Import List</button>
+      <button id="setTokenBtn">Set GitHub Token</button>
+      <button id="loadTokenFileBtn">Load Token From File</button>
     </div>
-    <button id="importList">Import List</button>
-    <button id="exportList">Export List</button>
-    <button id="sortList">Sort by Aisle</button>
-    <button id="adminMenu">Admin Menu</button>
+  </div>
+</div>
+
+<div class="list-container">
+  <div id="masterPage">
+    <div class="button-bar">
+      <button id="clearChecksBtn" class="clear">Clear All Checks</button>
+      <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search items...">
+        <span id="clearSearchBtn" class="clear-search">×</span>
+      </div>
+    </div>
+    <ul id="groceryList"></ul>
   </div>
 
-  <select id="storeSelect">
-    <option value="Albertsons">Albertsons</option>
-  </select>
+  <div id="checkedPage" class="hidden">
+    <ul id="checkedList"></ul>
+  </div>
 
-  <div id="itemList"></div>
+  <div id="addPage" class="hidden">
+    <input type="text" id="itemInput" placeholder="Item name">
+    <input type="text" id="aisleInput" placeholder="Aisle">
+    <button id="addItemBtn" class="add">Add Item</button>
+  </div>
+</div>
+
+<input type="file" id="importListInput" accept=".json,.csv" style="display:none;">
+<input type="file" id="tokenFileInput" accept=".txt" style="display:none;">
 
 <script>
-// Example basic logic (GitHub code untouched as requested)
-const itemList = document.getElementById('itemList');
-const searchInput = document.getElementById('search');
-const clearBtn = document.getElementById('clearChecks');
+let groceryItems = [];
+let checkedAisle = [];
+const githubUser = "509Eagle1";
+const repoName = "Grocery";
+const filePath = "data/grocery.json";
 
-const groceries = [
-  { item: 'Milk', aisle: 'Dairy' },
-  { item: 'Eggs', aisle: 'Dairy' },
-  { item: 'Apples', aisle: 'Produce' },
-  { item: 'Bread', aisle: 'Bakery' },
-  { item: 'Chicken', aisle: 'Meat' }
-];
-
-function renderList(filter = '') {
-  itemList.innerHTML = '';
-  groceries
-    .filter(g => g.item.toLowerCase().includes(filter.toLowerCase()))
-    .forEach((g, index) => {
-      const row = document.createElement('div');
-      row.className = 'item-row';
-
-      const left = document.createElement('div');
-      left.className = 'item-left';
-
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.id = 'item-' + index;
-
-      const label = document.createElement('label');
-      label.textContent = `${g.item} (${g.aisle})`;
-      label.setAttribute('for', 'item-' + index);
-
-      left.appendChild(checkbox);
-      left.appendChild(label);
-
-      const actions = document.createElement('div');
-      actions.className = 'item-actions';
-      const menuButton = document.createElement('button');
-      menuButton.textContent = '⋮';
-
-      const dropdown = document.createElement('div');
-      dropdown.className = 'dropdown';
-      const editBtn = document.createElement('button');
-      editBtn.textContent = 'Edit';
-      const removeBtn = document.createElement('button');
-      removeBtn.textContent = 'Remove';
-
-      dropdown.appendChild(editBtn);
-      dropdown.appendChild(removeBtn);
-      actions.appendChild(menuButton);
-      actions.appendChild(dropdown);
-
-      menuButton.addEventListener('click', () => {
-        dropdown.style.display = dropdown.style.display === 'flex' ? 'none' : 'flex';
-      });
-
-      removeBtn.addEventListener('click', () => {
-        groceries.splice(index, 1);
-        renderList(searchInput.value);
-      });
-
-      row.appendChild(left);
-      row.appendChild(actions);
-      itemList.appendChild(row);
+// ===== GitHub =====
+async function saveToGitHub() {
+  const token = localStorage.getItem("githubToken");
+  if (!token) return;
+  const apiUrl = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`;
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify({ groceryItems, checkedAisle }, null, 2))));
+  let sha = null;
+  try {
+    const check = await fetch(apiUrl, {
+      headers: { Authorization: `token ${token}`, Accept: "application/vnd.github.v3+json" }
     });
+    if (check.ok) sha = (await check.json()).sha;
+    const res = await fetch(apiUrl, {
+      method: "PUT",
+      headers: { Authorization: `token ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ message: "Update grocery list", content, sha })
+    });
+    if (!res.ok) alert("❌ Upload failed.");
+  } catch (e) { console.error(e); }
 }
 
-searchInput.addEventListener('input', e => renderList(e.target.value));
+async function restoreFromGitHub() {
+  const token = localStorage.getItem("githubToken");
+  if (!token) return;
+  const apiUrl = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`;
+  try {
+    const res = await fetch(apiUrl, {
+      headers: { Authorization: `token ${token}`, Accept: "application/vnd.github.v3+json" }
+    });
+    if (!res.ok) return;
+    const data = await res.json();
+    const jsonData = JSON.parse(atob(data.content));
+    groceryItems = jsonData.groceryItems || [];
+    checkedAisle = jsonData.checkedAisle || [];
+    renderMaster();
+    renderChecked();
+  } catch (e) { console.error(e); }
+}
 
-clearBtn.addEventListener('click', () => {
-  document.querySelectorAll('#itemList input[type="checkbox"]').forEach(cb => cb.checked = false);
+// ===== Token handling on startup =====
+function promptTokenIfMissing() {
+  let token = localStorage.getItem("githubToken");
+  if (!token) {
+    token = prompt("⚠️ GitHub token missing! Enter token:");
+    if (token) localStorage.setItem("githubToken", token);
+  }
+  document.getElementById("tokenStatus").textContent = token ? "✅ GitHub Token Set" : "⚠️ No GitHub Token";
+  if (token) restoreFromGitHub();
+}
+
+// ===== Render =====
+function renderMaster() {
+  const list = document.getElementById("groceryList");
+  list.innerHTML = "";
+  groceryItems.forEach((item) => {
+    const li = document.createElement("li");
+    li.className = "item";
+    li.textContent = `${item.name} (Aisle: ${item.aisle})`;
+    list.appendChild(li);
+  });
+}
+
+function renderChecked() {
+  const list = document.getElementById("checkedList");
+  list.innerHTML = "";
+  checkedAisle.forEach(a => {
+    const li = document.createElement("li");
+    li.textContent = a;
+    list.appendChild(li);
+  });
+}
+
+// ===== UI Buttons =====
+document.getElementById("addItemBtn").onclick = async () => {
+  const name = document.getElementById("itemInput").value.trim();
+  const aisle = document.getElementById("aisleInput").value.trim();
+  if (!name) return;
+  groceryItems.push({ name, aisle });
+  document.getElementById("itemInput").value = "";
+  document.getElementById("aisleInput").value = "";
+  renderMaster();
+  await saveToGitHub();
+};
+
+document.getElementById("setTokenBtn").onclick = promptTokenIfMissing;
+document.getElementById("exportJsonBtn").onclick = saveToGitHub;
+document.getElementById("restoreGitHubBtn").onclick = restoreFromGitHub;
+
+// ===== Show pages =====
+function showMaster() { document.getElementById("masterPage").classList.remove("hidden"); document.getElementById("checkedPage").classList.add("hidden"); document.getElementById("addPage").classList.add("hidden"); }
+function showChecked() { document.getElementById("checkedPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("addPage").classList.add("hidden"); }
+function showAdd() { document.getElementById("addPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.add("hidden"); }
+document.getElementById("showMasterBtn").onclick = showMaster;
+document.getElementById("showCheckedBtn").onclick = showChecked;
+document.getElementById("showAddBtn").onclick = showAdd;
+
+// ===== Startup =====
+document.addEventListener("DOMContentLoaded", () => {
+  promptTokenIfMissing();
+  renderMaster();
+  renderChecked();
 });
-
-renderList();
 </script>
 </body>
 </html>
