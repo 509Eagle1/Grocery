@@ -30,8 +30,13 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 #searchInput { width:100%; padding-right: 25px; box-sizing: border-box; }
 .clear-search { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; font-weight: bold; color: #888; font-size: 16px; display: none; }
 .clear-search:hover { color: #333; }
-.item button { margin-left:5px; padding:2px 6px; border-radius:4px; border:none; cursor:pointer; background:#007bff; color:white; font-size:12px; }
-.item button:hover { background:#0056b3; }
+.item button { margin-left:5px; padding:2px 6px; border-radius:4px; border:none; cursor:pointer; font-size:12px; }
+
+/* Albertsons list buttons colors */
+#masterPage .item button:nth-child(1) { background:#28a745; color:white; } /* Edit = green */
+#masterPage .item button:nth-child(1):hover { background:#218838; }
+#masterPage .item button:nth-child(2) { background:#dc3545; color:white; } /* Remove = red */
+#masterPage .item button:nth-child(2):hover { background:#c82333; }
 </style>
 </head>
 <body>
