@@ -188,7 +188,7 @@
     {
       "name": "Potatoes",
       "aisle": "1",
-      "checked": true
+      "checked": false
     },
     {
       "name": "Salad",
