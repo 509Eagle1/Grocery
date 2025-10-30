@@ -29,7 +29,7 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 .dropdown-content { display:none; position:absolute; right:0; background-color:#f9f9f9; min-width:100px; box-shadow:0 8px 16px rgba(0,0,0,0.2); z-index:1; border-radius:5px; }
 .dropdown-content button { width:100%; text-align:left; border:none; padding:6px 10px; cursor:pointer; font-size:12px; margin:0; border-radius:0; }
 .dropdown-content button:hover { opacity:0.9; }
-.dropdown-content .edit { background:#28a745; color:white; }
+.dropdown-content .edit { background:#28a745; color:white; margin-bottom:5px; } /* spacing added */
 .dropdown-content .remove { background:#dc3545; color:white; }
 
 /* Search */
@@ -170,7 +170,6 @@ function renderMaster(filter="") {
     dropdown.appendChild(dropBtn); dropdown.appendChild(dropContent);
     li.appendChild(dropdown);
 
-    // Click toggle dropdown
     dropBtn.addEventListener("click", e => {
       e.stopPropagation();
       const allDropdowns = document.querySelectorAll(".dropdown-content");
@@ -181,7 +180,6 @@ function renderMaster(filter="") {
     list.appendChild(li);
   });
 
-  // Close dropdowns on outside click
   document.addEventListener("click", ()=>{ document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none"); });
 }
 
