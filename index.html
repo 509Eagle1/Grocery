@@ -144,7 +144,7 @@ function renderMaster(filter="") {
     leftDiv.appendChild(checkbox); leftDiv.appendChild(span);
     li.appendChild(leftDiv);
 
-    // Dropdown menu for Edit/Remove
+    // Dropdown menu for Edit/Remove with confirmation
     const dropdown = document.createElement("div"); dropdown.className="dropdown";
     const dropBtn = document.createElement("button"); dropBtn.className="dropdown-btn"; dropBtn.textContent="Options ⏷";
     const dropContent = document.createElement("div"); dropContent.className="dropdown-content";
@@ -157,7 +157,13 @@ function renderMaster(filter="") {
     });
 
     const removeBtn = document.createElement("button"); removeBtn.className="remove"; removeBtn.textContent="Remove";
-    removeBtn.addEventListener("click",()=>{ groceryItems.splice(index,1); renderMaster(document.getElementById("searchInput").value); renderChecked(); });
+    removeBtn.addEventListener("click",()=>{
+      if(confirm("Are you sure you want to remove this item?")) {
+        groceryItems.splice(index,1); 
+        renderMaster(document.getElementById("searchInput").value); 
+        renderChecked();
+      }
+    });
 
     dropContent.appendChild(editBtn); dropContent.appendChild(removeBtn);
     dropdown.appendChild(dropBtn); dropdown.appendChild(dropContent);
