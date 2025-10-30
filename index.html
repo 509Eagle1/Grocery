@@ -23,7 +23,7 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 .hidden { display:none; }
 
 /* Dropdown styling */
-.dropdown { position: absolute; right: 0; top: 50%; transform: translateY(-50%); display:inline-block; }
+.dropdown { position: relative; display:inline-block; }
 .dropdown-btn { background:#007bff; color:white; border:none; padding:4px 8px; border-radius:5px; cursor:pointer; font-size:12px; }
 .dropdown-btn:hover { background:#0056b3; }
 .dropdown-content { display:none; position:absolute; right:0; background-color:#f9f9f9; min-width:100px; box-shadow:0 8px 16px rgba(0,0,0,0.2); z-index:1; border-radius:5px; }
@@ -31,7 +31,6 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 .dropdown-content button:hover { opacity:0.9; }
 .dropdown-content .edit { background:#28a745; color:white; }
 .dropdown-content .remove { background:#dc3545; color:white; }
-.dropdown:hover .dropdown-content { display:block; }
 
 /* Search */
 .search-container { position: relative; flex:1; max-width:300px; }
@@ -144,9 +143,10 @@ function renderMaster(filter="") {
     leftDiv.appendChild(checkbox); leftDiv.appendChild(span);
     li.appendChild(leftDiv);
 
-    // Dropdown menu for Edit/Remove with confirmation
+    // Dropdown menu for Edit/Remove with confirmation on click
     const dropdown = document.createElement("div"); dropdown.className="dropdown";
     const dropBtn = document.createElement("button"); dropBtn.className="dropdown-btn"; dropBtn.textContent="Options ⏷";
+
     const dropContent = document.createElement("div"); dropContent.className="dropdown-content";
 
     const editBtn = document.createElement("button"); editBtn.className="edit"; editBtn.textContent="Edit";
@@ -157,7 +157,8 @@ function renderMaster(filter="") {
     });
 
     const removeBtn = document.createElement("button"); removeBtn.className="remove"; removeBtn.textContent="Remove";
-    removeBtn.addEventListener("click",()=>{
+    removeBtn.addEventListener("click",(e)=>{
+      e.stopPropagation();
       if(confirm("Are you sure you want to remove this item?")) {
         groceryItems.splice(index,1); 
         renderMaster(document.getElementById("searchInput").value); 
@@ -169,8 +170,19 @@ function renderMaster(filter="") {
     dropdown.appendChild(dropBtn); dropdown.appendChild(dropContent);
     li.appendChild(dropdown);
 
+    // Click toggle dropdown
+    dropBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      const allDropdowns = document.querySelectorAll(".dropdown-content");
+      allDropdowns.forEach(dc => { if(dc !== dropContent) dc.style.display="none"; });
+      dropContent.style.display = dropContent.style.display==="block" ? "none" : "block";
+    });
+
     list.appendChild(li);
   });
+
+  // Close dropdowns on outside click
+  document.addEventListener("click", ()=>{ document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none"); });
 }
 
 // ===== Render Checked =====
