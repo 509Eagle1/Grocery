@@ -136,7 +136,7 @@ function promptTokenIfMissing() {
   if (token) restoreFromGitHub();
 }
 
-// ===== Render Master with checkboxes and edit/remove buttons =====
+// ===== Render Master =====
 function renderMaster(filter="") {
   const list = document.getElementById("groceryList");
   list.innerHTML = "";
@@ -191,11 +191,11 @@ function renderMaster(filter="") {
   });
 }
 
-// ===== Render Checked Page =====
+// ===== Render Checked =====
 function renderChecked() {
   const list = document.getElementById("checkedList");
   list.innerHTML = "";
-  groceryItems.filter(i => i.checked).forEach((item, i) => {
+  groceryItems.filter(item => item.checked).forEach((item) => {
     const li = document.createElement("li");
     li.className = "item";
 
@@ -253,63 +253,53 @@ document.getElementById("importListInput").addEventListener("change", e => {
     } else if(file.name.endsWith(".csv")){
       const lines = content.split(/\r?\n/).filter(Boolean);
       lines.forEach(line => {
-        const [name, aisle] = line.split(',').map(s=>s.trim());
+        const [name, aisle] = line.split(",").map(s=>s.trim());
         if(name) newItems.push({name, aisle, checked:false});
       });
     } else return alert("Unsupported file");
-    // Merge without overwriting checked status
-    const existing = new Map(groceryItems.map(i=>[i.name.toLowerCase(), i]));
-    newItems.forEach(i => {
-      const key = i.name.toLowerCase();
-      if(existing.has(key)){
-        existing.get(key).aisle = i.aisle; // update aisle but keep checked
-      } else groceryItems.push(i);
+    const existingNames = new Set(groceryItems.map(i=>i.name.toLowerCase()));
+    newItems.forEach(item => {
+      if(!existingNames.has(item.name.toLowerCase())) groceryItems.push(item);
     });
-    renderMaster(); renderChecked(); saveToGitHub();
-    alert(`✅ Imported ${newItems.length} items.`);
+    renderMaster(); renderChecked();
+    saveToGitHub();
   };
   reader.readAsText(file);
 });
 
-// ===== UI Page Switching =====
-function showMaster(){ document.getElementById("masterPage").classList.remove("hidden"); document.getElementById("checkedPage").classList.add("hidden"); document.getElementById("addPage").classList.add("hidden"); }
-function showChecked(){ document.getElementById("checkedPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("addPage").classList.add("hidden"); renderChecked(); }
-function showAdd(){ document.getElementById("addPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.add("hidden"); }
-
-// ===== Other Buttons =====
-document.getElementById("showMasterBtn").onclick = showMaster;
-document.getElementById("showCheckedBtn").onclick = showChecked;
-document.getElementById("showAddBtn").onclick = showAdd;
-document.getElementById("setTokenBtn").onclick = promptTokenIfMissing;
-document.getElementById("exportJsonBtn").onclick = saveToGitHub;
-document.getElementById("restoreGitHubBtn").onclick = restoreFromGitHub;
-
+// ===== Menu Buttons =====
 document.getElementById("clearChecksBtn").onclick = () => {
   groceryItems.forEach(i=>i.checked=false);
-  renderMaster(); renderChecked(); saveToGitHub();
+  renderMaster(); renderChecked();
+  saveToGitHub();
 };
+document.getElementById("showMasterBtn").onclick = () => { document.getElementById('masterPage').classList.remove('hidden'); document.getElementById('checkedPage').classList.add('hidden'); document.getElementById('addPage').classList.add('hidden'); };
+document.getElementById("showCheckedBtn").onclick = () => { document.getElementById('masterPage').classList.add('hidden'); document.getElementById('checkedPage').classList.remove('hidden'); document.getElementById('addPage').classList.add('hidden'); renderChecked(); };
+document.getElementById("showAddBtn").onclick = () => { document.getElementById('addPage').classList.remove('hidden'); document.getElementById('masterPage').classList.add('hidden'); document.getElementById('checkedPage').classList.add('hidden'); };
+document.getElementById("setTokenBtn").onclick = promptTokenIfMissing;
+document.getElementById("loadTokenFileBtn").onclick = () => document.getElementById("tokenFileInput").click();
+document.getElementById("tokenFileInput").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const token = reader.result.trim();
+    if(token){
+      localStorage.setItem("githubToken", token);
+      promptTokenIfMissing();
+    } else alert("Empty token file");
+  };
+  reader.readAsText(file);
+});
 
 // ===== Search =====
 const searchInput = document.getElementById("searchInput");
 const clearSearchBtn = document.getElementById("clearSearchBtn");
-searchInput.addEventListener("input", e => { renderMaster(e.target.value); clearSearchBtn.style.display = e.target.value?'block':'none'; });
-clearSearchBtn.addEventListener("click", () => { searchInput.value=''; renderMaster(); clearSearchBtn.style.display='none'; });
+searchInput.addEventListener("input", e => { renderMaster(e.target.value); clearSearchBtn.style.display=e.target.value?'block':'none'; });
+clearSearchBtn.addEventListener("click", ()=>{ searchInput.value=''; renderMaster(); clearSearchBtn.style.display='none'; });
 
-// ===== Token File =====
-document.getElementById("loadTokenFileBtn").onclick = () => document.getElementById("tokenFileInput").click();
-document.getElementById("tokenFileInput").addEventListener("change", e=>{
-  const file = e.target.files[0]; if(!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    const token = reader.result.trim();
-    if(token){ localStorage.setItem("githubToken", token); promptTokenIfMissing(); alert("✅ GitHub token loaded"); }
-    else alert("❌ Token file empty");
-  };
-  reader.readAsText(file);
-});
-
-// ===== Startup =====
-document.addEventListener("DOMContentLoaded", () => { promptTokenIfMissing(); renderMaster(); renderChecked(); });
+// ===== Init =====
+document.addEventListener("DOMContentLoaded", ()=>{ promptTokenIfMissing(); renderMaster(); renderChecked(); });
 </script>
 </body>
 </html>
