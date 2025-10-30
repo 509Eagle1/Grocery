@@ -28,7 +28,7 @@
     {
       "name": "Food Coloring",
       "aisle": "",
-      "checked": false
+      "checked": true
     },
     {
       "name": "French Fries",
@@ -78,7 +78,7 @@
     {
       "name": "Aaaaaaa",
       "aisle": "",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Bannana / strawberry yogurt",
