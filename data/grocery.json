@@ -143,7 +143,7 @@
     {
       "name": "Dressing",
       "aisle": "1",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Eggs",
