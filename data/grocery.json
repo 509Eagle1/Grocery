@@ -53,7 +53,7 @@
     {
       "name": "Shampoo",
       "aisle": "",
-      "checked": true
+      "checked": false
     },
     {
       "name": "Tater Tots",
@@ -193,7 +193,7 @@
     {
       "name": "Salad",
       "aisle": "1",
-      "checked": true
+      "checked": false
     },
     {
       "name": "Sausage Links",
@@ -203,7 +203,7 @@
     {
       "name": "Sour Cream",
       "aisle": "1",
-      "checked": true
+      "checked": false
     },
     {
       "name": "Sweet Tea",
@@ -218,7 +218,7 @@
     {
       "name": "Bsgs",
       "aisle": "1",
-      "checked": true
+      "checked": false
     },
     {
       "name": "Bagels",
@@ -228,7 +228,7 @@
     {
       "name": "Bread",
       "aisle": "2",
-      "checked": true
+      "checked": false
     },
     {
       "name": "Canned Chicken",
@@ -654,33 +654,6 @@
       "name": "Zzzzz",
       "aisle": "12",
       "checked": false
-    }
-  ],
-  "checkedAisle": [
-    {
-      "name": "Green Grapes",
-      "aisle": "1",
-      "done": false
-    },
-    {
-      "name": "Onion",
-      "aisle": "1",
-      "done": false
-    },
-    {
-      "name": "Sour Cream",
-      "aisle": "1",
-      "done": false
-    },
-    {
-      "name": "Bsgs",
-      "aisle": "1",
-      "done": false
-    },
-    {
-      "name": "Salad",
-      "aisle": "1",
-      "done": true
     }
   ]
 }
