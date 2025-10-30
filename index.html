@@ -32,11 +32,11 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 .clear-search:hover { color: #333; }
 .item button { margin-left:5px; padding:2px 6px; border-radius:4px; border:none; cursor:pointer; font-size:12px; }
 
-/* Albertsons list buttons colors */
-#masterPage .item button:nth-child(1) { background:#28a745; color:white; } /* Edit = green */
-#masterPage .item button:nth-child(1):hover { background:#218838; }
-#masterPage .item button:nth-child(2) { background:#dc3545; color:white; } /* Remove = red */
-#masterPage .item button:nth-child(2):hover { background:#c82333; }
+/* Albertsons list buttons colors using classes */
+#masterPage .edit-btn { background:#28a745; color:white; } 
+#masterPage .edit-btn:hover { background:#218838; }
+#masterPage .remove-btn { background:#dc3545; color:white; }
+#masterPage .remove-btn:hover { background:#c82333; }
 </style>
 </head>
 <body>
@@ -148,7 +148,7 @@ function promptTokenIfMissing() {
 function renderMaster(filter="") {
   const list = document.getElementById("groceryList");
   list.innerHTML = "";
-  groceryItems.forEach((item, i) => {
+  groceryItems.forEach((item, index) => {
     if(filter && !item.name.toLowerCase().includes(filter.toLowerCase())) return;
 
     const li = document.createElement("li");
@@ -174,20 +174,23 @@ function renderMaster(filter="") {
 
     const btnDiv = document.createElement("div");
 
-    const editBtn = document.createElement("button");
-    editBtn.textContent = "Edit";
-    editBtn.onclick = () => {
-      const newName = prompt("Edit item:", item.name);
-      if (newName !== null) item.name = newName.trim();
-      const newAisle = prompt("Edit aisle:", item.aisle);
-      if (newAisle !== null) item.aisle = newAisle.trim();
-      renderMaster();
-      renderChecked();
-    };
+    const editBtn = document.createElement('button');
+    editBtn.textContent='Edit';
+    editBtn.className = 'edit-btn';
+    editBtn.addEventListener('click', ()=>{
+      const newName = prompt("Edit item:", item.name); if(newName!==null)item.name=newName.trim();
+      const newAisle = prompt("Edit aisle:", item.aisle); if(newAisle!==null)item.aisle=newAisle.trim();
+      renderMaster(document.getElementById('searchInput').value);
+    });
 
-    const removeBtn = document.createElement("button");
-    removeBtn.textContent = "Remove";
-    removeBtn.onclick = () => { groceryItems.splice(i, 1); renderMaster(); renderChecked(); };
+    const removeBtn = document.createElement('button');
+    removeBtn.textContent='Remove';
+    removeBtn.className = 'remove-btn';
+    removeBtn.addEventListener('click', ()=>{
+      groceryItems.splice(index,1);
+      renderMaster(document.getElementById('searchInput').value);
+      renderChecked();
+    });
 
     btnDiv.appendChild(editBtn);
     btnDiv.appendChild(removeBtn);
