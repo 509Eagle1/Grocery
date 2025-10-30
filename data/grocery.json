@@ -173,7 +173,7 @@
     {
       "name": "Onion",
       "aisle": "1",
-      "checked": true
+      "checked": false
     },
     {
       "name": "Peppers",
@@ -188,7 +188,7 @@
     {
       "name": "Potatoes",
       "aisle": "1",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Salad",
