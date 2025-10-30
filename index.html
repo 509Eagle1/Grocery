@@ -154,7 +154,7 @@ function renderMaster(filter="") {
     checkbox.checked = item.checked || false;
     checkbox.addEventListener("change", () => {
       item.checked = checkbox.checked;
-      renderChecked();
+      renderChecked(); // live update Shopping List
       saveToGitHub();
     });
 
@@ -191,25 +191,26 @@ function renderMaster(filter="") {
   });
 }
 
-// ===== Render Checked =====
+// ===== Render Checked (Shopping List) =====
 function renderChecked() {
   const list = document.getElementById("checkedList");
   list.innerHTML = "";
-  groceryItems.filter(item => item.checked).forEach((item) => {
+
+  groceryItems.filter(item => item.checked).forEach(item => {
     const li = document.createElement("li");
     li.className = "item";
 
     const leftDiv = document.createElement("div");
-    leftDiv.style.display = "flex"; leftDiv.style.alignItems = "center"; leftDiv.style.gap = "5px";
+    leftDiv.style.display = "flex"; 
+    leftDiv.style.alignItems = "center"; 
+    leftDiv.style.gap = "5px";
 
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
-    checkbox.checked = true;
+    checkbox.checked = false; // always start unchecked
     checkbox.addEventListener("change", () => {
-      item.checked = checkbox.checked;
-      renderMaster();
-      renderChecked();
-      saveToGitHub();
+      if (checkbox.checked) li.classList.add("checked");
+      else li.classList.remove("checked");
     });
 
     const span = document.createElement("span");
@@ -235,37 +236,6 @@ document.getElementById("addItemBtn").onclick = async () => {
   document.getElementById("itemInput").value = "";
   document.getElementById("aisleInput").value = "";
 };
-
-// ===== Import =====
-document.getElementById("importListBtn").onclick = () => document.getElementById("importListInput").click();
-document.getElementById("importListInput").addEventListener("change", e => {
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = evt => {
-    let newItems = [];
-    const content = evt.target.result;
-    if(file.name.endsWith(".json")){
-      try {
-        const data = JSON.parse(content);
-        if(Array.isArray(data.groceryItems)) newItems = data.groceryItems;
-      } catch(err){ alert("Invalid JSON"); return; }
-    } else if(file.name.endsWith(".csv")){
-      const lines = content.split(/\r?\n/).filter(Boolean);
-      lines.forEach(line => {
-        const [name, aisle] = line.split(",").map(s=>s.trim());
-        if(name) newItems.push({name, aisle, checked:false});
-      });
-    } else return alert("Unsupported file");
-    const existingNames = new Set(groceryItems.map(i=>i.name.toLowerCase()));
-    newItems.forEach(item => {
-      if(!existingNames.has(item.name.toLowerCase())) groceryItems.push(item);
-    });
-    renderMaster(); renderChecked();
-    saveToGitHub();
-  };
-  reader.readAsText(file);
-});
 
 // ===== Menu Buttons =====
 document.getElementById("clearChecksBtn").onclick = () => {
