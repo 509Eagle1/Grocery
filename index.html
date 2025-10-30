@@ -195,9 +195,13 @@ function renderChecked() {
   const list = document.getElementById("checkedList");
   list.innerHTML = "";
 
-  groceryItems.filter(item => item.checked).forEach(item => {
+  let active = groceryItems.filter(item => item.checked && !item.done);
+  let done = groceryItems.filter(item => item.checked && item.done);
+
+  [...active, ...done].forEach(item => {
     const li = document.createElement("li");
     li.className = "item";
+    if(item.done) li.classList.add("checked");
 
     const leftDiv = document.createElement("div");
     leftDiv.style.display = "flex"; 
@@ -206,8 +210,11 @@ function renderChecked() {
 
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
-    checkbox.checked = false; // always unchecked
-    checkbox.disabled = true; // purely visual, cannot check
+    checkbox.checked = item.done || false;
+    checkbox.addEventListener("change", () => {
+      item.done = checkbox.checked;
+      renderChecked();
+    });
 
     const span = document.createElement("span");
     span.textContent = `${item.name} (Aisle: ${item.aisle})`;
@@ -225,7 +232,7 @@ document.getElementById("addItemBtn").onclick = async () => {
   const aisle = document.getElementById("aisleInput").value.trim();
   if (!name) return;
   if (!groceryItems.some(i=>i.name.toLowerCase()===name.toLowerCase())){
-    groceryItems.push({ name, aisle, checked: false });
+    groceryItems.push({ name, aisle, checked: false, done:false });
     renderMaster(); renderChecked();
     await saveToGitHub();
   } else alert("Item already exists!");
