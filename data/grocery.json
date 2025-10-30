@@ -133,7 +133,7 @@
     {
       "name": "Corn on the Cob",
       "aisle": "1",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Deli Ham",
