@@ -5,6 +5,7 @@ const filePath = "data/grocery.json";
 let groceryItems = JSON.parse(localStorage.getItem('groceryItems') || "[]");
 let checkedAisle = JSON.parse(localStorage.getItem('checkedAisle') || "[]");
 
+// --- Helper Functions ---
 function saveData() {
   localStorage.setItem('groceryItems', JSON.stringify(groceryItems));
   localStorage.setItem('checkedAisle', JSON.stringify(checkedAisle));
@@ -14,17 +15,18 @@ function updateTokenStatus(token) {
   document.getElementById('tokenStatus').textContent = token ? "✅ GitHub Connected" : "⚠️ No GitHub Token";
 }
 
-// --- Token Startup ---
-async function checkTokenOnStartup() {
+// --- GitHub Token ---
+async function ensureGitHubToken() {
   let token = localStorage.getItem('githubToken');
   if (!token) {
-    token = prompt("⚠️ GitHub token missing! Please enter your GitHub token:");
+    token = prompt("⚠️ GitHub token missing! Enter your GitHub token:");
     if (token) {
       localStorage.setItem('githubToken', token);
       updateTokenStatus(token);
       await restoreFromGitHub();
     } else {
-      alert("You can load a token from a .txt file via Admin → Load Token From File.");
+      updateTokenStatus(null);
+      alert("You can set a token later via Admin → Set GitHub Token or load from file.");
     }
   } else {
     updateTokenStatus(token);
@@ -43,17 +45,17 @@ function handleLoadTokenFile(e) {
     if (token) {
       localStorage.setItem('githubToken', token);
       updateTokenStatus(token);
-      alert('✅ GitHub token loaded! Restoring list...');
+      alert('✅ GitHub token loaded. Restoring list...');
       await restoreFromGitHub();
     } else alert('❌ Token file empty.');
   };
   reader.readAsText(file);
 }
 
-// --- GitHub ---
+// --- GitHub Operations ---
 async function saveToGitHub(silent=false){
   let token = localStorage.getItem('githubToken');
-  if(!token) token = await checkTokenOnStartup();
+  if(!token) token = await ensureGitHubToken();
   if(!token) return;
   const content=btoa(unescape(encodeURIComponent(JSON.stringify({groceryItems,checkedAisle},null,2))));
   const apiUrl=`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`;
@@ -85,7 +87,7 @@ async function restoreFromGitHub(){
   }catch(e){ console.error(e); alert("❌ Could not restore from GitHub"); }
 }
 
-// --- Render ---
+// --- Render Functions ---
 function renderMaster(filter=""){
   const list=document.getElementById('groceryList'); list.innerHTML='';
   sortByAisle(groceryItems);
@@ -140,9 +142,21 @@ async function addItem(){
   groceryItems.push({name,aisle,checked:false});
   document.getElementById('itemInput').value=''; document.getElementById('aisleInput').value='';
   saveData(); renderMaster(document.getElementById('searchInput').value);
-  await saveToGitHub(true);
+  await saveToGitHub(true); // Auto-export
 }
 
-// --- Helpers ---
-function clearAllChecks(){ groceryItems.forEach(i=>i.checked=false); saveData(); renderMaster(document.getElementById('searchInput').value); }
-function showMaster(){ document.getElementById('masterPage').classList.remove('hidden'); document
+// --- Event Listeners ---
+document.getElementById('addItemBtn').addEventListener('click', addItem);
+document.getElementById('clearChecksBtn').addEventListener('click', ()=>{ groceryItems.forEach(i=>i.checked=false); saveData(); renderMaster(); });
+document.getElementById('showMasterBtn').addEventListener('click', ()=>{ document.getElementById('masterPage').classList.remove('hidden'); document.getElementById('checkedPage').classList.add('hidden'); document.getElementById('addPage').classList.add('hidden'); });
+document.getElementById('showCheckedBtn').addEventListener('click', ()=>{
+  checkedAisle=groceryItems.filter(i=>i.checked).map(i=>({name:i.name, aisle:i.aisle, done:false})); saveData(); renderChecked();
+  document.getElementById('masterPage').classList.add('hidden'); document.getElementById('checkedPage').classList.remove('hidden'); document.getElementById('addPage').classList.add('hidden');
+});
+document.getElementById('showAddBtn').addEventListener('click', ()=>{ document.getElementById('addPage').classList.remove('hidden'); document.getElementById('masterPage').classList.add('hidden'); document.getElementById('checkedPage').classList.add('hidden'); });
+
+// Search
+const searchInput = document.getElementById('searchInput');
+const clearSearchBtn = document.getElementById('clearSearchBtn');
+searchInput.addEventListener('input', e=>{ renderMaster(e.target.value); clearSearchBtn.style.display = e.target.value ? 'block' : 'none'; });
+clearSearchBtn.addEventListener('
