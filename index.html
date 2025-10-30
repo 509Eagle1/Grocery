@@ -91,7 +91,6 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 
 <script>
 let groceryItems = JSON.parse(localStorage.getItem('groceryItems') || "[]");
-let checkedAisle = [];
 
 // ===== GitHub =====
 async function saveToGitHub() {
@@ -178,6 +177,7 @@ function renderMaster(filter="") {
         saveData();
         renderMaster(document.getElementById("searchInput").value);
       }
+      dropContent.style.display="none"; // close dropdown if Cancel clicked
     });
 
     dropContent.appendChild(editBtn); dropContent.appendChild(removeBtn);
