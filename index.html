@@ -99,12 +99,11 @@ async function saveToGitHub() {
       headers: { Authorization: `token ${token}`, Accept: "application/vnd.github.v3+json" }
     });
     if (check.ok) sha = (await check.json()).sha;
-    const res = await fetch(apiUrl, {
+    await fetch(apiUrl, {
       method: "PUT",
       headers: { Authorization: `token ${token}`, "Content-Type": "application/json" },
       body: JSON.stringify({ message: "Update grocery list", content, sha })
     });
-    if (!res.ok) alert("❌ Upload failed.");
   } catch (e) { console.error(e); }
 }
 
@@ -207,11 +206,8 @@ function renderChecked() {
 
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
-    checkbox.checked = false; // always start unchecked
-    checkbox.addEventListener("change", () => {
-      if (checkbox.checked) li.classList.add("checked");
-      else li.classList.remove("checked");
-    });
+    checkbox.checked = false; // always unchecked
+    checkbox.disabled = true; // purely visual, cannot check
 
     const span = document.createElement("span");
     span.textContent = `${item.name} (Aisle: ${item.aisle})`;
