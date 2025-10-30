@@ -118,7 +118,7 @@
     {
       "name": "Canadian Bacon",
       "aisle": "1",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Cheese Shreded",
