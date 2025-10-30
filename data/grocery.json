@@ -53,7 +53,7 @@
     {
       "name": "Shampoo",
       "aisle": "",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Tater Tots",
