@@ -16,8 +16,8 @@ h1 { text-align:center; margin-bottom:5px; }
 .button-bar .clear { background:#ffc107; color:#000; }
 .button-bar .add { background:#17a2b8; }
 .dropdown { position:relative; display:inline-block; }
-.dropdown-content { display:none; position:absolute; background-color:#f9f9f9; min-width:160px; box-shadow:0 8px 16px rgba(0,0,0,0.2); z-index:1; border-radius:5px; }
-.dropdown-content button { color:black; background:white; padding:8px 12px; width:100%; text-align:left; border:none; cursor:pointer; }
+.dropdown-content { display:none; position:absolute; background-color:#f9f9f9; min-width:100px; box-shadow:0 8px 16px rgba(0,0,0,0.2); z-index:1; border-radius:5px; }
+.dropdown-content button { color:black; background:white; padding:8px 12px; width:100%; text-align:left; border:none; cursor:pointer; font-size:12px; }
 .dropdown-content button:hover { background:#ddd; }
 .dropdown:hover .dropdown-content { display:block; }
 .list-container { background:white; padding:15px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
@@ -30,13 +30,6 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 #searchInput { width:100%; padding-right: 25px; box-sizing: border-box; }
 .clear-search { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; font-weight: bold; color: #888; font-size: 16px; display: none; }
 .clear-search:hover { color: #333; }
-.item button { margin-left:5px; padding:2px 6px; border-radius:4px; border:none; cursor:pointer; font-size:12px; }
-
-/* Albertsons list buttons colors using classes */
-#masterPage .edit-btn { background:#28a745; color:white; } 
-#masterPage .edit-btn:hover { background:#218838; }
-#masterPage .remove-btn { background:#dc3545; color:white; }
-#masterPage .remove-btn:hover { background:#c82333; }
 </style>
 </head>
 <body>
@@ -61,7 +54,6 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 </div>
 
 <div class="list-container">
-  <!-- Albertsons Page -->
   <div id="masterPage">
     <div class="button-bar">
       <button id="clearChecksBtn" class="clear">Clear All Checks</button>
@@ -73,12 +65,10 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
     <ul id="groceryList"></ul>
   </div>
 
-  <!-- Shopping List Page -->
   <div id="checkedPage" class="hidden">
     <ul id="checkedList"></ul>
   </div>
 
-  <!-- Add Item Page -->
   <div id="addPage" class="hidden">
     <input type="text" id="itemInput" placeholder="Item name">
     <input type="text" id="aisleInput" placeholder="Aisle">
@@ -172,12 +162,18 @@ function renderMaster(filter="") {
     leftDiv.appendChild(span);
     li.appendChild(leftDiv);
 
-    const btnDiv = document.createElement("div");
+    // Dropdown for Edit/Remove
+    const dropdown = document.createElement("div");
+    dropdown.className = "dropdown";
+    const dropBtn = document.createElement("button");
+    dropBtn.className = "dropdown-btn";
+    dropBtn.textContent = "Options ⏷";
+    const dropContent = document.createElement("div");
+    dropContent.className = "dropdown-content";
 
-    const editBtn = document.createElement('button');
-    editBtn.textContent='Edit';
-    editBtn.className = 'edit-btn';
-    editBtn.addEventListener('click', ()=>{
+    const editOpt = document.createElement("button");
+    editOpt.textContent = "Edit";
+    editOpt.addEventListener("click", ()=>{
       const newName = prompt("Edit item:", item.name);
       if(newName!==null) item.name = newName.trim();
       const newAisle = prompt("Edit aisle:", item.aisle);
@@ -185,18 +181,19 @@ function renderMaster(filter="") {
       renderMaster(document.getElementById('searchInput').value);
     });
 
-    const removeBtn = document.createElement('button');
-    removeBtn.textContent='Remove';
-    removeBtn.className = 'remove-btn';
-    removeBtn.addEventListener('click', ()=>{
+    const removeOpt = document.createElement("button");
+    removeOpt.textContent = "Remove";
+    removeOpt.addEventListener("click", ()=>{
       groceryItems.splice(index,1);
       renderMaster(document.getElementById('searchInput').value);
       renderChecked();
     });
 
-    btnDiv.appendChild(editBtn);
-    btnDiv.appendChild(removeBtn);
-    li.appendChild(btnDiv);
+    dropContent.appendChild(editOpt);
+    dropContent.appendChild(removeOpt);
+    dropdown.appendChild(dropBtn);
+    dropdown.appendChild(dropContent);
+    li.appendChild(dropdown);
 
     list.appendChild(li);
   });
