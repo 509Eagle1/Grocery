@@ -228,7 +228,7 @@
     {
       "name": "Bread",
       "aisle": "2",
-      "checked": false
+      "checked": true
     },
     {
       "name": "Canned Chicken",
