@@ -99,38 +99,40 @@ function sortByAisle(arr){ return arr.sort((a,b)=>a.aisle.localeCompare(b.aisle,
 // --- Token Status ---
 function updateTokenStatus(token) {
   const status = document.getElementById('tokenStatus');
-  if (token) status.textContent = "✅ GitHub Connected";
-  else status.textContent = "⚠️ No GitHub Token";
+  status.textContent = token ? "✅ GitHub Connected" : "⚠️ No GitHub Token";
 }
 
 // --- Prompt Token at startup ---
-function promptGitHubToken() {
+async function promptGitHubToken() {
   let token = localStorage.getItem('githubToken');
   if (!token) {
     token = prompt("⚠️ GitHub token missing! Please enter your GitHub token:");
     if (token) {
       localStorage.setItem('githubToken', token);
       updateTokenStatus(token);
-      restoreFromGitHub();
+      await restoreFromGitHub();
+    } else {
+      alert("You can also load a GitHub token from a .txt file using Admin → Load Token From File.");
     }
   } else {
     updateTokenStatus(token);
+    await restoreFromGitHub();
   }
   return token;
 }
 
-// --- Load Token From File and auto-restore ---
+// --- Load Token From File ---
 function handleLoadTokenFile(e) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = () => {
+  reader.onload = async () => {
     const token = reader.result.trim();
     if (token) {
       localStorage.setItem('githubToken', token);
       updateTokenStatus(token);
       alert('✅ GitHub token loaded! Restoring list...');
-      restoreFromGitHub();
+      await restoreFromGitHub();
     } else alert('❌ Token file empty.');
   };
   reader.readAsText(file);
@@ -138,8 +140,9 @@ function handleLoadTokenFile(e) {
 
 // --- GitHub Functions ---
 async function saveToGitHub(silent=false) {
-  const token = localStorage.getItem('githubToken');
-  if (!token) return;
+  let token = localStorage.getItem('githubToken');
+  if(!token) token = await promptGitHubToken();
+  if(!token) return;
   const content = btoa(unescape(encodeURIComponent(JSON.stringify({groceryItems,checkedAisle},null,2))));
   const apiUrl = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`;
   try {
@@ -151,27 +154,24 @@ async function saveToGitHub(silent=false) {
       headers:{"Authorization":`token ${token}`,"Content-Type":"application/json"},
       body:JSON.stringify({message:"Update grocery list",content,sha})
     });
-    if(!silent){
-      if(response.ok) alert("✅ Uploaded to GitHub!");
-      else alert("❌ Failed to upload");
-    }
+    if(!silent){ response.ok ? alert("✅ Uploaded to GitHub!") : alert("❌ Failed to upload"); }
   } catch(e){ console.error(e); if(!silent) alert("❌ Error uploading"); }
 }
 
 async function restoreFromGitHub(){
-  const token=localStorage.getItem('githubToken');
-  if(!token)return;
+  const token = localStorage.getItem('githubToken');
+  if(!token) return;
   try{
-    const response=await fetch(`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`,{headers:{Authorization:`token ${token}`,Accept:"application/vnd.github.v3+json"}});
-    if(!response.ok)throw new Error("Fetch failed");
-    const data=await response.json();
-    const decoded=atob(data.content);
-    const jsonData=JSON.parse(decoded);
-    groceryItems=jsonData.groceryItems||[];
-    checkedAisle=jsonData.checkedAisle||[];
+    const response = await fetch(`https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`,{headers:{Authorization:`token ${token}`,Accept:"application/vnd.github.v3+json"}});
+    if(!response.ok) throw new Error("Fetch failed");
+    const data = await response.json();
+    const decoded = atob(data.content);
+    const jsonData = JSON.parse(decoded);
+    groceryItems = jsonData.groceryItems || [];
+    checkedAisle = jsonData.checkedAisle || [];
     saveData(); renderMaster(); renderChecked();
     alert("✅ Restored from GitHub!");
-  }catch(e){console.error(e);alert("❌ Could not restore from GitHub");}
+  }catch(e){ console.error(e); alert("❌ Could not restore from GitHub"); }
 }
 
 // --- Render Lists ---
@@ -222,17 +222,16 @@ function renderChecked(){
   });
 }
 
-// --- Add Item (auto silent export) ---
+// --- Add Item ---
 async function addItem(){
   const name=document.getElementById('itemInput').value.trim();
   const aisle=document.getElementById('aisleInput').value.trim();
-  if(!name)return;
+  if(!name) return;
   if(groceryItems.some(i=>i.name.toLowerCase()===name.toLowerCase())) return alert("Item already exists!");
   groceryItems.push({name,aisle,checked:false});
   document.getElementById('itemInput').value=''; document.getElementById('aisleInput').value='';
   saveData(); renderMaster(document.getElementById('searchInput').value);
-  const token = localStorage.getItem('githubToken') || promptGitHubToken();
-  if(token) saveToGitHub(true); // silent export
+  await saveToGitHub(true); // silent auto-export
 }
 
 // --- Helpers ---
@@ -270,8 +269,8 @@ document.getElementById('loadTokenFileBtn').addEventListener('click',()=>documen
 document.getElementById('tokenFileInput').addEventListener('change', handleLoadTokenFile);
 
 // --- Startup ---
-document.addEventListener('DOMContentLoaded',()=>{
-  promptGitHubToken();
+document.addEventListener('DOMContentLoaded', async ()=>{
+  await promptGitHubToken();
   renderMaster();
   renderChecked();
 });
