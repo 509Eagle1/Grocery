@@ -164,23 +164,36 @@ function renderMaster(filter="") {
 }
 
 // ---------------- SHOPPING LIST ----------------
-function renderChecked(){
-  const list=document.getElementById('checkedList'); list.innerHTML='';
-  sortByAisle(checkedAisle);
-  checkedAisle.forEach((item,i)=>{
-    const li=document.createElement('li'); li.className='item';
+function renderChecked() {
+  const list = document.getElementById('checkedList');
+  list.innerHTML = '';
+
+  // Move checked items to bottom
+  const sortedItems = [...checkedAisle].sort((a,b) => (a.done === b.done ? 0 : (a.done ? 1 : -1)));
+
+  sortedItems.forEach(item => {
+    const li = document.createElement('li');
+    li.className = 'item';
     if(item.done) li.classList.add('checked');
-    const left=document.createElement('div');
-    const cb=document.createElement('input'); cb.type='checkbox'; cb.checked=item.done||false;
-    cb.addEventListener('change',()=>{
-      item.done=cb.checked;
-      if(cb.checked){ li.classList.add('checked'); checkedAisle.push(checkedAisle.splice(i,1)[0]); }
-      else { li.classList.remove('checked'); }
-      saveData(); renderChecked();
+
+    const left = document.createElement('div');
+    const cb = document.createElement('input');
+    cb.type = 'checkbox';
+    cb.checked = item.done || false;
+
+    cb.addEventListener('change', () => {
+      item.done = cb.checked;
+      saveData();
+      renderChecked(); // re-render to move checked item
     });
-    const span=document.createElement('span'); span.textContent=`${item.name} (Aisle: ${item.aisle})`;
-    left.appendChild(cb); left.appendChild(span);
-    li.appendChild(left); list.appendChild(li);
+
+    const span = document.createElement('span');
+    span.textContent = `${item.name} (Aisle: ${item.aisle})`;
+
+    left.appendChild(cb);
+    left.appendChild(span);
+    li.appendChild(left);
+    list.appendChild(li);
   });
 }
 
