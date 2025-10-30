@@ -83,7 +83,6 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 
 <script>
 let groceryItems = [];
-let checkedAisle = [];
 const githubUser = "509Eagle1";
 const repoName = "Grocery";
 const filePath = "data/grocery.json";
@@ -93,7 +92,7 @@ async function saveToGitHub() {
   const token = localStorage.getItem("githubToken");
   if (!token) return;
   const apiUrl = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`;
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify({ groceryItems, checkedAisle }, null, 2))));
+  const content = btoa(unescape(encodeURIComponent(JSON.stringify({ groceryItems }, null, 2))));
   let sha = null;
   try {
     const check = await fetch(apiUrl, {
@@ -121,7 +120,6 @@ async function restoreFromGitHub() {
     const data = await res.json();
     const jsonData = JSON.parse(atob(data.content));
     groceryItems = jsonData.groceryItems || [];
-    checkedAisle = jsonData.checkedAisle || [];
     renderMaster();
     renderChecked();
   } catch(e){ console.error(e); }
@@ -139,10 +137,12 @@ function promptTokenIfMissing() {
 }
 
 // ===== Render Master with checkboxes and edit/remove buttons =====
-function renderMaster() {
+function renderMaster(filter="") {
   const list = document.getElementById("groceryList");
   list.innerHTML = "";
   groceryItems.forEach((item, i) => {
+    if(filter && !item.name.toLowerCase().includes(filter.toLowerCase())) return;
+
     const li = document.createElement("li");
     li.className = "item";
 
@@ -152,7 +152,11 @@ function renderMaster() {
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.checked = item.checked || false;
-    checkbox.addEventListener("change", () => { item.checked = checkbox.checked; saveToGitHub(); });
+    checkbox.addEventListener("change", () => {
+      item.checked = checkbox.checked;
+      renderChecked();
+      saveToGitHub();
+    });
 
     const span = document.createElement("span");
     span.textContent = `${item.name} (Aisle: ${item.aisle})`;
@@ -171,12 +175,13 @@ function renderMaster() {
       const newAisle = prompt("Edit aisle:", item.aisle);
       if (newAisle !== null) item.aisle = newAisle.trim();
       renderMaster();
+      renderChecked();
       saveToGitHub();
     };
 
     const removeBtn = document.createElement("button");
     removeBtn.textContent = "Remove";
-    removeBtn.onclick = () => { groceryItems.splice(i, 1); renderMaster(); saveToGitHub(); };
+    removeBtn.onclick = () => { groceryItems.splice(i, 1); renderMaster(); renderChecked(); saveToGitHub(); };
 
     btnDiv.appendChild(editBtn);
     btnDiv.appendChild(removeBtn);
@@ -186,46 +191,125 @@ function renderMaster() {
   });
 }
 
+// ===== Render Checked Page =====
 function renderChecked() {
   const list = document.getElementById("checkedList");
   list.innerHTML = "";
-  checkedAisle.forEach(a => {
+  groceryItems.filter(i => i.checked).forEach((item, i) => {
     const li = document.createElement("li");
-    li.textContent = a;
+    li.className = "item";
+
+    const leftDiv = document.createElement("div");
+    leftDiv.style.display = "flex"; leftDiv.style.alignItems = "center"; leftDiv.style.gap = "5px";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = true;
+    checkbox.addEventListener("change", () => {
+      item.checked = checkbox.checked;
+      renderMaster();
+      renderChecked();
+      saveToGitHub();
+    });
+
+    const span = document.createElement("span");
+    span.textContent = `${item.name} (Aisle: ${item.aisle})`;
+
+    leftDiv.appendChild(checkbox);
+    leftDiv.appendChild(span);
+    li.appendChild(leftDiv);
     list.appendChild(li);
   });
 }
 
-// ===== UI Buttons =====
+// ===== Add Item =====
 document.getElementById("addItemBtn").onclick = async () => {
   const name = document.getElementById("itemInput").value.trim();
   const aisle = document.getElementById("aisleInput").value.trim();
   if (!name) return;
-  groceryItems.push({ name, aisle });
+  if (!groceryItems.some(i=>i.name.toLowerCase()===name.toLowerCase())){
+    groceryItems.push({ name, aisle, checked: false });
+    renderMaster(); renderChecked();
+    await saveToGitHub();
+  } else alert("Item already exists!");
   document.getElementById("itemInput").value = "";
   document.getElementById("aisleInput").value = "";
-  renderMaster();
-  await saveToGitHub();
 };
 
+// ===== Import =====
+document.getElementById("importListBtn").onclick = () => document.getElementById("importListInput").click();
+document.getElementById("importListInput").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    let newItems = [];
+    const content = evt.target.result;
+    if(file.name.endsWith(".json")){
+      try {
+        const data = JSON.parse(content);
+        if(Array.isArray(data.groceryItems)) newItems = data.groceryItems;
+      } catch(err){ alert("Invalid JSON"); return; }
+    } else if(file.name.endsWith(".csv")){
+      const lines = content.split(/\r?\n/).filter(Boolean);
+      lines.forEach(line => {
+        const [name, aisle] = line.split(',').map(s=>s.trim());
+        if(name) newItems.push({name, aisle, checked:false});
+      });
+    } else return alert("Unsupported file");
+    // Merge without overwriting checked status
+    const existing = new Map(groceryItems.map(i=>[i.name.toLowerCase(), i]));
+    newItems.forEach(i => {
+      const key = i.name.toLowerCase();
+      if(existing.has(key)){
+        existing.get(key).aisle = i.aisle; // update aisle but keep checked
+      } else groceryItems.push(i);
+    });
+    renderMaster(); renderChecked(); saveToGitHub();
+    alert(`✅ Imported ${newItems.length} items.`);
+  };
+  reader.readAsText(file);
+});
+
+// ===== UI Page Switching =====
+function showMaster(){ document.getElementById("masterPage").classList.remove("hidden"); document.getElementById("checkedPage").classList.add("hidden"); document.getElementById("addPage").classList.add("hidden"); }
+function showChecked(){ document.getElementById("checkedPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("addPage").classList.add("hidden"); renderChecked(); }
+function showAdd(){ document.getElementById("addPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.add("hidden"); }
+
+// ===== Other Buttons =====
+document.getElementById("showMasterBtn").onclick = showMaster;
+document.getElementById("showCheckedBtn").onclick = showChecked;
+document.getElementById("showAddBtn").onclick = showAdd;
 document.getElementById("setTokenBtn").onclick = promptTokenIfMissing;
 document.getElementById("exportJsonBtn").onclick = saveToGitHub;
 document.getElementById("restoreGitHubBtn").onclick = restoreFromGitHub;
 
-// ===== Show pages =====
-function showMaster() { document.getElementById("masterPage").classList.remove("hidden"); document.getElementById("checkedPage").classList.add("hidden"); document.getElementById("addPage").classList.add("hidden"); }
-function showChecked() { document.getElementById("checkedPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("addPage").classList.add("hidden"); }
-function showAdd() { document.getElementById("addPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.add("hidden"); }
-document.getElementById("showMasterBtn").onclick = showMaster;
-document.getElementById("showCheckedBtn").onclick = showChecked;
-document.getElementById("showAddBtn").onclick = showAdd;
+document.getElementById("clearChecksBtn").onclick = () => {
+  groceryItems.forEach(i=>i.checked=false);
+  renderMaster(); renderChecked(); saveToGitHub();
+};
+
+// ===== Search =====
+const searchInput = document.getElementById("searchInput");
+const clearSearchBtn = document.getElementById("clearSearchBtn");
+searchInput.addEventListener("input", e => { renderMaster(e.target.value); clearSearchBtn.style.display = e.target.value?'block':'none'; });
+clearSearchBtn.addEventListener("click", () => { searchInput.value=''; renderMaster(); clearSearchBtn.style.display='none'; });
+
+// ===== Token File =====
+document.getElementById("loadTokenFileBtn").onclick = () => document.getElementById("tokenFileInput").click();
+document.getElementById("tokenFileInput").addEventListener("change", e=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const token = reader.result.trim();
+    if(token){ localStorage.setItem("githubToken", token); promptTokenIfMissing(); alert("✅ GitHub token loaded"); }
+    else alert("❌ Token file empty");
+  };
+  reader.readAsText(file);
+});
 
 // ===== Startup =====
-document.addEventListener("DOMContentLoaded", () => {
-  promptTokenIfMissing();
-  renderMaster();
-  renderChecked();
-});
+document.addEventListener("DOMContentLoaded", () => { promptTokenIfMissing(); renderMaster(); renderChecked(); });
 </script>
 </body>
 </html>
