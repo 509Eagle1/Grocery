@@ -56,6 +56,7 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 </div>
 
 <div class="list-container">
+  <!-- Albertsons Page -->
   <div id="masterPage">
     <div class="button-bar">
       <button id="clearChecksBtn" class="clear">Clear All Checks</button>
@@ -67,10 +68,12 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
     <ul id="groceryList"></ul>
   </div>
 
+  <!-- Shopping List Page -->
   <div id="checkedPage" class="hidden">
     <ul id="checkedList"></ul>
   </div>
 
+  <!-- Add Item Page -->
   <div id="addPage" class="hidden">
     <input type="text" id="itemInput" placeholder="Item name">
     <input type="text" id="aisleInput" placeholder="Aisle">
@@ -91,11 +94,8 @@ const filePath = "data/grocery.json";
 async function saveToGitHub() {
   const token = localStorage.getItem("githubToken");
   if (!token) return;
-
-  // Exclude "checked" and "done" flags from upload
   const uploadItems = groceryItems.map(({ name, aisle }) => ({ name, aisle }));
   const content = btoa(unescape(encodeURIComponent(JSON.stringify({ groceryItems: uploadItems }, null, 2))));
-
   const apiUrl = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`;
   let sha = null;
   try {
@@ -128,7 +128,7 @@ async function restoreFromGitHub() {
   } catch(e){ console.error(e); }
 }
 
-// ===== Token handling on startup =====
+// ===== Token handling =====
 function promptTokenIfMissing() {
   let token = localStorage.getItem("githubToken");
   if (!token) {
@@ -157,7 +157,7 @@ function renderMaster(filter="") {
     checkbox.checked = item.checked || false;
     checkbox.addEventListener("change", () => {
       item.checked = checkbox.checked;
-      renderChecked(); // update Shopping List view
+      renderChecked();
     });
 
     const span = document.createElement("span");
@@ -196,9 +196,8 @@ function renderMaster(filter="") {
 function renderChecked() {
   const list = document.getElementById("checkedList");
   list.innerHTML = "";
-
-  let active = groceryItems.filter(item => item.checked && !item.done);
-  let done = groceryItems.filter(item => item.checked && item.done);
+  const active = groceryItems.filter(item => item.checked && !item.done);
+  const done = groceryItems.filter(item => item.checked && item.done);
 
   [...active, ...done].forEach(item => {
     const li = document.createElement("li");
