@@ -89,28 +89,24 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 <script>
 let groceryItems = JSON.parse(localStorage.getItem('groceryItems') || "[]");
 
-// ===== GitHub =====
-async function saveToGitHub() { /* your GitHub code */ }
-async function restoreFromGitHub() { /* your GitHub code */ }
-
 // ===== Save / Load =====
 function saveData() { localStorage.setItem('groceryItems', JSON.stringify(groceryItems)); }
 
-// ===== Token =====
+// ===== GitHub Token =====
 function promptGitHubToken() {
   let token = localStorage.getItem("githubToken");
   if (!token) token = prompt("⚠️ GitHub token missing! Enter token:") || null;
   if(token) localStorage.setItem("githubToken", token);
   document.getElementById("tokenStatus").textContent = token ? "✅ GitHub Token Set" : "⚠️ No GitHub Token";
-  if(token) restoreFromGitHub();
 }
 
-// ===== Render Master =====
+// ===== Render Master List =====
 function renderMaster(filter="") {
   const list = document.getElementById("groceryList");
   list.innerHTML = "";
   groceryItems.forEach((item,index)=>{
     if(filter && !item.name.toLowerCase().includes(filter.toLowerCase())) return;
+
     const li = document.createElement("li"); li.className="item";
 
     const leftDiv = document.createElement("div");
@@ -125,9 +121,9 @@ function renderMaster(filter="") {
     leftDiv.appendChild(checkbox); leftDiv.appendChild(span);
     li.appendChild(leftDiv);
 
+    // Dropdown for each item
     const dropdown = document.createElement("div"); dropdown.className="dropdown";
     const dropBtn = document.createElement("button"); dropBtn.className="dropdown-btn"; dropBtn.textContent="Options ⏷";
-
     const dropContent = document.createElement("div"); dropContent.className="dropdown-content";
 
     const editBtn = document.createElement("button"); editBtn.className="edit"; editBtn.textContent="Edit";
@@ -140,7 +136,7 @@ function renderMaster(filter="") {
 
     const removeBtn = document.createElement("button"); removeBtn.className="remove"; removeBtn.textContent="Remove";
     removeBtn.addEventListener("click",(e)=>{
-      e.stopPropagation(); // stop dropdown toggle
+      e.stopPropagation(); // prevent dropdown from closing
       if(confirm(`Are you sure you want to remove "${item.name}"?`)){
         groceryItems.splice(index,1);
         saveData();
@@ -165,34 +161,55 @@ function renderMaster(filter="") {
 }
 
 // ===== Render Checked / Shopping List =====
-function renderChecked() { /* same as before */ }
+function renderChecked() {
+  const checkedList = document.getElementById("checkedList");
+  checkedList.innerHTML = "";
+  groceryItems.filter(i=>i.checked).forEach(item=>{
+    const li = document.createElement("li");
+    li.className="item";
+    const cb = document.createElement("input"); cb.type="checkbox";
+    cb.addEventListener("change",()=>{ li.classList.toggle("checked",cb.checked); });
+    const span = document.createElement("span"); span.textContent=`${item.name} (Aisle: ${item.aisle})`;
+    li.appendChild(cb); li.appendChild(span);
+    checkedList.appendChild(li);
+  });
+}
 
 // ===== Add Item =====
-async function addItem(){ /* same as before */ }
+function addItem() {
+  const name = document.getElementById("itemInput").value.trim();
+  const aisle = document.getElementById("aisleInput").value.trim();
+  if(!name) return;
+  groceryItems.push({name,aisle,checked:false});
+  document.getElementById("itemInput").value = ""; document.getElementById("aisleInput").value="";
+  saveData(); renderMaster();
+}
 
-// ===== Show Pages =====
+// ===== Page Switching =====
 function showMaster(){ document.getElementById("masterPage").classList.remove("hidden"); document.getElementById("checkedPage").classList.add("hidden"); document.getElementById("addPage").classList.add("hidden"); }
 function showChecked(){ document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.remove("hidden"); document.getElementById("addPage").classList.add("hidden"); }
 function showAdd(){ document.getElementById("addPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.add("hidden"); }
 
 document.addEventListener("DOMContentLoaded",()=>{
   promptGitHubToken();
+  renderMaster(); renderChecked();
+
   document.getElementById("addItemBtn").addEventListener("click",addItem);
-  document.getElementById("clearChecksBtn").addEventListener("click",()=>{ groceryItems.forEach(i=>i.checked=false); saveData(); renderMaster(); renderChecked(); });
+  document.getElementById("clearChecksBtn").addEventListener("click",()=>{
+    groceryItems.forEach(i=>i.checked=false);
+    saveData(); renderMaster(); renderChecked();
+  });
   document.getElementById("showMasterBtn").addEventListener("click",showMaster);
   document.getElementById("showCheckedBtn").addEventListener("click",showChecked);
   document.getElementById("showAddBtn").addEventListener("click",showAdd);
-  document.getElementById("exportJsonBtn").addEventListener("click",saveToGitHub);
-  document.getElementById("restoreGitHubBtn").addEventListener("click",restoreFromGitHub);
 
   const searchInput=document.getElementById("searchInput");
   const clearSearchBtn=document.getElementById("clearSearchBtn");
-  searchInput.addEventListener("input",()=>{ renderMaster(searchInput.value); clearSearchBtn.style.display=searchInput.value?'block':'none'; });
+  searchInput.addEventListener("input",()=>{ renderMaster(searchInput.value); clearSearchBtn.style.display = searchInput.value ? 'block' : 'none'; });
   clearSearchBtn.addEventListener("click",()=>{ searchInput.value=''; renderMaster(); clearSearchBtn.style.display='none'; });
 
-  document.addEventListener("click", ()=>{ document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none"); });
-
-  renderMaster(); renderChecked();
+  // Close dropdowns on outside click
+  document.addEventListener("click",()=>{ document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none"); });
 });
 </script>
 </body>
