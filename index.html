@@ -115,6 +115,7 @@ function renderMaster(filter="") {
     const checkbox = document.createElement("input"); checkbox.type="checkbox"; checkbox.checked=item.checked || false;
     checkbox.addEventListener("change",()=>{
       item.checked = checkbox.checked; renderChecked();
+      saveData();
     });
 
     const span = document.createElement("span"); span.textContent=`${item.name} (Aisle: ${item.aisle})`;
@@ -136,13 +137,12 @@ function renderMaster(filter="") {
 
     const removeBtn = document.createElement("button"); removeBtn.className="remove"; removeBtn.textContent="Remove";
     removeBtn.addEventListener("click",(e)=>{
-      e.stopPropagation(); // prevent dropdown from closing
+      e.stopPropagation();
       if(confirm(`Are you sure you want to remove "${item.name}"?`)){
         groceryItems.splice(index,1);
         saveData();
         renderMaster(document.getElementById("searchInput").value);
       }
-      // Cancel keeps dropdown open
     });
 
     dropContent.appendChild(editBtn); dropContent.appendChild(removeBtn);
@@ -167,10 +167,29 @@ function renderChecked() {
   groceryItems.filter(i=>i.checked).forEach(item=>{
     const li = document.createElement("li");
     li.className="item";
-    const cb = document.createElement("input"); cb.type="checkbox";
-    cb.addEventListener("change",()=>{ li.classList.toggle("checked",cb.checked); });
-    const span = document.createElement("span"); span.textContent=`${item.name} (Aisle: ${item.aisle})`;
-    li.appendChild(cb); li.appendChild(span);
+
+    const leftDiv = document.createElement("div");
+    leftDiv.style.display="flex";
+    leftDiv.style.alignItems="center";
+    leftDiv.style.gap="5px";
+
+    const cb = document.createElement("input");
+    cb.type="checkbox";
+    cb.checked = true;
+    cb.addEventListener("change",()=>{
+      item.checked = cb.checked;
+      saveData();
+      renderMaster();
+      renderChecked();
+    });
+
+    const span = document.createElement("span");
+    span.textContent = `${item.name} (Aisle: ${item.aisle})`;
+
+    leftDiv.appendChild(cb);
+    leftDiv.appendChild(span);
+    li.appendChild(leftDiv);
+
     checkedList.appendChild(li);
   });
 }
