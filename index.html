@@ -266,19 +266,24 @@ function renderChecked() {
   const checkedList = document.getElementById("checkedList");
   checkedList.innerHTML = "";
 
-  groceryItems.filter(i => i.checked).forEach(item => {
+  const checkedItems = groceryItems.filter(i => i.checked);
+
+  checkedItems.forEach(item => {
     const li = document.createElement("li");
-    li.className = "item"; // never add checked class
+    li.className = "item";
 
     const cb = document.createElement("input");
     cb.type = "checkbox";
     cb.checked = false; // always start unchecked
     cb.addEventListener("change", () => {
       li.classList.toggle("checked", cb.checked);
+      if(cb.checked) {
+        checkedList.appendChild(li); // move to bottom
+      }
     });
 
     const span = document.createElement("span");
-    span.textContent=`${item.name} (Aisle: ${item.aisle})`;
+    span.textContent = `${item.name} (Aisle: ${item.aisle})`;
 
     li.appendChild(cb);
     li.appendChild(span);
