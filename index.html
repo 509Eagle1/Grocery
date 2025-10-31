@@ -268,7 +268,7 @@ function renderChecked() {
 
   groceryItems.filter(i => i.checked).forEach(item => {
     const li = document.createElement("li");
-    li.className = "item";
+    li.className = "item"; // never add checked class
 
     const cb = document.createElement("input");
     cb.type = "checkbox";
