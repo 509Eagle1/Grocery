@@ -38,21 +38,29 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 .clear-search { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; font-weight: bold; color: #888; font-size: 16px; display: none; }
 .clear-search:hover { color: #333; }
 
-/* Drag handle */
+/* Drag handle using SVG */
 .drag-handle {
   cursor: grab;
-  font-size: 18px;
   margin-left: 8px;
-  color: #666;
   user-select: none;
 }
-.drag-handle:active {
-  cursor: grabbing;
-  color: #000;
+.drag-handle svg {
+  width: 16px;
+  height: 16px;
+  fill: #666;
+}
+.drag-handle:active svg {
+  fill: #000;
 }
 .item.dragging {
   opacity: 0.5;
   background: #e0e0e0;
+}
+
+/* Shopping list left alignment */
+#checkedList .item {
+  justify-content: flex-start;
+  gap: 8px;
 }
 </style>
 </head>
@@ -150,7 +158,7 @@ function renderMaster(filter="") {
     leftDiv.appendChild(span);
     li.appendChild(leftDiv);
 
-    // Dropdown for each item
+    // Right side: dropdown + drag handle
     const rightDiv = document.createElement("div");
     rightDiv.style.display="flex";
     rightDiv.style.alignItems="center";
@@ -193,10 +201,16 @@ function renderMaster(filter="") {
     dropdown.appendChild(dropContent);
     rightDiv.appendChild(dropdown);
 
-    // Drag handle
+    // Drag handle (SVG grip)
     const handle = document.createElement("span");
     handle.className = "drag-handle";
-    handle.textContent = "≋≋";
+    handle.innerHTML = `
+      <svg viewBox="0 0 20 20">
+        <circle cx="5" cy="4" r="2"></circle>
+        <circle cx="5" cy="10" r="2"></circle>
+        <circle cx="5" cy="16" r="2"></circle>
+      </svg>
+    `;
     rightDiv.appendChild(handle);
 
     li.appendChild(rightDiv);
@@ -256,6 +270,7 @@ function renderChecked() {
     li.className="item";
     const cb = document.createElement("input");
     cb.type="checkbox";
+    cb.checked = true;
     cb.addEventListener("change",()=>{ li.classList.toggle("checked",cb.checked); });
     const span = document.createElement("span");
     span.textContent=`${item.name} (Aisle: ${item.aisle})`;
