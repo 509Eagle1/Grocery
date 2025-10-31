@@ -18,7 +18,6 @@ h1 { text-align:center; margin-bottom:5px; }
 .list-container { background:white; padding:15px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
 .item { display:flex; justify-content:space-between; align-items:center; padding:6px; border-bottom:1px solid #ddd; position:relative; }
 .item.checked { text-decoration: line-through; color:gray; }
-.item.over { border: 2px dashed #007bff; }
 input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; margin-bottom:5px; }
 #addPage { display:flex; flex-direction:column; gap:5px; flex-wrap:wrap; align-items:flex-start; margin-top:10px; }
 .hidden { display:none; }
@@ -88,33 +87,12 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 <input type="file" id="tokenFileInput" accept=".txt" style="display:none;">
 
 <script>
-let githubUser = "509Eagle1";
-let repoName = "Grocery";
-let filePath = "data/grocery.json";
-
 let groceryItems = JSON.parse(localStorage.getItem('groceryItems') || "[]");
 
 // ===== Save / Load =====
 function saveData() { localStorage.setItem('groceryItems', JSON.stringify(groceryItems)); }
 
-// ===== GitHub =====
-async function saveToGitHub() {
-  const token = localStorage.getItem("githubToken");
-  if(!token) return;
-  const content = btoa(unescape(encodeURIComponent(JSON.stringify(groceryItems,null,2))));
-  const apiUrl = `https://api.github.com/repos/${githubUser}/${repoName}/contents/${filePath}`;
-  try {
-    const res = await fetch(apiUrl,{headers:{Authorization:`token ${token}`,Accept:"application/vnd.github.v3+json"}});
-    const data = res.ok ? await res.json() : {};
-    const sha = data.sha || null;
-    await fetch(apiUrl,{
-      method:'PUT',
-      headers:{"Authorization":`token ${token}`,"Content-Type":"application/json"},
-      body:JSON.stringify({message:"Update grocery list",content,sha})
-    });
-  } catch(e){ console.error("GitHub save error:",e); }
-}
-
+// ===== GitHub Token =====
 function promptGitHubToken() {
   let token = localStorage.getItem("githubToken");
   if (!token) token = prompt("⚠️ GitHub token missing! Enter token:") || null;
@@ -135,13 +113,15 @@ function renderMaster(filter="") {
     leftDiv.style.display="flex"; leftDiv.style.alignItems="center"; leftDiv.style.gap="5px";
 
     const checkbox = document.createElement("input"); checkbox.type="checkbox"; checkbox.checked=item.checked || false;
-    checkbox.addEventListener("change",()=>{ item.checked = checkbox.checked; renderChecked(); });
+    checkbox.addEventListener("change",()=>{
+      item.checked = checkbox.checked; renderChecked();
+    });
 
     const span = document.createElement("span"); span.textContent=`${item.name} (Aisle: ${item.aisle})`;
     leftDiv.appendChild(checkbox); leftDiv.appendChild(span);
     li.appendChild(leftDiv);
 
-    // Dropdown menu
+    // Dropdown for each item
     const dropdown = document.createElement("div"); dropdown.className="dropdown";
     const dropBtn = document.createElement("button"); dropBtn.className="dropdown-btn"; dropBtn.textContent="Options ⏷";
     const dropContent = document.createElement("div"); dropContent.className="dropdown-content";
@@ -150,132 +130,86 @@ function renderMaster(filter="") {
     editBtn.addEventListener("click",()=>{
       const newName = prompt("Edit item:",item.name); if(newName!==null)item.name=newName.trim();
       const newAisle = prompt("Edit aisle:",item.aisle); if(newAisle!==null)item.aisle=newAisle.trim();
-      renderMaster(document.getElementById("searchInput").value); saveData(); saveToGitHub();
+      renderMaster(document.getElementById("searchInput").value);
+      saveData();
     });
 
     const removeBtn = document.createElement("button"); removeBtn.className="remove"; removeBtn.textContent="Remove";
     removeBtn.addEventListener("click",(e)=>{
-      e.stopPropagation();
+      e.stopPropagation(); // prevent dropdown from closing
       if(confirm(`Are you sure you want to remove "${item.name}"?`)){
-        groceryItems.splice(index,1); saveData(); saveToGitHub();
+        groceryItems.splice(index,1);
+        saveData();
         renderMaster(document.getElementById("searchInput").value);
       }
+      // Cancel keeps dropdown open
     });
 
     dropContent.appendChild(editBtn); dropContent.appendChild(removeBtn);
     dropdown.appendChild(dropBtn); dropdown.appendChild(dropContent);
     li.appendChild(dropdown);
-    list.appendChild(li);
-  });
 
-  // Make list sortable
-  makeSortable();
-}
-
-// ===== Drag-and-Drop =====
-function makeSortable() {
-  const list = document.getElementById("groceryList");
-  const items = Array.from(list.children);
-  let dragSrcEl = null;
-
-  items.forEach(item => {
-    item.setAttribute("draggable", true);
-
-    item.addEventListener("dragstart", function(e) {
-      dragSrcEl = this;
-      e.dataTransfer.effectAllowed = "move";
-      this.style.opacity = "0.5";
-    });
-
-    item.addEventListener("dragover", function(e) {
-      e.preventDefault();
-      return false;
-    });
-
-    item.addEventListener("dragenter", function() { this.classList.add("over"); });
-    item.addEventListener("dragleave", function() { this.classList.remove("over"); });
-
-    item.addEventListener("drop", function(e) {
+    dropBtn.addEventListener("click",(e)=>{
       e.stopPropagation();
-      if (dragSrcEl !== this) {
-        const nodes = Array.from(list.children);
-        const fromIndex = nodes.indexOf(dragSrcEl);
-        const toIndex = nodes.indexOf(this);
-
-        list.insertBefore(dragSrcEl, fromIndex < toIndex ? this.nextSibling : this);
-
-        const movedItem = groceryItems.splice(fromIndex, 1)[0];
-        groceryItems.splice(toIndex, 0, movedItem);
-
-        saveData();
-        saveToGitHub();
-      }
-      return false;
+      const isVisible = dropContent.style.display==="block";
+      document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none");
+      dropContent.style.display = isVisible ? "none" : "block";
     });
 
-    item.addEventListener("dragend", function() {
-      this.style.opacity = "1";
-      list.querySelectorAll(".item").forEach(i => i.classList.remove("over"));
-    });
+    list.appendChild(li);
   });
 }
 
-// ===== Shopping List =====
+// ===== Render Checked / Shopping List =====
 function renderChecked() {
-  const list = document.getElementById("checkedList"); list.innerHTML="";
-  groceryItems.filter(i=>i.checked).forEach((item)=>{
-    const li = document.createElement("li"); li.className="item";
-    const cb = document.createElement("input"); cb.type="checkbox"; cb.checked=false;
-        const span = document.createElement("span"); 
-    span.textContent = `${item.name} (Aisle: ${item.aisle})`;
-    cb.addEventListener("change", ()=>{
-      if(cb.checked){
-        li.classList.add("checked");
-        list.appendChild(li); // move to bottom
-      } else {
-        li.classList.remove("checked");
-      }
-    });
+  const checkedList = document.getElementById("checkedList");
+  checkedList.innerHTML = "";
+  groceryItems.filter(i=>i.checked).forEach(item=>{
+    const li = document.createElement("li");
+    li.className="item";
+    const cb = document.createElement("input"); cb.type="checkbox";
+    cb.addEventListener("change",()=>{ li.classList.toggle("checked",cb.checked); });
+    const span = document.createElement("span"); span.textContent=`${item.name} (Aisle: ${item.aisle})`;
     li.appendChild(cb); li.appendChild(span);
-    list.appendChild(li);
+    checkedList.appendChild(li);
   });
 }
 
 // ===== Add Item =====
-async function addItem() {
+function addItem() {
   const name = document.getElementById("itemInput").value.trim();
   const aisle = document.getElementById("aisleInput").value.trim();
   if(!name) return;
-  if(groceryItems.some(i=>i.name.toLowerCase()===name.toLowerCase())) return alert("Item already exists!");
-  groceryItems.push({name, aisle, checked:false});
-  document.getElementById("itemInput").value=""; document.getElementById("aisleInput").value="";
-  saveData(); renderMaster(document.getElementById("searchInput").value);
-  const token = localStorage.getItem("githubToken"); if(token) await saveToGitHub();
+  groceryItems.push({name,aisle,checked:false});
+  document.getElementById("itemInput").value = ""; document.getElementById("aisleInput").value="";
+  saveData(); renderMaster();
 }
 
-// ===== Tab Navigation =====
+// ===== Page Switching =====
 function showMaster(){ document.getElementById("masterPage").classList.remove("hidden"); document.getElementById("checkedPage").classList.add("hidden"); document.getElementById("addPage").classList.add("hidden"); }
-function showChecked(){ document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.remove("hidden"); document.getElementById("addPage").classList.add("hidden"); renderChecked(); }
+function showChecked(){ document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.remove("hidden"); document.getElementById("addPage").classList.add("hidden"); }
 function showAdd(){ document.getElementById("addPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.add("hidden"); }
 
-// ===== Init =====
-document.addEventListener("DOMContentLoaded", ()=>{
-  document.getElementById("addItemBtn").addEventListener("click", addItem);
-  document.getElementById("clearChecksBtn").addEventListener("click", ()=>{
-    groceryItems.forEach(i=>i.checked=false); saveData(); renderMaster();
-  });
-  document.getElementById("showMasterBtn").addEventListener("click", showMaster);
-  document.getElementById("showCheckedBtn").addEventListener("click", showChecked);
-  document.getElementById("showAddBtn").addEventListener("click", showAdd);
-
-  const searchInput = document.getElementById("searchInput");
-  const clearSearchBtn = document.getElementById("clearSearchBtn");
-  searchInput.addEventListener("input", ()=>{ renderMaster(searchInput.value); clearSearchBtn.style.display = searchInput.value ? "inline" : "none"; });
-  clearSearchBtn.addEventListener("click", ()=>{ searchInput.value=""; renderMaster(); clearSearchBtn.style.display="none"; });
-
-  const token = localStorage.getItem("githubToken");
-  if(token) promptGitHubToken();
+document.addEventListener("DOMContentLoaded",()=>{
+  promptGitHubToken();
   renderMaster(); renderChecked();
+
+  document.getElementById("addItemBtn").addEventListener("click",addItem);
+  document.getElementById("clearChecksBtn").addEventListener("click",()=>{
+    groceryItems.forEach(i=>i.checked=false);
+    saveData(); renderMaster(); renderChecked();
+  });
+  document.getElementById("showMasterBtn").addEventListener("click",showMaster);
+  document.getElementById("showCheckedBtn").addEventListener("click",showChecked);
+  document.getElementById("showAddBtn").addEventListener("click",showAdd);
+
+  const searchInput=document.getElementById("searchInput");
+  const clearSearchBtn=document.getElementById("clearSearchBtn");
+  searchInput.addEventListener("input",()=>{ renderMaster(searchInput.value); clearSearchBtn.style.display = searchInput.value ? 'block' : 'none'; });
+  clearSearchBtn.addEventListener("click",()=>{ searchInput.value=''; renderMaster(); clearSearchBtn.style.display='none'; });
+
+  // Close dropdowns on outside click
+  document.addEventListener("click",()=>{ document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none"); });
 });
 </script>
 </body>
