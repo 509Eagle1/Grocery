@@ -115,8 +115,10 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 let groceryItems = JSON.parse(localStorage.getItem('groceryItems') || "[]");
 let shoppingCheckedStates = {};
 
+// ===== Local Storage =====
 function saveData() { localStorage.setItem('groceryItems', JSON.stringify(groceryItems)); }
 
+// ===== GitHub Token =====
 function promptGitHubToken() {
   let token = localStorage.getItem("githubToken");
   if (!token) token = prompt("⚠️ GitHub token missing! Enter token:") || null;
@@ -124,6 +126,7 @@ function promptGitHubToken() {
   document.getElementById("tokenStatus").textContent = token ? "✅ GitHub Token Set" : "⚠️ No GitHub Token";
 }
 
+// ===== GitHub Save =====
 async function saveToGitHub() {
   const token = localStorage.getItem("githubToken");
   if(!token){ alert("GitHub token missing!"); return; }
@@ -150,6 +153,7 @@ async function saveToGitHub() {
   } catch(err){ console.log(err); }
 }
 
+// ===== Render Master List =====
 function renderMaster(filter="") {
   const list = document.getElementById("groceryList");
   list.innerHTML = "";
@@ -218,6 +222,7 @@ function renderMaster(filter="") {
   });
 }
 
+// ===== Render Checked / Shopping List =====
 function renderChecked() {
   const checkedList = document.getElementById("checkedList"); checkedList.innerHTML="";
   let checkedItems = groceryItems.filter(i => i.checked);
@@ -240,6 +245,7 @@ function renderChecked() {
   });
 }
 
+// ===== Add Item =====
 function addItem() {
   const name = document.getElementById("itemInput").value.trim();
   const aisle = document.getElementById("aisleInput").value.trim();
@@ -249,6 +255,7 @@ function addItem() {
   saveData(); renderMaster(); saveToGitHub();
 }
 
+// ===== Page Switching =====
 function showMaster(){ document.getElementById("masterPage").classList.remove("hidden"); document.getElementById("checkedPage").classList.add("hidden"); document.getElementById("addPage").classList.add("hidden"); }
 function showChecked(){ document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.remove("hidden"); document.getElementById("addPage").classList.add("hidden"); }
 function showAdd(){ document.getElementById("addPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.add("hidden"); }
@@ -270,14 +277,70 @@ document.addEventListener("DOMContentLoaded",()=>{
 
   // Admin Dropdown
   const adminBtn = document.getElementById("adminDropdownBtn"); const adminContent = document.getElementById("adminDropdownContent");
-  adminBtn.addEventListener("click", e=>{ e.stopPropagation(); adminContent.style.display = adminContent.style.display==="block"?"none":"block"; });
+  adminBtn.addEventListener("click", e=>{ e.stopPropagation();
+                                           adminContent.style.display = adminContent.style.display==="block"?"none":"block"; });
 
-  // Close dropdowns on outside click
-  document.addEventListener("click",(e)=>{
-    document.querySelectorAll("#groceryList .dropdown-content").forEach(dc=>{ if(!dc.contains(e.target)) dc.style.display="none"; });
-    if(!adminContent.contains(e.target) && !adminBtn.contains(e.target)) adminContent.style.display="none";
+  // Clicking outside closes dropdowns
+  document.addEventListener("click",()=>{ document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none"); });
+
+  // Admin Buttons
+  document.getElementById("exportJsonBtn").addEventListener("click", async () => { 
+    await saveToGitHub(); 
+    alert("Albertsons list exported to GitHub!"); 
+  });
+
+  document.getElementById("restoreGitHubBtn").addEventListener("click", async () => {
+    const token = localStorage.getItem("githubToken");
+    if(!token){ alert("GitHub token missing!"); return; }
+    const owner = "YOUR_GITHUB_USERNAME";  // replace
+    const repo = "YOUR_REPO_NAME";         // replace
+    const path = "groceryItems.json";      // replace
+    const branch = "main";
+    try {
+      const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
+        headers: { Authorization: `token ${token}` }
+      });
+      if(res.status !== 200) { alert("Could not fetch from GitHub"); return; }
+      const data = await res.json();
+      const content = atob(data.content);
+      groceryItems = JSON.parse(content);
+      saveData(); renderMaster(); renderChecked(); alert("Albertsons list restored from GitHub!");
+    } catch(err){ console.error(err); alert("Error restoring from GitHub"); }
+  });
+
+  document.getElementById("importListBtn").addEventListener("click",()=>{ document.getElementById("importListInput").click(); });
+  document.getElementById("importListInput").addEventListener("change", (e)=>{
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try { 
+        groceryItems = JSON.parse(event.target.result); 
+        saveData(); renderMaster(); renderChecked(); saveToGitHub(); 
+        alert("Albertsons list imported!");
+      } catch(err){ alert("Invalid JSON file."); }
+    };
+    reader.readAsText(file);
+  });
+
+  // Set GitHub token manually
+  document.getElementById("setTokenBtn").addEventListener("click", ()=>{ 
+    const token = prompt("Enter GitHub Token:"); 
+    if(token){ localStorage.setItem("githubToken", token); document.getElementById("tokenStatus").textContent = "✅ GitHub Token Set"; }
+  });
+
+  // Load token from file
+  document.getElementById("loadTokenFileBtn").addEventListener("click", ()=>{ document.getElementById("tokenFileInput").click(); });
+  document.getElementById("tokenFileInput").addEventListener("change", (e)=>{
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (event)=>{
+      const token = event.target.result.trim();
+      if(token){ localStorage.setItem("githubToken", token); document.getElementById("tokenStatus").textContent = "✅ GitHub Token Set"; }
+    };
+    reader.readAsText(file);
   });
 });
 </script>
+
 </body>
 </html>
