@@ -10,10 +10,12 @@ body {
   margin: 10px;
   background: #f4f4f4;
 }
+
 h1 {
   text-align: center;
   margin-bottom: 5px;
 }
+
 .menu {
   display: flex;
   align-items: center;
@@ -21,40 +23,47 @@ h1 {
   gap: 8px;
   margin-bottom: 10px;
 }
+
 .menu button, .menu input {
   padding: 5px 8px;
   font-size: 14px;
 }
+
 #searchBar {
   flex: 1;
 }
+
 #shoppingList {
   list-style-type: none;
   padding-left: 10px;
   margin: 0;
   text-align: left;
 }
+
 #shoppingList li {
   display: flex;
   align-items: center;
   justify-content: flex-start;
   text-align: left;
   gap: 8px;
-  padding: 4px 0;
+  padding: 6px 8px;
   background: white;
-  margin-bottom: 4px;
-  border-radius: 4px;
-  padding-left: 8px;
+  margin-bottom: 5px;
+  border-radius: 6px;
   cursor: grab;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
+
 #shoppingList li:active {
   cursor: grabbing;
-  background: #d8eaff;
+  background: #eaf3ff;
 }
+
 #shoppingList li.checked span {
   text-decoration: line-through;
   color: gray;
 }
+
 .drag-over {
   border: 2px dashed #007BFF;
 }
@@ -69,19 +78,35 @@ h1 {
   <input type="text" id="searchBar" placeholder="Search items..." onkeyup="searchItems()">
 </div>
 
-<ul id="shoppingList">
-  <li draggable="true"><input type="checkbox"> <span>Milk</span></li>
-  <li draggable="true"><input type="checkbox"> <span>Eggs</span></li>
-  <li draggable="true"><input type="checkbox"> <span>Bread</span></li>
-  <li draggable="true"><input type="checkbox"> <span>Cheese</span></li>
-  <li draggable="true"><input type="checkbox"> <span>Apples</span></li>
-</ul>
+<ul id="shoppingList"></ul>
 
 <script>
+const list = document.getElementById('shoppingList');
+
+// === Load saved list from localStorage or default ===
+let groceryItems = JSON.parse(localStorage.getItem('albertsonsList')) || [
+  "Milk", "Eggs", "Bread", "Cheese", "Apples", "Bananas", "Butter", "Orange Juice"
+];
+renderList();
+
+// === Render list items ===
+function renderList() {
+  list.innerHTML = '';
+  groceryItems.forEach(item => {
+    const li = document.createElement('li');
+    li.setAttribute('draggable', true);
+    li.innerHTML = `<input type="checkbox"> <span>${item}</span>`;
+    list.appendChild(li);
+  });
+  addDragEvents();
+}
+
+// === Clear all checkboxes ===
 function clearChecks() {
   document.querySelectorAll('#shoppingList input[type="checkbox"]').forEach(cb => cb.checked = false);
 }
 
+// === Search filter ===
 function searchItems() {
   const filter = document.getElementById('searchBar').value.toLowerCase();
   document.querySelectorAll('#shoppingList li').forEach(li => {
@@ -90,66 +115,54 @@ function searchItems() {
   });
 }
 
-// === Drag and Drop Sorting ===
-const list = document.getElementById('shoppingList');
+// === Drag and Drop Reordering ===
 let draggedItem = null;
 
-list.addEventListener('dragstart', e => {
-  if (e.target.tagName === 'LI') {
-    draggedItem = e.target;
-    e.target.style.opacity = '0.5';
-  }
-});
+function addDragEvents() {
+  const items = list.querySelectorAll('li');
+  items.forEach(li => {
+    li.addEventListener('dragstart', e => {
+      draggedItem = li;
+      setTimeout(() => li.style.display = 'none', 0);
+    });
 
-list.addEventListener('dragend', e => {
-  if (draggedItem) {
-    draggedItem.style.opacity = '1';
-    draggedItem = null;
-  }
-});
+    li.addEventListener('dragend', e => {
+      setTimeout(() => {
+        li.style.display = '';
+        draggedItem = null;
+        saveNewOrder();
+      }, 0);
+    });
 
-list.addEventListener('dragover', e => {
-  e.preventDefault();
-  const afterElement = getDragAfterElement(list, e.clientY);
-  const dragging = document.querySelector('.dragging');
-});
+    li.addEventListener('dragover', e => e.preventDefault());
 
-list.addEventListener('drop', e => {
-  e.preventDefault();
-  const afterElement = getDragAfterElement(list, e.clientY);
-  if (afterElement == null) {
-    list.appendChild(draggedItem);
-  } else {
-    list.insertBefore(draggedItem, afterElement);
-  }
-  saveNewOrder();
-});
+    li.addEventListener('dragenter', e => {
+      e.preventDefault();
+      li.classList.add('drag-over');
+    });
 
-list.addEventListener('dragenter', e => {
-  if (e.target.tagName === 'LI') e.target.classList.add('drag-over');
-});
+    li.addEventListener('dragleave', e => li.classList.remove('drag-over'));
 
-list.addEventListener('dragleave', e => {
-  if (e.target.tagName === 'LI') e.target.classList.remove('drag-over');
-});
-
-function getDragAfterElement(container, y) {
-  const draggableElements = [...container.querySelectorAll('li:not(.dragging)')];
-  return draggableElements.reduce((closest, child) => {
-    const box = child.getBoundingClientRect();
-    const offset = y - box.top - box.height / 2;
-    if (offset < 0 && offset > closest.offset) {
-      return { offset: offset, element: child };
-    } else {
-      return closest;
-    }
-  }, { offset: Number.NEGATIVE_INFINITY }).element;
+    li.addEventListener('drop', e => {
+      li.classList.remove('drag-over');
+      if (draggedItem && draggedItem !== li) {
+        const itemsArray = Array.from(list.children);
+        const draggedIndex = itemsArray.indexOf(draggedItem);
+        const droppedIndex = itemsArray.indexOf(li);
+        if (draggedIndex < droppedIndex) {
+          list.insertBefore(draggedItem, li.nextSibling);
+        } else {
+          list.insertBefore(draggedItem, li);
+        }
+      }
+    });
+  });
 }
 
+// === Save new order to localStorage ===
 function saveNewOrder() {
-  const items = [...document.querySelectorAll('#shoppingList li span')].map(span => span.textContent);
-  console.log("New order saved:", items);
-  // TODO: Replace console.log with GitHub save function if wired
+  groceryItems = Array.from(list.querySelectorAll('span')).map(span => span.textContent);
+  localStorage.setItem('albertsonsList', JSON.stringify(groceryItems));
 }
 </script>
 
