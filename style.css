@@ -44,7 +44,7 @@ h1 {
   color: white;
 }
 
-/* Admin button remains default */
+/* Admin button */
 .menu .dropdown-btn {
   padding: 6px 10px;
   font-size: 12px;
@@ -145,37 +145,39 @@ h1 {
   fill: #555;
 }
 
-/* ===== Dropdown Styling ===== */
-.dropdown {
-  position: relative;
-  display: inline-block;
+/* ===== Admin Dropdown Styling ===== */
+.menu .dropdown {
+  position: relative; /* parent relative so dropdown absolute is relative to this */
 }
 
-.dropdown-content {
+.menu .dropdown-content {
   display: none;
   position: absolute;
-  right: 0;
+  top: 100%;      /* place below the Admin button */
+  left: 0;         /* align left edge with Admin button */
   background-color: #f9f9f9;
-  min-width: 140px;
+  min-width: 160px;
   box-shadow: 0 8px 16px rgba(0,0,0,0.2);
-  z-index: 1;
+  z-index: 1000;
   border-radius: 5px;
 }
 
-.dropdown-content button {
+.menu .dropdown-content button {
   width: 100%;
   text-align: left;
+  padding: 8px 10px;
+  font-size: 13px;
   border: none;
-  padding: 6px 10px;
+  background: white;
   cursor: pointer;
-  font-size: 12px;
   margin: 0;
   border-radius: 0;
-  white-space: normal;
-  word-wrap: break-word;
 }
 
-.dropdown-content button:hover { opacity: 0.9; }
+.menu .dropdown-content button:hover {
+  background: #007bff;
+  color: white;
+}
 
 .dropdown-content .edit { background: #28a745; color: white; margin-bottom: 5px; }
 .dropdown-content .remove { background: #dc3545; color: white; }
