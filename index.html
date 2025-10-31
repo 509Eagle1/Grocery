@@ -113,6 +113,7 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 
 <script>
 let groceryItems = JSON.parse(localStorage.getItem('groceryItems') || "[]");
+let shoppingCheckedStates = {}; // persistent shopping list checkbox state
 
 // ===== Save / Load =====
 function saveData() { localStorage.setItem('groceryItems', JSON.stringify(groceryItems)); }
@@ -266,7 +267,17 @@ function renderChecked() {
   const checkedList = document.getElementById("checkedList");
   checkedList.innerHTML = "";
 
-  const checkedItems = groceryItems.filter(i => i.checked);
+  // get items checked in master
+  let checkedItems = groceryItems.filter(i => i.checked);
+
+  // sort so checked shopping list items go to bottom
+  checkedItems.sort((a,b)=>{
+    const aKey = a.name + "|" + a.aisle;
+    const bKey = b.name + "|" + b.aisle;
+    const aChecked = shoppingCheckedStates[aKey] || false;
+    const bChecked = shoppingCheckedStates[bKey] || false;
+    return aChecked - bChecked; // false first, true last
+  });
 
   checkedItems.forEach(item => {
     const li = document.createElement("li");
@@ -274,12 +285,13 @@ function renderChecked() {
 
     const cb = document.createElement("input");
     cb.type = "checkbox";
-    cb.checked = false; // always start unchecked
+    const key = item.name + "|" + item.aisle;
+    cb.checked = shoppingCheckedStates[key] || false;
+
     cb.addEventListener("change", () => {
       li.classList.toggle("checked", cb.checked);
-      if(cb.checked) {
-        checkedList.appendChild(li); // move to bottom
-      }
+      shoppingCheckedStates[key] = cb.checked;
+      renderChecked(); // re-render to move checked to bottom
     });
 
     const span = document.createElement("span");
