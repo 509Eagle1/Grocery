@@ -7,37 +7,44 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
   <h1>Grocery Master List</h1>
 
-  <div class="menu">
+  <!-- ===== MENU BAR ===== -->
+  <div class="menu-bar">
     <button id="albertsonsBtn">Albertsons</button>
-    <button id="shoppingBtn">Shopping List</button>
-    <button id="addItemMenuBtn">Add Items</button>
-    <div class="admin-dropdown">
-      <button id="adminMenuBtn">Admin ▼</button>
+    <button id="shoppingListBtn">Shopping List</button>
+    <button id="addItemsBtn">Add Items</button>
+
+    <div class="dropdown">
+      <button id="adminBtn">Admin ▼</button>
       <div id="adminDropdown" class="dropdown-content">
-        <button id="exportJsonBtn">Export to GitHub</button>
-        <button id="restoreGitHubBtn">Restore from GitHub</button>
-        <button id="importListBtn">Import List</button>
-        <input type="file" id="importListInput" accept=".json" style="display:none">
+        <button id="exportBtn">Export to GitHub</button>
+        <button id="saveChangesBtn">💾 Save Changes to GitHub</button>
+        <button id="restoreBtn">Restore from GitHub</button>
+        <button id="importBtn">Import List</button>
         <button id="setTokenBtn">Set GitHub Token</button>
         <button id="loadTokenFileBtn">Load Token from File</button>
         <input type="file" id="tokenFileInput" accept=".txt" style="display:none">
-        <p id="tokenStatus">❌ No Token Set</p>
+        <input type="file" id="importListInput" accept=".json" style="display:none">
+        <p id="tokenStatus" style="font-size:12px; margin-top:5px; color:green;"></p>
       </div>
     </div>
   </div>
 
-  <div id="albertsonsSection" class="section active">
-    <ul id="albertsonsList"></ul>
+  <!-- ===== ALBERTSONS PAGE ===== -->
+  <div id="albertsonsPage" class="page">
+    <div id="albertsonsList"></div>
   </div>
 
-  <div id="shoppingSection" class="section">
+  <!-- ===== SHOPPING LIST PAGE ===== -->
+  <div id="shoppingListPage" class="page">
     <ul id="shoppingList"></ul>
   </div>
 
-  <div id="addItemSection" class="section">
-    <input type="text" id="itemInput" placeholder="Enter new item">
+  <!-- ===== ADD ITEMS PAGE ===== -->
+  <div id="addItemsPage" class="page">
+    <input type="text" id="newItemInput" placeholder="Enter new item..." />
     <button id="addItemBtn">Add Item</button>
   </div>
 
