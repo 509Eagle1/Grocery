@@ -22,7 +22,7 @@
   {
     "name": "Apple sause",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Tater Tots",
@@ -32,7 +32,7 @@
   {
     "name": "Aaaaaad",
     "aisle": "1",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Bologna",
@@ -42,12 +42,12 @@
   {
     "name": "Butter - Jan",
     "aisle": "1",
-    "checked": false
+    "checked": true
   },
   {
     "name": "French Fries",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Cube Steaks",
@@ -672,6 +672,11 @@
   {
     "name": "Q3",
     "aisle": "22",
+    "checked": false
+  },
+  {
+    "name": "Pppp",
+    "aisle": "23",
     "checked": false
   }
 ]
