@@ -592,7 +592,7 @@
   {
     "name": "Cccccc",
     "aisle": "12",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Ddddd",
