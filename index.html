@@ -1,53 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Grocery Master List</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grocery Master List</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <h1>Grocery Master List</h1>
+<h1>Grocery Master List</h1>
 
-  <!-- ===== MENU BAR ===== -->
-  <div class="menu-bar">
-    <button id="albertsonsBtn">Albertsons</button>
-    <button id="shoppingListBtn">Shopping List</button>
-    <button id="addItemsBtn">Add Items</button>
+<!-- ===== MENU BAR ===== -->
+<div class="menu-bar">
+  <button id="albertsonsBtn">Albertsons</button>
+  <button id="shoppingListBtn">Shopping List</button>
+  <button id="addItemsBtn">Add Items</button>
 
-    <div class="dropdown">
-      <button id="adminBtn">Admin ▼</button>
-      <div id="adminDropdown" class="dropdown-content">
-        <button id="exportBtn">Export to GitHub</button>
-        <button id="saveChangesBtn">💾 Save Changes to GitHub</button>
-        <button id="restoreBtn">Restore from GitHub</button>
-        <button id="importBtn">Import List</button>
-        <button id="setTokenBtn">Set GitHub Token</button>
-        <button id="loadTokenFileBtn">Load Token from File</button>
-        <input type="file" id="tokenFileInput" accept=".txt" style="display:none">
-        <input type="file" id="importListInput" accept=".json" style="display:none">
-        <p id="tokenStatus" style="font-size:12px; margin-top:5px; color:green;"></p>
-      </div>
+  <div class="dropdown">
+    <button id="adminBtn">Admin ▼</button>
+    <div id="adminDropdown" class="dropdown-content">
+      <button id="exportBtn">Export to GitHub</button>
+      <button id="restoreBtn">Restore from GitHub</button>
+      <button id="importBtn">Import List</button>
+      <button id="setTokenBtn">Set GitHub Token</button>
+      <button id="loadTokenFileBtn">Load Token from File</button>
+      <input type="file" id="tokenFileInput" accept=".txt" style="display:none">
+      <input type="file" id="importListInput" accept=".json" style="display:none">
+      <p id="tokenStatus" style="font-size:12px; margin-top:5px; color:green;"></p>
     </div>
   </div>
+</div>
 
-  <!-- ===== ALBERTSONS PAGE ===== -->
-  <div id="albertsonsPage" class="page">
-    <div id="albertsonsList"></div>
-  </div>
+<!-- ===== ALBERTSONS PAGE ===== -->
+<div id="albertsonsPage" class="page">
+  <div id="albertsonsList"></div>
+</div>
 
-  <!-- ===== SHOPPING LIST PAGE ===== -->
-  <div id="shoppingListPage" class="page">
-    <ul id="shoppingList"></ul>
-  </div>
+<!-- ===== SHOPPING LIST PAGE ===== -->
+<div id="shoppingListPage" class="page">
+  <ul id="shoppingList"></ul>
+</div>
 
-  <!-- ===== ADD ITEMS PAGE ===== -->
-  <div id="addItemsPage" class="page">
-    <input type="text" id="newItemInput" placeholder="Enter new item..." />
-    <button id="addItemBtn">Add Item</button>
-  </div>
+<!-- ===== ADD ITEMS PAGE ===== -->
+<div id="addItemsPage" class="page">
+  <input type="text" id="newItemInput" placeholder="Enter new item...">
+  <button id="addItemBtn">Add Item</button>
+</div>
 
-  <script src="script.js"></script>
+<script src="script.js"></script>
 </body>
 </html>

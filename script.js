@@ -137,6 +137,7 @@ function editItem(index) {
     saveToGitHub();
   }
 }
+
 function removeItem(index) {
   if (confirm("Remove this item?")) {
     albertsonsList.splice(index, 1);
@@ -165,22 +166,13 @@ async function exportListToGitHub() {
   }
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`;
   const content = btoa(JSON.stringify(albertsonsList, null, 2));
-  const res = await fetch(url, {
-    headers: { Authorization: `token ${githubToken}` }
-  });
+  const res = await fetch(url, { headers: { Authorization: `token ${githubToken}` } });
   const data = await res.json();
   const sha = data.sha || undefined;
   await fetch(url, {
     method: "PUT",
-    headers: {
-      Authorization: `token ${githubToken}`,
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({
-      message: "Update grocery list",
-      content,
-      sha
-    })
+    headers: { Authorization: `token ${githubToken}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ message: "Update grocery list", content, sha })
   });
 }
 
@@ -189,10 +181,8 @@ async function restoreFromGitHub() {
     alert("Set your GitHub token first!");
     return;
   }
-  const res = await fetch(
-    `https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`,
-    { headers: { Authorization: `token ${githubToken}` } }
-  );
+  const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${filePath}`,
+    { headers: { Authorization: `token ${githubToken}` } });
   const data = await res.json();
   const decoded = atob(data.content);
   albertsonsList = JSON.parse(decoded);
@@ -206,11 +196,6 @@ document.getElementById("adminBtn").onclick = () => {
 };
 document.getElementById("exportBtn").onclick = exportListToGitHub;
 document.getElementById("restoreBtn").onclick = restoreFromGitHub;
-document.getElementById("saveChangesBtn").onclick = async () => {
-  alert("Saving current Albertsons list to GitHub...");
-  await exportListToGitHub();
-  alert("✅ Changes successfully saved to GitHub!");
-};
 document.getElementById("importBtn").onclick = () => document.getElementById("importListInput").click();
 document.getElementById("importListInput").addEventListener("change", async e => {
   const file = e.target.files[0];
@@ -219,27 +204,9 @@ document.getElementById("importListInput").addEventListener("change", async e =>
   renderAlbertsons();
   saveToGitHub();
 });
-
 document.getElementById("setTokenBtn").onclick = () => {
   const token = prompt("Enter your GitHub Personal Access Token:");
   if (token) {
     githubToken = token;
     localStorage.setItem("githubToken", token);
-    document.getElementById("tokenStatus").textContent = "✅ Token saved.";
-  }
-};
-document.getElementById("loadTokenFileBtn").onclick = () =>
-  document.getElementById("tokenFileInput").click();
-document.getElementById("tokenFileInput").addEventListener("change", async e => {
-  const file = e.target.files[0];
-  const text = await file.text();
-  githubToken = text.trim();
-  localStorage.setItem("githubToken", githubToken);
-  document.getElementById("tokenStatus").textContent = "✅ Token loaded from file.";
-});
-
-// ===== AUTO SAVE TO GITHUB =====
-function saveToGitHub() {
-  clearTimeout(window.saveTimeout);
-  window.saveTimeout = setTimeout(exportListToGitHub, 2000);
-}
+    document.getElementById("tokenStatus").textContent = "✅
