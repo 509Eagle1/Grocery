@@ -74,8 +74,8 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
   <button id="showCheckedBtn">Shopping List</button>
   <button id="showAddBtn">Add Items</button>
   <div class="dropdown">
-    <button class="dropdown-btn">Admin ⏷</button>
-    <div class="dropdown-content">
+    <button id="adminDropdownBtn" class="dropdown-btn">Admin ⏷</button>
+    <div id="adminDropdownContent" class="dropdown-content">
       <button id="exportJsonBtn">Export</button>
       <button id="restoreGitHubBtn">Restore</button>
       <button id="importListBtn">Import List</button>
@@ -231,13 +231,6 @@ function renderMaster(filter="") {
     rightDiv.appendChild(handle);
     li.appendChild(rightDiv);
 
-    dropBtn.addEventListener("click",(e)=>{
-      e.stopPropagation();
-      const isVisible = dropContent.style.display==="block";
-      document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none");
-      content.style.display = isVisible ? "none" : "block";
-    });
-
     handle.addEventListener("mousedown",(e)=>{ li.draggable=true; });
     handle.addEventListener("mouseup",(e)=>{ li.draggable=false; });
 
@@ -342,19 +335,20 @@ document.addEventListener("DOMContentLoaded",()=>{
   searchInput.addEventListener("input",()=>{ renderMaster(searchInput.value); clearSearchBtn.style.display = searchInput.value ? 'block' : 'none'; });
   clearSearchBtn.addEventListener("click",()=>{ searchInput.value=''; renderMaster(); clearSearchBtn.style.display='none'; });
 
-  // Fix Admin dropdown
-  document.querySelectorAll(".dropdown-btn").forEach(btn => {
-    btn.addEventListener("click", e => {
-      e.stopPropagation(); // prevents closing immediately
-      const content = btn.nextElementSibling;
-      const isVisible = content.style.display==="block";
-      document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none");
-      content.style.display = isVisible ? "none" : "block";
-    });
+  // ===== Admin Dropdown =====
+  const adminBtn = document.getElementById("adminDropdownBtn");
+  const adminContent = document.getElementById("adminDropdownContent");
+  adminBtn.addEventListener("click", e => {
+    e.stopPropagation();
+    const isVisible = adminContent.style.display === "block";
+    document.querySelectorAll(".dropdown-content").forEach(dc => dc.style.display = "none");
+    adminContent.style.display = isVisible ? "none" : "block";
   });
 
-  // Close dropdowns on outside click
-  document.addEventListener("click",()=>{ document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none"); });
+  // Close all dropdowns when clicking outside
+  document.addEventListener("click", () => {
+    document.querySelectorAll(".dropdown-content").forEach(dc => dc.style.display = "none");
+  });
 });
 </script>
 </body>
