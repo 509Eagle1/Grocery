@@ -3,233 +3,155 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Grocery Master List</title>
+<title>Albertsons Grocery List</title>
 <style>
-body { font-family: Arial, sans-serif; margin:10px; background:#f4f4f4; }
-h1 { text-align:center; margin-bottom:5px; }
-.menu { display:flex; gap:5px; justify-content:center; margin-bottom:10px; flex-wrap:wrap; }
-.menu button, .menu .dropdown-btn { padding:8px 12px; border-radius:8px; border:none; background:#007bff; color:white; font-size:14px; cursor:pointer; }
-.menu button:hover, .menu .dropdown-btn:hover { background:#0056b3; }
-.status-icon { text-align:center; font-size:12px; color:#333; margin-bottom:2px; }
-.button-bar { display:flex; flex-wrap:wrap; gap:5px; justify-content:flex-start; align-items:center; margin-bottom:10px; }
-.button-bar button { padding:6px 10px; border-radius:6px; border:none; color:white; cursor:pointer; }
-.button-bar .clear { background:#ffc107; color:#000; }
-.button-bar .add { background:#17a2b8; }
-.list-container { background:white; padding:15px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
-.item { display:flex; justify-content:space-between; align-items:center; padding:6px; border-bottom:1px solid #ddd; position:relative; }
-.item.checked { text-decoration: line-through; color:gray; }
-input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; margin-bottom:5px; }
-#addPage { display:flex; flex-direction:column; gap:5px; flex-wrap:wrap; align-items:flex-start; margin-top:10px; }
-.hidden { display:none; }
-
-/* Dropdown styling */
-.dropdown { position: relative; display:inline-block; }
-.dropdown-btn { background:#007bff; color:white; border:none; padding:4px 8px; border-radius:5px; cursor:pointer; font-size:12px; }
-.dropdown-btn:hover { background:#0056b3; }
-.dropdown-content { display:none; position:absolute; right:0; background-color:#f9f9f9; min-width:140px; box-shadow:0 8px 16px rgba(0,0,0,0.2); z-index:1; border-radius:5px; }
-.dropdown-content button { width:100%; text-align:left; border:none; padding:6px 10px; cursor:pointer; font-size:12px; margin:0; border-radius:0; white-space:normal; word-wrap:break-word; }
-.dropdown-content button:hover { opacity:0.9; }
-.dropdown-content .edit { background:#28a745; color:white; margin-bottom:5px; }
-.dropdown-content .remove { background:#dc3545; color:white; }
-
-/* Search */
-.search-container { position: relative; flex:1; max-width:300px; }
-#searchInput { width:100%; padding-right: 25px; box-sizing: border-box; }
-.clear-search { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; font-weight: bold; color: #888; font-size: 16px; display: none; }
-.clear-search:hover { color: #333; }
+body {
+  font-family: Arial, sans-serif;
+  margin: 10px;
+  background: #f4f4f4;
+}
+h1 {
+  text-align: center;
+  margin-bottom: 5px;
+}
+.menu {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.menu button, .menu input {
+  padding: 5px 8px;
+  font-size: 14px;
+}
+#searchBar {
+  flex: 1;
+}
+#shoppingList {
+  list-style-type: none;
+  padding-left: 10px;
+  margin: 0;
+  text-align: left;
+}
+#shoppingList li {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  text-align: left;
+  gap: 8px;
+  padding: 4px 0;
+  background: white;
+  margin-bottom: 4px;
+  border-radius: 4px;
+  padding-left: 8px;
+  cursor: grab;
+}
+#shoppingList li:active {
+  cursor: grabbing;
+  background: #d8eaff;
+}
+#shoppingList li.checked span {
+  text-decoration: line-through;
+  color: gray;
+}
+.drag-over {
+  border: 2px dashed #007BFF;
+}
 </style>
 </head>
 <body>
 
-<h1>Albertsons</h1>
-<div id="tokenStatus" class="status-icon">⚠️ No GitHub Token</div>
+<h1>Albertsons Grocery List</h1>
 
 <div class="menu">
-  <button id="showMasterBtn">Albertsons</button>
-  <button id="showCheckedBtn">Shopping List</button>
-  <button id="showAddBtn">Add Items</button>
-  <div class="dropdown">
-    <button class="dropdown-btn">Admin ⏷</button>
-    <div class="dropdown-content">
-      <button id="exportJsonBtn">Export</button>
-      <button id="restoreGitHubBtn">Restore</button>
-      <button id="importListBtn">Import List</button>
-      <button id="setTokenBtn">Set GitHub Token</button>
-      <button id="loadTokenFileBtn">Load Token From File</button>
-    </div>
-  </div>
+  <button onclick="clearChecks()">Clear All Checks</button>
+  <input type="text" id="searchBar" placeholder="Search items..." onkeyup="searchItems()">
 </div>
 
-<div class="list-container">
-  <div id="masterPage">
-    <div class="button-bar">
-      <button id="clearChecksBtn" class="clear">Clear All Checks</button>
-      <div class="search-container">
-        <input type="text" id="searchInput" placeholder="Search items...">
-        <span id="clearSearchBtn" class="clear-search">×</span>
-      </div>
-    </div>
-    <ul id="groceryList"></ul>
-  </div>
-
-  <div id="checkedPage" class="hidden">
-    <ul id="checkedList"></ul>
-  </div>
-
-  <div id="addPage" class="hidden">
-    <input type="text" id="itemInput" placeholder="Item name">
-    <input type="text" id="aisleInput" placeholder="Aisle">
-    <button id="addItemBtn" class="add">Add Item</button>
-  </div>
-</div>
-
-<input type="file" id="importListInput" accept=".json,.csv" style="display:none;">
-<input type="file" id="tokenFileInput" accept=".txt" style="display:none;">
+<ul id="shoppingList">
+  <li draggable="true"><input type="checkbox"> <span>Milk</span></li>
+  <li draggable="true"><input type="checkbox"> <span>Eggs</span></li>
+  <li draggable="true"><input type="checkbox"> <span>Bread</span></li>
+  <li draggable="true"><input type="checkbox"> <span>Cheese</span></li>
+  <li draggable="true"><input type="checkbox"> <span>Apples</span></li>
+</ul>
 
 <script>
-let groceryItems = JSON.parse(localStorage.getItem('groceryItems') || "[]");
-
-// ===== Save / Load =====
-function saveData() { localStorage.setItem('groceryItems', JSON.stringify(groceryItems)); }
-
-// ===== GitHub Token =====
-function promptGitHubToken() {
-  let token = localStorage.getItem("githubToken");
-  if (!token) token = prompt("⚠️ GitHub token missing! Enter token:") || null;
-  if(token) localStorage.setItem("githubToken", token);
-  document.getElementById("tokenStatus").textContent = token ? "✅ GitHub Token Set" : "⚠️ No GitHub Token";
+function clearChecks() {
+  document.querySelectorAll('#shoppingList input[type="checkbox"]').forEach(cb => cb.checked = false);
 }
 
-// ===== Render Master List =====
-function renderMaster(filter="") {
-  const list = document.getElementById("groceryList");
-  list.innerHTML = "";
-  groceryItems.forEach((item,index)=>{
-    if(filter && !item.name.toLowerCase().includes(filter.toLowerCase())) return;
-
-    const li = document.createElement("li"); li.className="item";
-
-    const leftDiv = document.createElement("div");
-    leftDiv.style.display="flex"; leftDiv.style.alignItems="center"; leftDiv.style.gap="5px";
-
-    const checkbox = document.createElement("input"); checkbox.type="checkbox"; checkbox.checked=item.checked || false;
-    checkbox.addEventListener("change",()=>{
-      item.checked = checkbox.checked; renderChecked();
-      saveData();
-    });
-
-    const span = document.createElement("span"); span.textContent=`${item.name} (Aisle: ${item.aisle})`;
-    leftDiv.appendChild(checkbox); leftDiv.appendChild(span);
-    li.appendChild(leftDiv);
-
-    // Dropdown for each item
-    const dropdown = document.createElement("div"); dropdown.className="dropdown";
-    const dropBtn = document.createElement("button"); dropBtn.className="dropdown-btn"; dropBtn.textContent="Options ⏷";
-    const dropContent = document.createElement("div"); dropContent.className="dropdown-content";
-
-    const editBtn = document.createElement("button"); editBtn.className="edit"; editBtn.textContent="Edit";
-    editBtn.addEventListener("click",()=>{
-      const newName = prompt("Edit item:",item.name); if(newName!==null)item.name=newName.trim();
-      const newAisle = prompt("Edit aisle:",item.aisle); if(newAisle!==null)item.aisle=newAisle.trim();
-      renderMaster(document.getElementById("searchInput").value);
-      saveData();
-    });
-
-    const removeBtn = document.createElement("button"); removeBtn.className="remove"; removeBtn.textContent="Remove";
-    removeBtn.addEventListener("click",(e)=>{
-      e.stopPropagation();
-      if(confirm(`Are you sure you want to remove "${item.name}"?`)){
-        groceryItems.splice(index,1);
-        saveData();
-        renderMaster(document.getElementById("searchInput").value);
-      }
-    });
-
-    dropContent.appendChild(editBtn); dropContent.appendChild(removeBtn);
-    dropdown.appendChild(dropBtn); dropdown.appendChild(dropContent);
-    li.appendChild(dropdown);
-
-    dropBtn.addEventListener("click",(e)=>{
-      e.stopPropagation();
-      const isVisible = dropContent.style.display==="block";
-      document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none");
-      dropContent.style.display = isVisible ? "none" : "block";
-    });
-
-    list.appendChild(li);
+function searchItems() {
+  const filter = document.getElementById('searchBar').value.toLowerCase();
+  document.querySelectorAll('#shoppingList li').forEach(li => {
+    const text = li.textContent.toLowerCase();
+    li.style.display = text.includes(filter) ? '' : 'none';
   });
 }
 
-// ===== Render Checked / Shopping List =====
-function renderChecked() {
-  const checkedList = document.getElementById("checkedList");
-  checkedList.innerHTML = "";
-  groceryItems.filter(i=>i.checked).forEach(item=>{
-    const li = document.createElement("li");
-    li.className="item";
+// === Drag and Drop Sorting ===
+const list = document.getElementById('shoppingList');
+let draggedItem = null;
 
-    const leftDiv = document.createElement("div");
-    leftDiv.style.display="flex";
-    leftDiv.style.alignItems="center";
-    leftDiv.style.gap="5px";
-
-    const cb = document.createElement("input");
-    cb.type="checkbox";
-    cb.checked = true;
-    cb.addEventListener("change",()=>{
-      item.checked = cb.checked;
-      saveData();
-      renderMaster();
-      renderChecked();
-    });
-
-    const span = document.createElement("span");
-    span.textContent = `${item.name} (Aisle: ${item.aisle})`;
-
-    leftDiv.appendChild(cb);
-    leftDiv.appendChild(span);
-    li.appendChild(leftDiv);
-
-    checkedList.appendChild(li);
-  });
-}
-
-// ===== Add Item =====
-function addItem() {
-  const name = document.getElementById("itemInput").value.trim();
-  const aisle = document.getElementById("aisleInput").value.trim();
-  if(!name) return;
-  groceryItems.push({name,aisle,checked:false});
-  document.getElementById("itemInput").value = ""; document.getElementById("aisleInput").value="";
-  saveData(); renderMaster();
-}
-
-// ===== Page Switching =====
-function showMaster(){ document.getElementById("masterPage").classList.remove("hidden"); document.getElementById("checkedPage").classList.add("hidden"); document.getElementById("addPage").classList.add("hidden"); }
-function showChecked(){ document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.remove("hidden"); document.getElementById("addPage").classList.add("hidden"); }
-function showAdd(){ document.getElementById("addPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.add("hidden"); }
-
-document.addEventListener("DOMContentLoaded",()=>{
-  promptGitHubToken();
-  renderMaster(); renderChecked();
-
-  document.getElementById("addItemBtn").addEventListener("click",addItem);
-  document.getElementById("clearChecksBtn").addEventListener("click",()=>{
-    groceryItems.forEach(i=>i.checked=false);
-    saveData(); renderMaster(); renderChecked();
-  });
-  document.getElementById("showMasterBtn").addEventListener("click",showMaster);
-  document.getElementById("showCheckedBtn").addEventListener("click",showChecked);
-  document.getElementById("showAddBtn").addEventListener("click",showAdd);
-
-  const searchInput=document.getElementById("searchInput");
-  const clearSearchBtn=document.getElementById("clearSearchBtn");
-  searchInput.addEventListener("input",()=>{ renderMaster(searchInput.value); clearSearchBtn.style.display = searchInput.value ? 'block' : 'none'; });
-  clearSearchBtn.addEventListener("click",()=>{ searchInput.value=''; renderMaster(); clearSearchBtn.style.display='none'; });
-
-  // Close dropdowns on outside click
-  document.addEventListener("click",()=>{ document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none"); });
+list.addEventListener('dragstart', e => {
+  if (e.target.tagName === 'LI') {
+    draggedItem = e.target;
+    e.target.style.opacity = '0.5';
+  }
 });
+
+list.addEventListener('dragend', e => {
+  if (draggedItem) {
+    draggedItem.style.opacity = '1';
+    draggedItem = null;
+  }
+});
+
+list.addEventListener('dragover', e => {
+  e.preventDefault();
+  const afterElement = getDragAfterElement(list, e.clientY);
+  const dragging = document.querySelector('.dragging');
+});
+
+list.addEventListener('drop', e => {
+  e.preventDefault();
+  const afterElement = getDragAfterElement(list, e.clientY);
+  if (afterElement == null) {
+    list.appendChild(draggedItem);
+  } else {
+    list.insertBefore(draggedItem, afterElement);
+  }
+  saveNewOrder();
+});
+
+list.addEventListener('dragenter', e => {
+  if (e.target.tagName === 'LI') e.target.classList.add('drag-over');
+});
+
+list.addEventListener('dragleave', e => {
+  if (e.target.tagName === 'LI') e.target.classList.remove('drag-over');
+});
+
+function getDragAfterElement(container, y) {
+  const draggableElements = [...container.querySelectorAll('li:not(.dragging)')];
+  return draggableElements.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) {
+      return { offset: offset, element: child };
+    } else {
+      return closest;
+    }
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+function saveNewOrder() {
+  const items = [...document.querySelectorAll('#shoppingList li span')].map(span => span.textContent);
+  console.log("New order saved:", items);
+  // TODO: Replace console.log with GitHub save function if wired
+}
 </script>
+
 </body>
 </html>
