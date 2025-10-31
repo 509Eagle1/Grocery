@@ -20,19 +20,41 @@ h1 {
 /* ===== Menu Buttons ===== */
 .menu {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   justify-content: flex-start;
   flex-wrap: nowrap;  /* single line */
   margin-bottom: 10px;
 }
 
-.menu button, .menu .dropdown-btn {
-  padding: 4px 8px;   /* smaller padding for mobile */
-  font-size: 12px;    /* smaller font for iPhone 15 Pro Max */
+/* Main buttons: Albertsons, Shopping List, Add Items */
+.menu button:not(.dropdown-btn) {
+  padding: 8px 14px;       /* larger size */
+  font-size: 14px;          /* larger font */
   border-radius: 6px;
+  background: white;         /* reverse color: background white */
+  color: #007bff;           /* text in primary blue */
+  border: 1px solid #007bff;
+  font-weight: bold;
+  cursor: pointer;
+  flex-shrink: 0;           /* prevent shrinking on small screens */
 }
 
-.menu button:hover, .menu .dropdown-btn:hover {
+.menu button:not(.dropdown-btn):hover {
+  background: #007bff;
+  color: white;
+}
+
+/* Admin button remains default */
+.menu .dropdown-btn {
+  padding: 6px 10px;
+  font-size: 12px;
+  background: #007bff;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.menu .dropdown-btn:hover {
   background: #0056b3;
 }
 
@@ -114,18 +136,6 @@ h1 {
   display: inline-block;
 }
 
-.dropdown-btn {
-  background: #007bff;
-  color: white;
-  border: none;
-  padding: 4px 8px;
-  border-radius: 5px;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-.dropdown-btn:hover { background: #0056b3; }
-
 .dropdown-content {
   display: none;
   position: absolute;
@@ -202,8 +212,12 @@ input[type="text"] {
 
 /* ===== Responsive Improvements ===== */
 @media(max-width:430px){
-  .menu button, .menu .dropdown-btn {
-    padding: 3px 5px;
+  .menu button:not(.dropdown-btn) {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .menu .dropdown-btn {
+    padding: 5px 8px;
     font-size: 11px;
   }
 }
