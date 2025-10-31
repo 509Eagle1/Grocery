@@ -28,15 +28,15 @@ h1 {
 
 /* Main buttons: Albertsons, Shopping List, Add Items */
 .menu button:not(.dropdown-btn) {
-  padding: 8px 14px;       /* larger size */
-  font-size: 14px;          /* larger font */
+  padding: 8px 14px;       
+  font-size: 14px;          
   border-radius: 6px;
-  background: white;         /* reverse color: background white */
-  color: #007bff;           /* text in primary blue */
+  background: white;        
+  color: #007bff;           
   border: 1px solid #007bff;
   font-weight: bold;
   cursor: pointer;
-  flex-shrink: 0;           /* prevent shrinking on small screens */
+  flex-shrink: 0;           
 }
 
 .menu button:not(.dropdown-btn):hover {
@@ -118,8 +118,8 @@ h1 {
 
 /* ===== Options Button Styling ===== */
 .item-right .dropdown-btn {
-  background: #007bff;   /* blue background */
-  color: white;          /* white text */
+  background: #007bff;   
+  color: white;          
   border-radius: 5px;
   border: none;
   padding: 4px 8px;
@@ -128,7 +128,7 @@ h1 {
 }
 
 .item-right .dropdown-btn:hover {
-  background: #0056b3;   /* darker blue on hover */
+  background: #0056b3;   
 }
 
 /* Drag Handle */
@@ -147,40 +147,49 @@ h1 {
 
 /* ===== Admin Dropdown Styling ===== */
 .menu .dropdown {
-  position: relative; /* parent relative so dropdown absolute is relative to this */
+  position: relative; 
 }
 
 .menu .dropdown-content {
   display: none;
   position: absolute;
-  top: 100%;      /* place below the Admin button */
-  left: 0;         /* align left edge with Admin button */
+  top: 100%;     
+  left: 0;        
   background-color: #f9f9f9;
-  min-width: 160px;
+  min-width: 160px; 
   box-shadow: 0 8px 16px rgba(0,0,0,0.2);
   z-index: 1000;
   border-radius: 5px;
+  padding: 5px 0;    
 }
 
-.menu .dropdown-content button {
+/* ===== Options Dropdown Buttons Stacked Vertically ===== */
+.dropdown-content button {
   width: 100%;
   text-align: left;
-  padding: 8px 10px;
-  font-size: 13px;
   border: none;
-  background: white;
+  padding: 6px 10px;
   cursor: pointer;
-  margin: 0;
-  border-radius: 0;
+  font-size: 12px;
+  margin: 3px 0;       /* spacing between buttons */
+  border-radius: 3px;
+  white-space: normal;
+  word-wrap: break-word;
 }
 
-.menu .dropdown-content button:hover {
-  background: #007bff;
+.dropdown-content button:hover {
+  opacity: 0.9;
+}
+
+.dropdown-content .edit {
+  background: #28a745;
   color: white;
 }
 
-.dropdown-content .edit { background: #28a745; color: white; margin-bottom: 5px; }
-.dropdown-content .remove { background: #dc3545; color: white; }
+.dropdown-content .remove {
+  background: #dc3545;
+  color: white;
+}
 
 /* ===== Search Styling ===== */
 .search-container {
