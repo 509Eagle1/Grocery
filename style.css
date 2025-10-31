@@ -1,4 +1,4 @@
-/* ===== GLOBAL ===== */
+/* ===== General Styles ===== */
 body {
   font-family: Arial, sans-serif;
   margin: 10px;
@@ -7,232 +7,232 @@ body {
 
 h1 {
   text-align: center;
-  margin-bottom: 10px;
+  margin-bottom: 5px;
 }
 
-/* ===== MENU BAR ===== */
-.menu-bar {
+.status-icon {
+  text-align: center;
+  font-size: 12px;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+/* ===== Menu Buttons ===== */
+.menu {
   display: flex;
-  justify-content: space-around;
-  align-items: center;
-  flex-wrap: nowrap;
-  gap: 4px;
+  gap: 6px;
+  justify-content: flex-start;
+  flex-wrap: nowrap;  /* single line */
   margin-bottom: 10px;
 }
 
-.menu-bar button {
-  flex: 1;
-  min-width: 60px;
-  font-size: 14px;
+/* Main buttons: Albertsons, Shopping List, Add Items */
+.menu button:not(.dropdown-btn) {
+  padding: 8px 14px;       /* larger size */
+  font-size: 14px;          /* larger font */
+  border-radius: 6px;
+  background: white;         /* reverse color: background white */
+  color: #007bff;           /* text in primary blue */
+  border: 1px solid #007bff;
   font-weight: bold;
-  padding: 10px 6px;
-  border: none;
-  border-radius: 8px;
-  background: white;
-  color: #222;
   cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.2s, color 0.2s;
+  flex-shrink: 0;           /* prevent shrinking on small screens */
 }
 
-.menu-bar button:hover {
-  background: #222;
-  color: white;
-}
-
-/* Admin dropdown container */
-.dropdown {
-  position: relative;
-}
-
-#adminBtn {
+.menu button:not(.dropdown-btn):hover {
   background: #007bff;
   color: white;
 }
 
-#adminBtn:hover {
+/* Admin button remains default */
+.menu .dropdown-btn {
+  padding: 6px 10px;
+  font-size: 12px;
+  background: #007bff;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.menu .dropdown-btn:hover {
   background: #0056b3;
 }
 
-/* Admin dropdown content */
+/* ===== Button Bar ===== */
+.button-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.button-bar button {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+.button-bar .clear { background: #ffc107; color: #000; }
+.button-bar .add { background: #17a2b8; }
+
+/* ===== List Container ===== */
+.list-container {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* ===== List Items ===== */
+.item {
+  display: flex;
+  align-items: center;
+  padding: 6px;
+  border-bottom: 1px solid #ddd;
+  position: relative;
+}
+
+.item.checked span {
+  text-decoration: line-through;
+  color: gray;
+}
+
+/* LEFT: Checkbox + Item Name */
+.item-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* RIGHT: Options + Drag Handle */
+.item-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ===== Options Button Styling ===== */
+.item-right .dropdown-btn {
+  background: #007bff;   /* blue background */
+  color: white;          /* white text */
+  border-radius: 5px;
+  border: none;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.item-right .dropdown-btn:hover {
+  background: #0056b3;   /* darker blue on hover */
+}
+
+/* Drag Handle */
+.drag-handle {
+  cursor: grab;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drag-handle svg {
+  width: 20px;
+  height: 20px;
+  fill: #555;
+}
+
+/* ===== Dropdown Styling ===== */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
 .dropdown-content {
   display: none;
   position: absolute;
-  top: 40px;
   right: 0;
-  background-color: white;
-  min-width: 180px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  border-radius: 6px;
-  z-index: 10;
-  padding: 5px;
+  background-color: #f9f9f9;
+  min-width: 140px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  z-index: 1;
+  border-radius: 5px;
 }
 
 .dropdown-content button {
   width: 100%;
   text-align: left;
-  padding: 8px;
   border: none;
-  border-radius: 6px;
-  background: #007bff;
-  color: white;
-  margin-bottom: 5px;
+  padding: 6px 10px;
   cursor: pointer;
-  font-size: 13px;
-}
-
-.dropdown-content button:hover {
-  background: #0056b3;
-}
-
-/* ===== PAGE CONTAINERS ===== */
-.page {
-  display: none;
-  background: white;
-  border-radius: 10px;
-  padding: 15px;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
-}
-
-#albertsonsPage {
-  display: block;
-}
-
-/* ===== ALBERTSONS LIST ITEMS ===== */
-.list-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px;
-  border-bottom: 1px solid #ddd;
-  position: relative;
-}
-
-.list-item span {
-  font-size: 15px;
-  flex: 1;
-}
-
-/* ===== OPTIONS BUTTON ===== */
-.options-btn {
-  background: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 4px 8px;
   font-size: 12px;
-  cursor: pointer;
-  margin-left: 10px;
-}
-
-.options-btn:hover {
-  background: #0056b3;
-}
-
-/* ===== ITEM DROPDOWN MENU ===== */
-.options-menu {
-  display: none;
-  position: absolute;
-  top: 35px;
-  right: 0;
-  background: white;
-  border-radius: 6px;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
-  padding: 6px;
-  z-index: 20;
-}
-
-.options-menu button {
-  display: block;
-  width: 100%;
-  margin-bottom: 6px;
-  padding: 6px;
-  font-size: 13px;
-  border: none;
-  border-radius: 5px;
-  color: white;
-  cursor: pointer;
-}
-
-.options-menu button.edit {
-  background: #28a745;
-}
-
-.options-menu button.remove {
-  background: #dc3545;
-}
-
-.options-menu button:hover {
-  opacity: 0.9;
-}
-
-/* ===== DRAG HANDLE ===== */
-.drag-handle {
-  cursor: grab;
-  font-size: 16px;
-  color: #666;
-  user-select: none;
-  margin-left: 8px;
-}
-
-/* ===== SHOPPING LIST ===== */
-#shoppingList {
-  list-style: none;
-  padding: 0;
   margin: 0;
+  border-radius: 0;
+  white-space: normal;
+  word-wrap: break-word;
 }
 
-#shoppingList li {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 10px;
-  padding: 8px;
-  border-bottom: 1px solid #ddd;
+.dropdown-content button:hover { opacity: 0.9; }
+
+.dropdown-content .edit { background: #28a745; color: white; margin-bottom: 5px; }
+.dropdown-content .remove { background: #dc3545; color: white; }
+
+/* ===== Search Styling ===== */
+.search-container {
+  position: relative;
+  flex: 1;
+  max-width: 300px;
 }
 
-#shoppingList li span {
-  font-size: 15px;
-}
-
-#shoppingList li.checked span {
-  text-decoration: line-through;
-  color: gray;
-}
-
-/* ===== INPUTS ===== */
-#newItemInput {
+#searchInput {
   width: 100%;
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  margin-bottom: 8px;
+  padding-right: 25px;
+  box-sizing: border-box;
 }
 
-#addItemBtn {
-  background: #17a2b8;
-  color: white;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
+.clear-search {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
   cursor: pointer;
+  font-weight: bold;
+  color: #888;
+  font-size: 16px;
+  display: none;
 }
 
-#addItemBtn:hover {
-  background: #138496;
+.clear-search:hover { color: #333; }
+
+/* ===== Pages ===== */
+.hidden { display: none; }
+#addPage { display: flex; flex-direction: column; gap: 5px; flex-wrap: wrap; align-items: flex-start; margin-top: 10px; }
+
+/* ===== Shopping List Left Justify ===== */
+#checkedList .item {
+  justify-content: flex-start;
+  gap: 5px;
 }
 
-/* ===== DRAGGING STATE ===== */
-.dragging {
-  opacity: 0.6;
-  background: #e6f0ff;
+/* ===== Misc Inputs ===== */
+input[type="text"] {
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  margin-bottom: 5px;
 }
 
-/* ===== SMALL SCREENS ===== */
-@media (max-width: 480px) {
-  .menu-bar button {
-    font-size: 13px;
-    padding: 8px 4px;
+/* ===== Responsive Improvements ===== */
+@media(max-width:430px){
+  .menu button:not(.dropdown-btn) {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .menu .dropdown-btn {
+    padding: 5px 8px;
+    font-size: 11px;
   }
 }
