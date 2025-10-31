@@ -20,20 +20,16 @@ h1 {
 /* ===== Menu Buttons ===== */
 .menu {
   display: flex;
-  gap: 5px;
-  justify-content: flex-start; /* align left */
-  flex-wrap: nowrap;            /* single line */
+  gap: 4px;
+  justify-content: flex-start;
+  flex-wrap: nowrap;  /* single line */
   margin-bottom: 10px;
 }
 
 .menu button, .menu .dropdown-btn {
-  padding: 8px 12px;
-  border-radius: 8px;
-  border: none;
-  background: #007bff;
-  color: white;
-  font-size: 14px;
-  cursor: pointer;
+  padding: 4px 8px;   /* smaller padding for mobile */
+  font-size: 12px;    /* smaller font for iPhone 15 Pro Max */
+  border-radius: 6px;
 }
 
 .menu button:hover, .menu .dropdown-btn:hover {
@@ -95,7 +91,7 @@ h1 {
 .item-right {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
 }
 
 /* Drag Handle */
@@ -205,8 +201,9 @@ input[type="text"] {
 }
 
 /* ===== Responsive Improvements ===== */
-@media(max-width:600px){
-  .menu { flex-direction: column; }
-  .button-bar { flex-direction: column; align-items: flex-start; }
-  .item-right { gap: 5px; }
+@media(max-width:430px){
+  .menu button, .menu .dropdown-btn {
+    padding: 3px 5px;
+    font-size: 11px;
+  }
 }
