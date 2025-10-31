@@ -113,7 +113,7 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 
 <script>
 let groceryItems = JSON.parse(localStorage.getItem('groceryItems') || "[]");
-let shoppingCheckedStates = {}; // persistent shopping list checkbox state
+let shoppingCheckedStates = {};
 
 function saveData() { localStorage.setItem('groceryItems', JSON.stringify(groceryItems)); }
 
@@ -209,7 +209,6 @@ function renderMaster(filter="") {
       </svg>
     `;
     rightDiv.appendChild(handle);
-
     li.appendChild(rightDiv);
 
     dropBtn.addEventListener("click",(e)=>{
@@ -281,12 +280,12 @@ function renderChecked() {
     const key = item.name + "|" + item.aisle;
     cb.checked = shoppingCheckedStates[key] || false;
 
-    li.classList.toggle("checked", cb.checked); // strikethrough if checked
+    li.classList.toggle("checked", cb.checked); // strike through immediately
 
     cb.addEventListener("change", () => {
       shoppingCheckedStates[key] = cb.checked;
-      li.classList.toggle("checked", cb.checked); // toggle line-through
-      renderChecked(); // move to bottom
+      li.classList.toggle("checked", cb.checked); // strike through immediately
+      renderChecked(); // move to bottom if checked
     });
 
     const span = document.createElement("span");
