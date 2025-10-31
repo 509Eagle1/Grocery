@@ -62,7 +62,7 @@
   {
     "name": "Mash Potatoes",
     "aisle": "",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Shampoo",
@@ -77,22 +77,22 @@
   {
     "name": "Butter Sticks",
     "aisle": "1",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Canadian Bacon",
     "aisle": "1",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Cheese Shreded",
     "aisle": "1",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Cheese Sliced",
     "aisle": "1",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Corn on the Cob",
@@ -662,6 +662,16 @@
   {
     "name": "Q1",
     "aisle": "21",
+    "checked": false
+  },
+  {
+    "name": "Q2",
+    "aisle": "21",
+    "checked": false
+  },
+  {
+    "name": "Q3",
+    "aisle": "22",
     "checked": false
   }
 ]
