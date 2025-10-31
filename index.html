@@ -1,68 +1,46 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Grocery Master List</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Grocery Master List</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <h1>Grocery Master List</h1>
 
-<h1>Albertsons</h1>
-<div id="tokenStatus" class="status-icon">⚠️ No GitHub Token</div>
-
-<!-- Menu -->
-<div class="menu">
-  <button id="showMasterBtn">Albertsons</button>
-  <button id="showCheckedBtn">Shopping List</button>
-  <button id="showAddBtn">Add Items</button>
-  <!-- Admin dropdown -->
-  <div class="dropdown">
-    <button class="dropdown-btn">Admin ⏷</button>
-    <div class="dropdown-content">
-      <button id="exportJsonBtn">Export</button>
-      <button id="restoreGitHubBtn">Restore</button>
-      <button id="importListBtn">Import List</button>
-      <button id="setTokenBtn">Set GitHub Token</button>
-      <button id="loadTokenFileBtn">Load Token From File</button>
-    </div>
-  </div>
-</div>
-
-<!-- List Container -->
-<div class="list-container">
-
-  <!-- Albertsons Master List -->
-  <div id="masterPage">
-    <div class="button-bar">
-      <button id="clearChecksBtn" class="clear">Clear All Checks</button>
-      <div class="search-container">
-        <input type="text" id="searchInput" placeholder="Search items...">
-        <span id="clearSearchBtn" class="clear-search">×</span>
+  <div class="menu">
+    <button id="albertsonsBtn">Albertsons</button>
+    <button id="shoppingBtn">Shopping List</button>
+    <button id="addItemMenuBtn">Add Items</button>
+    <div class="admin-dropdown">
+      <button id="adminMenuBtn">Admin ▼</button>
+      <div id="adminDropdown" class="dropdown-content">
+        <button id="exportJsonBtn">Export to GitHub</button>
+        <button id="restoreGitHubBtn">Restore from GitHub</button>
+        <button id="importListBtn">Import List</button>
+        <input type="file" id="importListInput" accept=".json" style="display:none">
+        <button id="setTokenBtn">Set GitHub Token</button>
+        <button id="loadTokenFileBtn">Load Token from File</button>
+        <input type="file" id="tokenFileInput" accept=".txt" style="display:none">
+        <p id="tokenStatus">❌ No Token Set</p>
       </div>
     </div>
-    <ul id="groceryList"></ul>
   </div>
 
-  <!-- Shopping List -->
-  <div id="checkedPage" class="hidden">
-    <ul id="checkedList"></ul>
+  <div id="albertsonsSection" class="section active">
+    <ul id="albertsonsList"></ul>
   </div>
 
-  <!-- Add Items Page -->
-  <div id="addPage" class="hidden">
-    <input type="text" id="itemInput" placeholder="Item name">
-    <input type="text" id="aisleInput" placeholder="Aisle">
-    <button id="addItemBtn" class="add">Add Item</button>
+  <div id="shoppingSection" class="section">
+    <ul id="shoppingList"></ul>
   </div>
-</div>
 
-<!-- Hidden Inputs for Files -->
-<input type="file" id="importListInput" accept=".json,.csv" style="display:none;">
-<input type="file" id="tokenFileInput" accept=".txt" style="display:none;">
+  <div id="addItemSection" class="section">
+    <input type="text" id="itemInput" placeholder="Enter new item">
+    <button id="addItemBtn">Add Item</button>
+  </div>
 
-<!-- JS -->
-<script src="script.js"></script>
-
+  <script src="script.js"></script>
 </body>
 </html>
