@@ -115,10 +115,8 @@ input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; marg
 let groceryItems = JSON.parse(localStorage.getItem('groceryItems') || "[]");
 let shoppingCheckedStates = {}; // persistent shopping list checkbox state
 
-// ===== Save / Load =====
 function saveData() { localStorage.setItem('groceryItems', JSON.stringify(groceryItems)); }
 
-// ===== GitHub Token =====
 function promptGitHubToken() {
   let token = localStorage.getItem("githubToken");
   if (!token) token = prompt("⚠️ GitHub token missing! Enter token:") || null;
@@ -159,7 +157,6 @@ function renderMaster(filter="") {
     leftDiv.appendChild(span);
     li.appendChild(leftDiv);
 
-    // Right side: dropdown + drag handle
     const rightDiv = document.createElement("div");
     rightDiv.style.display="flex";
     rightDiv.style.alignItems="center";
@@ -202,7 +199,6 @@ function renderMaster(filter="") {
     dropdown.appendChild(dropContent);
     rightDiv.appendChild(dropdown);
 
-    // Drag handle (SVG grip)
     const handle = document.createElement("span");
     handle.className = "drag-handle";
     handle.innerHTML = `
@@ -223,7 +219,6 @@ function renderMaster(filter="") {
       dropContent.style.display = isVisible ? "none" : "block";
     });
 
-    // Drag & Drop Events
     handle.addEventListener("mousedown",(e)=>{ li.draggable=true; });
     handle.addEventListener("mouseup",(e)=>{ li.draggable=false; });
 
@@ -267,16 +262,14 @@ function renderChecked() {
   const checkedList = document.getElementById("checkedList");
   checkedList.innerHTML = "";
 
-  // get items checked in master
   let checkedItems = groceryItems.filter(i => i.checked);
 
-  // sort so checked shopping list items go to bottom
   checkedItems.sort((a,b)=>{
     const aKey = a.name + "|" + a.aisle;
     const bKey = b.name + "|" + b.aisle;
     const aChecked = shoppingCheckedStates[aKey] || false;
     const bChecked = shoppingCheckedStates[bKey] || false;
-    return aChecked - bChecked; // false first, true last
+    return aChecked - bChecked;
   });
 
   checkedItems.forEach(item => {
@@ -288,10 +281,12 @@ function renderChecked() {
     const key = item.name + "|" + item.aisle;
     cb.checked = shoppingCheckedStates[key] || false;
 
+    li.classList.toggle("checked", cb.checked); // strikethrough if checked
+
     cb.addEventListener("change", () => {
-      li.classList.toggle("checked", cb.checked);
       shoppingCheckedStates[key] = cb.checked;
-      renderChecked(); // re-render to move checked to bottom
+      li.classList.toggle("checked", cb.checked); // toggle line-through
+      renderChecked(); // move to bottom
     });
 
     const span = document.createElement("span");
@@ -303,7 +298,6 @@ function renderChecked() {
   });
 }
 
-// ===== Add Item =====
 function addItem() {
   const name = document.getElementById("itemInput").value.trim();
   const aisle = document.getElementById("aisleInput").value.trim();
@@ -315,7 +309,6 @@ function addItem() {
   renderMaster();
 }
 
-// ===== Page Switching =====
 function showMaster(){ document.getElementById("masterPage").classList.remove("hidden"); document.getElementById("checkedPage").classList.add("hidden"); document.getElementById("addPage").classList.add("hidden"); }
 function showChecked(){ document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.remove("hidden"); document.getElementById("addPage").classList.add("hidden"); }
 function showAdd(){ document.getElementById("addPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.add("hidden"); }
