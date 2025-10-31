@@ -116,6 +116,21 @@ h1 {
   gap: 6px;
 }
 
+/* ===== Options Button Styling ===== */
+.item-right .dropdown-btn {
+  background: #007bff;   /* blue background */
+  color: white;          /* white text */
+  border-radius: 5px;
+  border: none;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.item-right .dropdown-btn:hover {
+  background: #0056b3;   /* darker blue on hover */
+}
+
 /* Drag Handle */
 .drag-handle {
   cursor: grab;
