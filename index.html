@@ -129,9 +129,9 @@ async function saveToGitHub() {
   const token = localStorage.getItem("githubToken");
   if(!token){ alert("GitHub token missing!"); return; }
 
-  const owner = "509Eagle1";  // <--- replace
-  const repo = "Grocery";         // <--- replace
-  const path = "data/grocery.json";      // <--- replace
+  const owner = "YOUR_GITHUB_USERNAME";  // <--- replace
+  const repo = "YOUR_REPO_NAME";         // <--- replace
+  const path = "groceryItems.json";      // <--- replace
   const branch = "main";
 
   let sha = null;
@@ -235,7 +235,7 @@ function renderMaster(filter="") {
       e.stopPropagation();
       const isVisible = dropContent.style.display==="block";
       document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none");
-      dropContent.style.display = isVisible ? "none" : "block";
+      content.style.display = isVisible ? "none" : "block";
     });
 
     handle.addEventListener("mousedown",(e)=>{ li.draggable=true; });
@@ -342,6 +342,18 @@ document.addEventListener("DOMContentLoaded",()=>{
   searchInput.addEventListener("input",()=>{ renderMaster(searchInput.value); clearSearchBtn.style.display = searchInput.value ? 'block' : 'none'; });
   clearSearchBtn.addEventListener("click",()=>{ searchInput.value=''; renderMaster(); clearSearchBtn.style.display='none'; });
 
+  // Fix Admin dropdown
+  document.querySelectorAll(".dropdown-btn").forEach(btn => {
+    btn.addEventListener("click", e => {
+      e.stopPropagation(); // prevents closing immediately
+      const content = btn.nextElementSibling;
+      const isVisible = content.style.display==="block";
+      document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none");
+      content.style.display = isVisible ? "none" : "block";
+    });
+  });
+
+  // Close dropdowns on outside click
   document.addEventListener("click",()=>{ document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none"); });
 });
 </script>
