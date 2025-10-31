@@ -21,9 +21,9 @@ h1 {
 .menu {
   display: flex;
   gap: 5px;
-  justify-content: center;
+  justify-content: flex-start; /* align left */
+  flex-wrap: nowrap;            /* single line */
   margin-bottom: 10px;
-  flex-wrap: wrap;
 }
 
 .menu button, .menu .dropdown-btn {
