@@ -171,8 +171,6 @@ function addItem() {
 
   saveData();
   renderMaster();
-
-  // TODO: GitHub export placeholder
 }
 
 // ===== Page Switching =====
@@ -195,6 +193,115 @@ function showAdd() {
   document.getElementById("checkedPage").classList.add("hidden");
 }
 
+// ===== GitHub API =====
+async function githubExport() {
+  const token = localStorage.getItem("githubToken");
+  if(!token) return alert("GitHub token missing!");
+  const content = JSON.stringify(groceryItems, null, 2);
+  const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+
+  try {
+    // Get existing file SHA (if exists)
+    let sha = null;
+    const getResp = await fetch(apiUrl, {
+      headers: { Authorization: `token ${token}` }
+    });
+    if(getResp.ok) {
+      const data = await getResp.json();
+      sha = data.sha;
+    }
+
+    const body = {
+      message: "Update grocery list",
+      content: btoa(unescape(encodeURIComponent(content))),
+      sha: sha || undefined
+    };
+
+    const putResp = await fetch(apiUrl, {
+      method: "PUT",
+      headers: { Authorization: `token ${token}` },
+      body: JSON.stringify(body)
+    });
+
+    if(putResp.ok) alert("Exported to GitHub successfully!");
+    else alert("Failed to export to GitHub.");
+
+  } catch(err) {
+    console.error(err);
+    alert("Error exporting to GitHub.");
+  }
+}
+
+async function githubRestore() {
+  const token = localStorage.getItem("githubToken");
+  if(!token) return alert("GitHub token missing!");
+  const apiUrl = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+
+  try {
+    const resp = await fetch(apiUrl, {
+      headers: { Authorization: `token ${token}` }
+    });
+    if(!resp.ok) return alert("Failed to fetch from GitHub.");
+    const data = await resp.json();
+    const json = atob(data.content);
+    groceryItems = JSON.parse(json);
+    saveData();
+    renderMaster();
+    renderChecked();
+    alert("Restored from GitHub successfully!");
+  } catch(err) {
+    console.error(err);
+    alert("Error restoring from GitHub.");
+  }
+}
+
+// ===== Import JSON from local file =====
+document.getElementById("importListInput").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    try {
+      groceryItems = JSON.parse(ev.target.result);
+      saveData();
+      renderMaster();
+      renderChecked();
+      alert("Imported list successfully!");
+    } catch(err) {
+      alert("Invalid JSON file.");
+    }
+  };
+  reader.readAsText(file);
+});
+
+// ===== Admin Buttons =====
+document.getElementById("exportJsonBtn").addEventListener("click", githubExport);
+document.getElementById("restoreGitHubBtn").addEventListener("click", githubRestore);
+document.getElementById("importListBtn").addEventListener("click", () => {
+  document.getElementById("importListInput").click();
+});
+document.getElementById("setTokenBtn").addEventListener("click", promptGitHubToken);
+document.getElementById("loadTokenFileBtn").addEventListener("click", () => {
+  document.getElementById("tokenFileInput").click();
+});
+
+// ===== Load token from file =====
+document.getElementById("tokenFileInput").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const token = ev.target.result.trim();
+    if(token) {
+      localStorage.setItem("githubToken", token);
+      document.getElementById("tokenStatus").textContent = "✅ GitHub Token Set";
+      alert("Token loaded!");
+    }
+  };
+  reader.readAsText(file);
+});
+
+// ===== Initialize =====
 document.addEventListener("DOMContentLoaded", () => {
   promptGitHubToken();
   renderMaster();
@@ -243,6 +350,4 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("click", () => {
     document.querySelectorAll(".dropdown-content").forEach(dc => dc.style.display = "none");
   });
-
-  // TODO: GitHub Export / Restore logic
 });
