@@ -157,7 +157,7 @@
   {
     "name": "Pistachio",
     "aisle": "1",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Potatoes",
@@ -167,7 +167,7 @@
   {
     "name": "Salad",
     "aisle": "1",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Sausage Links",
@@ -637,6 +637,16 @@
   {
     "name": "Zebra 2",
     "aisle": "16",
+    "checked": false
+  },
+  {
+    "name": "Elephant",
+    "aisle": "17",
+    "checked": false
+  },
+  {
+    "name": "Joker",
+    "aisle": "18",
     "checked": false
   }
 ]
