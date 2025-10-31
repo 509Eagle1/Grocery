@@ -1,36 +1,212 @@
-body { font-family: Arial, sans-serif; margin:10px; background:#f4f4f4; }
-h1 { text-align:center; margin-bottom:5px; }
-.menu { display:flex; gap:5px; justify-content:center; margin-bottom:10px; flex-wrap:wrap; }
-.menu button, .menu .dropdown-btn { padding:8px 12px; border-radius:8px; border:none; background:#007bff; color:white; font-size:14px; cursor:pointer; }
-.menu button:hover, .menu .dropdown-btn:hover { background:#0056b3; }
-.status-icon { text-align:center; font-size:12px; color:#333; margin-bottom:2px; }
-.button-bar { display:flex; flex-wrap:wrap; gap:5px; justify-content:flex-start; align-items:center; margin-bottom:10px; }
-.button-bar button { padding:6px 10px; border-radius:6px; border:none; color:white; cursor:pointer; }
-.button-bar .clear { background:#ffc107; color:#000; }
-.button-bar .add { background:#17a2b8; }
-.list-container { background:white; padding:15px; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
-.item { display:flex; justify-content:space-between; align-items:center; padding:6px; border-bottom:1px solid #ddd; position:relative; }
-.item.checked span { text-decoration: line-through; color:gray; }
-input[type="text"] { padding:5px; border-radius:5px; border:1px solid #ccc; margin-bottom:5px; }
-#addPage { display:flex; flex-direction:column; gap:5px; flex-wrap:wrap; align-items:flex-start; margin-top:10px; }
-.hidden { display:none; }
+/* ===== General Styles ===== */
+body {
+  font-family: Arial, sans-serif;
+  margin: 10px;
+  background: #f4f4f4;
+}
 
-/* Dropdown styling */
-.dropdown { position: relative; display:inline-block; }
-.dropdown-btn { background:#007bff; color:white; border:none; padding:4px 8px; border-radius:5px; cursor:pointer; font-size:12px; }
-.dropdown-btn:hover { background:#0056b3; }
-.dropdown-content { display:none; position:absolute; right:0; background-color:#f9f9f9; min-width:140px; box-shadow:0 8px 16px rgba(0,0,0,0.2); z-index:1; border-radius:5px; }
-.dropdown-content button { width:100%; text-align:left; border:none; padding:6px 10px; cursor:pointer; font-size:12px; margin:0; border-radius:0; white-space:normal; word-wrap:break-word; }
-.dropdown-content button:hover { opacity:0.9; }
-.dropdown-content .edit { background:#28a745; color:white; margin-bottom:5px; }
-.dropdown-content .remove { background:#dc3545; color:white; }
+h1 {
+  text-align: center;
+  margin-bottom: 5px;
+}
 
-/* Search */
-.search-container { position: relative; flex:1; max-width:300px; }
-#searchInput { width:100%; padding-right: 25px; box-sizing: border-box; }
-.clear-search { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; font-weight: bold; color: #888; font-size: 16px; display: none; }
+.status-icon {
+  text-align: center;
+  font-size: 12px;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+/* ===== Menu Buttons ===== */
+.menu {
+  display: flex;
+  gap: 5px;
+  justify-content: center;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.menu button, .menu .dropdown-btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  background: #007bff;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.menu button:hover, .menu .dropdown-btn:hover {
+  background: #0056b3;
+}
+
+/* ===== Button Bar ===== */
+.button-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  justify-content: flex-start;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.button-bar button {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
+
+.button-bar .clear { background: #ffc107; color: #000; }
+.button-bar .add { background: #17a2b8; }
+
+/* ===== List Container ===== */
+.list-container {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+/* ===== List Items ===== */
+.item {
+  display: flex;
+  align-items: center;
+  padding: 6px;
+  border-bottom: 1px solid #ddd;
+  position: relative;
+}
+
+.item.checked span {
+  text-decoration: line-through;
+  color: gray;
+}
+
+/* LEFT: Checkbox + Item Name */
+.item-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* RIGHT: Options + Drag Handle */
+.item-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Drag Handle */
+.drag-handle {
+  cursor: grab;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drag-handle svg {
+  width: 20px;
+  height: 20px;
+  fill: #555;
+}
+
+/* ===== Dropdown Styling ===== */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-btn {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.dropdown-btn:hover { background: #0056b3; }
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  right: 0;
+  background-color: #f9f9f9;
+  min-width: 140px;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  z-index: 1;
+  border-radius: 5px;
+}
+
+.dropdown-content button {
+  width: 100%;
+  text-align: left;
+  border: none;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  margin: 0;
+  border-radius: 0;
+  white-space: normal;
+  word-wrap: break-word;
+}
+
+.dropdown-content button:hover { opacity: 0.9; }
+
+.dropdown-content .edit { background: #28a745; color: white; margin-bottom: 5px; }
+.dropdown-content .remove { background: #dc3545; color: white; }
+
+/* ===== Search Styling ===== */
+.search-container {
+  position: relative;
+  flex: 1;
+  max-width: 300px;
+}
+
+#searchInput {
+  width: 100%;
+  padding-right: 25px;
+  box-sizing: border-box;
+}
+
+.clear-search {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-weight: bold;
+  color: #888;
+  font-size: 16px;
+  display: none;
+}
+
 .clear-search:hover { color: #333; }
 
-/* Drag handle */
-.drag-handle { cursor: grab; margin-left:5px; }
-.drag-handle svg { width:16px; height:16px; fill:#555; }
+/* ===== Pages ===== */
+.hidden { display: none; }
+#addPage { display: flex; flex-direction: column; gap: 5px; flex-wrap: wrap; align-items: flex-start; margin-top: 10px; }
+
+/* ===== Shopping List Left Justify ===== */
+#checkedList .item {
+  justify-content: flex-start;
+  gap: 5px;
+}
+
+/* ===== Misc Inputs ===== */
+input[type="text"] {
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  margin-bottom: 5px;
+}
+
+/* ===== Responsive Improvements ===== */
+@media(max-width:600px){
+  .menu { flex-direction: column; }
+  .button-bar { flex-direction: column; align-items: flex-start; }
+  .item-right { gap: 5px; }
+}

@@ -24,17 +24,16 @@ async function promptGitHubToken() {
   document.getElementById("tokenStatus").textContent = token ? "✅ GitHub Token Set" : "⚠️ No GitHub Token";
   
   if(token){
-    // Validate token by trying to fetch the file
     try{
       const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`,{
         headers:{Authorization:`token ${token}`}
       });
-      if(res.status===200 || res.status===404){ // 404 is OK if file doesn't exist yet
+      if(res.status===200 || res.status===404){
         githubTokenValid = true;
         console.log("GitHub token is valid ✅");
       }else{
         githubTokenValid = false;
-        console.log("GitHub token invalid or insufficient permissions ❌", res.status);
+        console.log("GitHub token invalid ❌", res.status);
       }
     }catch(e){
       githubTokenValid = false;
@@ -56,10 +55,9 @@ function renderMaster(filter="") {
     li.setAttribute("draggable","true");
     li.dataset.index = index;
 
+    // LEFT: checkbox + name
     const leftDiv = document.createElement("div");
-    leftDiv.style.display="flex"; 
-    leftDiv.style.alignItems="center"; 
-    leftDiv.style.gap="5px";
+    leftDiv.className = "item-left";
 
     const checkbox = document.createElement("input"); 
     checkbox.type="checkbox"; 
@@ -72,11 +70,15 @@ function renderMaster(filter="") {
 
     const span = document.createElement("span"); 
     span.textContent=`${item.name} (Aisle: ${item.aisle})`;
+
     leftDiv.appendChild(checkbox); 
     leftDiv.appendChild(span);
-    li.appendChild(leftDiv);
 
-    // Dropdown
+    // RIGHT: Options button + drag handle
+    const rightDiv = document.createElement("div");
+    rightDiv.className = "item-right";
+
+    // Dropdown Options button
     const dropdown = document.createElement("div"); 
     dropdown.className="dropdown";
     const dropBtn = document.createElement("button"); 
@@ -114,13 +116,18 @@ function renderMaster(filter="") {
     dropContent.appendChild(removeBtn);
     dropdown.appendChild(dropBtn); 
     dropdown.appendChild(dropContent);
-    li.appendChild(dropdown);
+
+    rightDiv.appendChild(dropdown);
 
     // Drag handle
     const dragHandle = document.createElement("span");
     dragHandle.className="drag-handle";
     dragHandle.innerHTML='<svg viewBox="0 0 24 24"><path d="M3 12h18v2H3v-2zm0-5h18v2H3V7zm0 10h18v2H3v-2z"/></svg>';
-    li.appendChild(dragHandle);
+    rightDiv.appendChild(dragHandle);
+
+    // Append left and right divs to li
+    li.appendChild(leftDiv);
+    li.appendChild(rightDiv);
 
     // Drag events
     li.addEventListener("dragstart",(e)=>{
@@ -175,6 +182,7 @@ function renderChecked() {
     const cb = document.createElement("input");
     cb.type="checkbox";
     cb.checked = false;
+
     const span = document.createElement("span");
     span.textContent=`${item.name} (Aisle: ${item.aisle})`;
 
