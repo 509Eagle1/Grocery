@@ -13,11 +13,6 @@ function saveData() {
   localStorage.setItem('groceryItems', JSON.stringify(groceryItems));
 }
 
-// ===== Notification Helper =====
-function notify(msg, success = true){
-  console.log(msg); // placeholder, can implement toast notifications
-}
-
 // ===== GitHub Token Prompt & Validation =====
 async function promptGitHubToken() {
   let token = localStorage.getItem("githubToken");
@@ -27,17 +22,17 @@ async function promptGitHubToken() {
   }
 
   document.getElementById("tokenStatus").textContent = token ? "✅ GitHub Token Set" : "⚠️ No GitHub Token";
-  
+
   if(token){
     try{
       const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`,{
         headers:{Authorization:`token ${token}`}
       });
-      githubTokenValid = (res.status===200 || res.status===404);
-      console.log("GitHub token is", githubTokenValid ? "valid ✅" : "invalid ❌");
+      githubTokenValid = res.status === 200 || res.status === 404;
+      console.log("GitHub token valid:", githubTokenValid);
     }catch(e){
       githubTokenValid = false;
-      console.log("Error validating GitHub token ❌", e);
+      console.log("Error validating GitHub token:", e);
     }
   }
 }
@@ -50,9 +45,8 @@ function renderMaster(filter="") {
   groceryItems.forEach((item,index)=>{
     if(filter && !item.name.toLowerCase().includes(filter.toLowerCase())) return;
 
-    const li = document.createElement("li"); 
+    const li = document.createElement("li");
     li.className="item"; 
-    li.setAttribute("draggable","true");
     li.dataset.index = index;
 
     // LEFT: checkbox + name
@@ -74,7 +68,7 @@ function renderMaster(filter="") {
     leftDiv.appendChild(checkbox); 
     leftDiv.appendChild(span);
 
-    // RIGHT: Options button + drag handle
+    // RIGHT: Options + drag handle
     const rightDiv = document.createElement("div");
     rightDiv.className = "item-right";
 
@@ -125,11 +119,11 @@ function renderMaster(filter="") {
     dragHandle.innerHTML='<svg viewBox="0 0 24 24"><path d="M3 12h18v2H3v-2zm0-5h18v2H3V7zm0 10h18v2H3v-2z"/></svg>';
     rightDiv.appendChild(dragHandle);
 
-    // Append left and right divs to li
     li.appendChild(leftDiv);
     li.appendChild(rightDiv);
 
     // Drag events
+    li.setAttribute("draggable","true");
     li.addEventListener("dragstart",(e)=>{
       li.classList.add("dragging");
       e.dataTransfer.setData("text/plain", index);
@@ -158,23 +152,14 @@ function renderMaster(filter="") {
       renderMaster(document.getElementById("searchInput").value);
     });
 
-    list.appendChild(li);
-  });
-
-  // ===== Item dropdown toggle =====
-  document.querySelectorAll('.dropdown').forEach(drop => {
-    const btn = drop.querySelector('.dropdown-btn');
-    const content = drop.querySelector('.dropdown-content');
-
-    btn.addEventListener('click', (e) => {
+    dropBtn.addEventListener("click",(e)=>{
       e.stopPropagation();
-      document.querySelectorAll('.dropdown-content').forEach(dc => {
-        if(dc !== content) dc.style.display = 'none';
-      });
-      content.style.display = (content.style.display === 'block') ? 'none' : 'block';
+      const isVisible = dropContent.style.display==="block";
+      document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none");
+      dropContent.style.display = isVisible ? 'none' : 'block';
     });
 
-    content.addEventListener('click', e => e.stopPropagation());
+    list.appendChild(li);
   });
 }
 
@@ -182,11 +167,9 @@ function renderMaster(filter="") {
 function renderChecked() {
   const checkedList = document.getElementById("checkedList");
   checkedList.innerHTML = "";
-  const checkedItems = groceryItems.filter(i=>i.checked);
-  checkedItems.forEach((item)=>{
+  groceryItems.filter(i=>i.checked).forEach((item)=>{
     const li = document.createElement("li");
     li.className="item";
-    li.style.justifyContent="flex-start";
 
     const cb = document.createElement("input");
     cb.type="checkbox";
@@ -200,12 +183,8 @@ function renderChecked() {
     checkedList.appendChild(li);
 
     cb.addEventListener("change", ()=>{
-      if(cb.checked){
-        li.classList.add("checked");
-        checkedList.appendChild(li);
-      }else{
-        li.classList.remove("checked");
-      }
+      if(cb.checked) li.classList.add("checked");
+      else li.classList.remove("checked");
     });
   });
 }
@@ -215,24 +194,36 @@ function addItem() {
   const name = document.getElementById("itemInput").value.trim();
   const aisle = document.getElementById("aisleInput").value.trim();
   if(!name) return;
-  groceryItems.push({name,aisle,checked:false});
+  groceryItems.push({name, aisle, checked:false});
   document.getElementById("itemInput").value = ""; 
-  document.getElementById("aisleInput").value="";
+  document.getElementById("aisleInput").value = "";
   saveData(); 
   renderMaster();
-  exportToGitHub(true); // Auto-export
+  exportToGitHub(); // Auto-export
 }
 
 // ===== Page Switching =====
-function showMaster(){ document.getElementById("masterPage").classList.remove("hidden"); document.getElementById("checkedPage").classList.add("hidden"); document.getElementById("addPage").classList.add("hidden"); }
-function showChecked(){ document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.remove("hidden"); document.getElementById("addPage").classList.add("hidden"); }
-function showAdd(){ document.getElementById("addPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.add("hidden"); }
+function showMaster() { 
+  document.getElementById("masterPage").classList.remove("hidden"); 
+  document.getElementById("checkedPage").classList.add("hidden"); 
+  document.getElementById("addPage").classList.add("hidden"); 
+}
+function showChecked() { 
+  document.getElementById("masterPage").classList.add("hidden"); 
+  document.getElementById("checkedPage").classList.remove("hidden"); 
+  document.getElementById("addPage").classList.add("hidden"); 
+}
+function showAdd() { 
+  document.getElementById("addPage").classList.remove("hidden"); 
+  document.getElementById("masterPage").classList.add("hidden"); 
+  document.getElementById("checkedPage").classList.add("hidden"); 
+}
 
-// ===== GitHub Export =====
-async function exportToGitHub(showNotify=false){
-  if(!githubTokenValid){ console.log("Cannot export: invalid token"); return; }
+// ===== GitHub Functions =====
+async function exportToGitHub() {
+  if(!githubTokenValid){ alert("Cannot export: invalid token"); return; }
   const token = localStorage.getItem("githubToken");
-  const content = btoa(JSON.stringify(groceryItems,null,2));
+  const content = btoa(JSON.stringify(groceryItems, null, 2));
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
   let sha;
   try{
@@ -243,7 +234,7 @@ async function exportToGitHub(showNotify=false){
       const data = await getRes.json();
       sha = data.sha;
     }
-  }catch(e){ console.log("Error fetching existing file", e); }
+  } catch(e){ console.log("Error fetching existing file", e); }
 
   try{
     const res = await fetch(url,{
@@ -252,112 +243,84 @@ async function exportToGitHub(showNotify=false){
       body: JSON.stringify({ message:"Update grocery list", content, branch, sha })
     });
     const data = await res.json();
-    if(showNotify) notify("Exported to GitHub ✅");
     console.log("Export result:", data);
-  }catch(err){ 
-    console.log("Export failed", err);
-    if(showNotify) notify("Export failed ❌", false);
+    alert("Export complete ✅");
+  } catch(err){ 
+    console.log("Export failed", err); 
+    alert("Export failed ❌");
   }
 }
-
-// ===== GitHub Restore =====
-async function restoreFromGitHub(){
-  if(!githubTokenValid){ console.log("Cannot restore: invalid token"); return; }
-  const token = localStorage.getItem("githubToken");
-  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
-  try{
-    const res = await fetch(url,{ headers:{Authorization:`token ${token}`} });
-    const data = await res.json();
-    if(data && data.content){
-      groceryItems = JSON.parse(atob(data.content));
-      saveData();
-      renderMaster();
-      renderChecked();
-      notify("Restore success ✅");
-      console.log("Restore success");
-    }else{
-      notify("Restore failed ❌", false);
-      console.log("Restore failed", data);
-    }
-  }catch(err){ 
-    console.log("Restore error ❌", err); 
-    notify("Restore error ❌", false);
-  }
-}
-
-// ===== Import Local File =====
-document.getElementById("importListInput").addEventListener("change",(e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ()=>{
-    try{
-      groceryItems = JSON.parse(reader.result);
-      saveData();
-      renderMaster();
-      renderChecked();
-      notify("Import success ✅");
-    }catch(err){ 
-      console.log("Import failed",err); 
-      notify("Import failed ❌", false);
-    }
-  };
-  reader.readAsText(file);
-});
-
-// ===== Load Token From File =====
-document.getElementById("tokenFileInput").addEventListener("change",(e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ()=>{ 
-    localStorage.setItem("githubToken", reader.result.trim());
-    promptGitHubToken();
-  };
-  reader.readAsText(file);
-});
 
 // ===== Initialize =====
-document.addEventListener("DOMContentLoaded",async ()=>{
+document.addEventListener("DOMContentLoaded", async () => {
   await promptGitHubToken();
-  renderMaster(); 
+  renderMaster();
   renderChecked();
 
-  // Buttons
-  document.getElementById("addItemBtn").addEventListener("click",addItem);
-  document.getElementById("clearChecksBtn").addEventListener("click",()=>{
+  document.getElementById("addItemBtn").addEventListener("click", addItem);
+  document.getElementById("clearChecksBtn").addEventListener("click", () => {
     groceryItems.forEach(i=>i.checked=false);
-    saveData(); 
-    renderMaster(); 
+    saveData();
+    renderMaster();
     renderChecked();
   });
-  document.getElementById("showMasterBtn").addEventListener("click",showMaster);
-  document.getElementById("showCheckedBtn").addEventListener("click",showChecked);
-  document.getElementById("showAddBtn").addEventListener("click",showAdd);
 
-  // Search
-  const searchInput=document.getElementById("searchInput");
-  const clearSearchBtn=document.getElementById("clearSearchBtn");
-  searchInput.addEventListener("input",()=>{ 
-    renderMaster(searchInput.value); 
-    clearSearchBtn.style.display = searchInput.value ? 'block' : 'none'; 
+  document.getElementById("showMasterBtn").addEventListener("click", showMaster);
+  document.getElementById("showCheckedBtn").addEventListener("click", showChecked);
+  document.getElementById("showAddBtn").addEventListener("click", showAdd);
+
+  const searchInput = document.getElementById("searchInput");
+  const clearSearchBtn = document.getElementById("clearSearchBtn");
+  searchInput.addEventListener("input", ()=> {
+    renderMaster(searchInput.value);
+    clearSearchBtn.style.display = searchInput.value ? 'block' : 'none';
   });
-  clearSearchBtn.addEventListener("click",()=>{ 
-    searchInput.value=''; 
-    renderMaster(); 
-    clearSearchBtn.style.display='none'; 
+  clearSearchBtn.addEventListener("click", ()=> {
+    searchInput.value = '';
+    renderMaster();
+    clearSearchBtn.style.display = 'none';
   });
 
   // Admin dropdown buttons
-  document.getElementById("exportJsonBtn").addEventListener("click",()=>exportToGitHub(true));
-  document.getElementById("restoreGitHubBtn").addEventListener("click",restoreFromGitHub);
-  document.getElementById("importListBtn").addEventListener("click",()=>document.getElementById("importListInput").click());
-  document.getElementById("setTokenBtn").addEventListener("click",promptGitHubToken);
-  document.getElementById("loadTokenFileBtn").addEventListener("click",()=>document.getElementById("tokenFileInput").click());
+  document.getElementById("exportJsonBtn").addEventListener("click", exportToGitHub);
+  document.getElementById("restoreGitHubBtn").addEventListener("click", restoreFromGitHub);
+  document.getElementById("importListBtn").addEventListener("click", () => document.getElementById("importListInput").click());
+  document.getElementById("setTokenBtn").addEventListener("click", promptGitHubToken);
+  document.getElementById("loadTokenFileBtn").addEventListener("click", () => document.getElementById("tokenFileInput").click());
 
-  // Close dropdowns when clicking outside
-  document.addEventListener("click", () => {
-    document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none");
+  document.getElementById("importListInput").addEventListener("change", (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{
+      try{
+        groceryItems = JSON.parse(reader.result);
+        saveData();
+        renderMaster();
+        renderChecked();
+        alert("Import successful ✅");
+      }catch(err){ 
+        console.log("Import failed", err); 
+        alert("Import failed ❌");
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  document.getElementById("tokenFileInput").addEventListener("change", (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ()=>{ 
+      localStorage.setItem("githubToken", reader.result.trim());
+      promptGitHubToken();
+    };
+    reader.readAsText(file);
+  });
+
+  // Close all dropdowns on outside click
+  document.addEventListener("click", ()=> {
+    document.querySelectorAll(".dropdown-content").forEach(dc => dc.style.display = "none");
   });
 });
       
