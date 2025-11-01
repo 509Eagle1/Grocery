@@ -633,5 +633,10 @@
     "name": "Bacon",
     "aisle": "1",
     "checked": false
+  },
+  {
+    "name": "Bana/Straw Yogart",
+    "aisle": "2",
+    "checked": false
   }
 ]
