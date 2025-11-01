@@ -32,7 +32,7 @@
   {
     "name": "Tater Tots",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Butter - Jan",
@@ -42,7 +42,7 @@
   {
     "name": "Toothpaste",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Cube Steaks",
@@ -52,7 +52,7 @@
   {
     "name": "Shampoo",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Bannana / strawberry yogurt",
@@ -62,7 +62,7 @@
   {
     "name": "Butter Sticks",
     "aisle": "1",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Canadian Bacon",
