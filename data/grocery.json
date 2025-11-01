@@ -30,19 +30,9 @@
     "checked": false
   },
   {
-    "name": "Tater Tots",
-    "aisle": "",
-    "checked": true
-  },
-  {
     "name": "Butter - Jan",
     "aisle": "1",
     "checked": false
-  },
-  {
-    "name": "Toothpaste",
-    "aisle": "",
-    "checked": true
   },
   {
     "name": "Cube Steaks",
@@ -50,27 +40,12 @@
     "checked": false
   },
   {
-    "name": "Shampoo",
-    "aisle": "",
-    "checked": true
-  },
-  {
     "name": "Bannana / strawberry yogurt",
     "aisle": "1",
     "checked": false
   },
   {
-    "name": "Butter Sticks",
-    "aisle": "1",
-    "checked": true
-  },
-  {
     "name": "Canadian Bacon",
-    "aisle": "1",
-    "checked": false
-  },
-  {
-    "name": "Cheese Shreded",
     "aisle": "1",
     "checked": false
   },
@@ -668,5 +643,30 @@
     "name": "Jsheheh",
     "aisle": "44",
     "checked": false
+  },
+  {
+    "name": "Tater Tots",
+    "aisle": "",
+    "checked": true
+  },
+  {
+    "name": "Toothpaste",
+    "aisle": "",
+    "checked": true
+  },
+  {
+    "name": "Shampoo",
+    "aisle": "",
+    "checked": true
+  },
+  {
+    "name": "Butter Sticks",
+    "aisle": "1",
+    "checked": true
+  },
+  {
+    "name": "Cheese Shreded",
+    "aisle": "1",
+    "checked": true
   }
 ]
