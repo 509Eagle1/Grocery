@@ -16,6 +16,7 @@
   <button id="showMasterBtn">Albertsons</button>
   <button id="showCheckedBtn">Shopping List</button>
   <button id="showAddBtn">Add Items</button>
+
   <!-- Admin dropdown -->
   <div class="dropdown">
     <button class="dropdown-btn">Admin ⏷</button>
@@ -32,7 +33,7 @@
 <!-- List Container -->
 <div class="list-container">
 
-  <!-- Albertsons Master List -->
+  <!-- Master List -->
   <div id="masterPage">
     <div class="button-bar">
       <button id="clearChecksBtn" class="clear">Clear All Checks</button>
@@ -49,7 +50,7 @@
     <ul id="checkedList"></ul>
   </div>
 
-  <!-- Add Items Page -->
+  <!-- Add Item Page -->
   <div id="addPage" class="hidden">
     <input type="text" id="itemInput" placeholder="Item name">
     <input type="text" id="aisleInput" placeholder="Aisle">
@@ -57,12 +58,10 @@
   </div>
 </div>
 
-<!-- Hidden Inputs for Files -->
+<!-- Hidden Inputs -->
 <input type="file" id="importListInput" accept=".json,.csv" style="display:none;">
 <input type="file" id="tokenFileInput" accept=".txt" style="display:none;">
 
-<!-- JS -->
 <script src="script.js"></script>
-
 </body>
 </html>

@@ -1,4 +1,3 @@
-/* ===== General Styles ===== */
 body {
   font-family: Arial, sans-serif;
   margin: 10px;
@@ -17,16 +16,15 @@ h1 {
   margin-bottom: 2px;
 }
 
-/* ===== Menu Buttons ===== */
+/* Menu Buttons */
 .menu {
   display: flex;
   gap: 6px;
   justify-content: flex-start;
-  flex-wrap: nowrap;  /* single line */
+  flex-wrap: nowrap;
   margin-bottom: 10px;
 }
 
-/* Main buttons: Albertsons, Shopping List, Add Items */
 .menu button:not(.dropdown-btn) {
   padding: 8px 14px;
   font-size: 14px;
@@ -36,7 +34,6 @@ h1 {
   border: 1px solid #007bff;
   font-weight: bold;
   cursor: pointer;
-  flex-shrink: 0;
 }
 
 .menu button:not(.dropdown-btn):hover {
@@ -53,16 +50,13 @@ h1 {
   cursor: pointer;
 }
 
-.menu .dropdown-btn:hover {
-  background: #0056b3;
-}
+.menu .dropdown-btn:hover { background: #0056b3; }
 
-/* ===== Button Bar ===== */
+/* Button Bar */
 .button-bar {
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
-  justify-content: flex-start;
   align-items: center;
   margin-bottom: 10px;
 }
@@ -78,7 +72,7 @@ h1 {
 .button-bar .clear { background: #ffc107; color: #000; }
 .button-bar .add { background: #17a2b8; }
 
-/* ===== List Container ===== */
+/* List Container */
 .list-container {
   background: white;
   padding: 15px;
@@ -86,63 +80,20 @@ h1 {
   box-shadow: 0 0 10px rgba(0,0,0,0.1);
 }
 
-/* ===== List Items ===== */
+/* List Items */
 .item {
   display: flex;
   align-items: center;
   padding: 6px;
   border-bottom: 1px solid #ddd;
-  position: relative;
 }
 
-.item.checked span {
-  text-decoration: line-through;
-  color: gray;
-}
+.item.checked span { text-decoration: line-through; color: gray; }
+.item-left { flex: 1; display: flex; align-items: center; gap: 5px; }
+.item-right { display: flex; align-items: center; gap: 6px; }
 
-.item-left {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.item-right {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.item-right .dropdown-btn {
-  background: #007bff;
-  color: white;
-  border-radius: 5px;
-  border: none;
-  padding: 4px 8px;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.item-right .dropdown-btn:hover { background: #0056b3; }
-
-.drag-handle {
-  cursor: grab;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.drag-handle svg {
-  width: 20px;
-  height: 20px;
-  fill: #555;
-}
-
-.dropdown {
-  position: relative;
-  display: inline-block;
-}
-
+/* Dropdown Options */
+.dropdown { position: relative; display: inline-block; }
 .dropdown-content {
   display: none;
   position: absolute;
@@ -161,64 +112,26 @@ h1 {
   padding: 6px 10px;
   cursor: pointer;
   font-size: 12px;
-  margin: 0;
-  border-radius: 0;
-  white-space: normal;
-  word-wrap: break-word;
 }
 
-.dropdown-content button:hover { opacity: 0.9; }
 .dropdown-content .edit { background: #28a745; color: white; margin-bottom: 5px; }
 .dropdown-content .remove { background: #dc3545; color: white; }
 
-.search-container {
-  position: relative;
-  flex: 1;
-  max-width: 300px;
-}
-
-#searchInput {
-  width: 100%;
-  padding-right: 25px;
-  box-sizing: border-box;
-}
-
+/* Search */
+.search-container { position: relative; flex: 1; max-width: 300px; }
+#searchInput { width: 100%; padding-right: 25px; box-sizing: border-box; }
 .clear-search {
-  position: absolute;
-  right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
-  cursor: pointer;
-  font-weight: bold;
-  color: #888;
-  font-size: 16px;
-  display: none;
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  cursor: pointer; font-weight: bold; color: #888; font-size: 16px; display: none;
 }
 
-.clear-search:hover { color: #333; }
-
+/* Pages */
 .hidden { display: none; }
-#addPage { display: flex; flex-direction: column; gap: 5px; flex-wrap: wrap; align-items: flex-start; margin-top: 10px; }
+#addPage { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
+#checkedList .item { justify-content: flex-start; gap: 5px; }
 
-#checkedList .item {
-  justify-content: flex-start;
-  gap: 5px;
-}
-
-input[type="text"] {
-  padding: 5px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  margin-bottom: 5px;
-}
-
+/* Responsive */
 @media(max-width:430px){
-  .menu button:not(.dropdown-btn) {
-    padding: 6px 10px;
-    font-size: 12px;
-  }
-  .menu .dropdown-btn {
-    padding: 5px 8px;
-    font-size: 11px;
-  }
+  .menu button:not(.dropdown-btn) { padding: 6px 10px; font-size: 12px; }
+  .menu .dropdown-btn { padding: 5px 8px; font-size: 11px; }
 }
