@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grocery Master List</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>Albertsons</h1>
+<div id="tokenStatus" class="status-icon">⚠️ No GitHub Token</div>
+
+<div class="menu">
+  <button id="showMasterBtn">Albertsons</button>
+  <button id="showCheckedBtn">Shopping List</button>
+  <button id="showAddBtn">Add Items</button>
+  <div class="dropdown">
+    <button class="dropdown-btn">Admin ⏷</button>
+    <div class="dropdown-content">
+      <button id="exportJsonBtn">Export</button>
+      <button id="restoreGitHubBtn">Restore</button>
+      <button id="importListBtn">Import List</button>
+      <button id="setTokenBtn">Set GitHub Token</button>
+      <button id="loadTokenFileBtn">Load Token From File</button>
+    </div>
+  </div>
+</div>
+
+<div class="list-container">
+
+  <div id="masterPage">
+    <div class="button-bar">
+      <button id="clearChecksBtn" class="clear">Clear All Checks</button>
+      <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search items...">
+        <span id="clearSearchBtn" class="clear-search">×</span>
+      </div>
+    </div>
+    <ul id="groceryList"></ul>
+  </div>
+
+  <div id="checkedPage" class="hidden">
+    <ul id="checkedList"></ul>
+  </div>
+
+  <div id="addPage" class="hidden">
+    <input type="text" id="itemInput" placeholder="Item name">
+    <input type="text" id="aisleInput" placeholder="Aisle">
+    <button id="addItemBtn" class="add">Add Item</button>
+  </div>
+
+</div>
+
+<input type="file" id="importListInput" accept=".json,.csv" style="display:none;">
+<input type="file" id="tokenFileInput" accept=".txt" style="display:none;">
+
+<script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 10px;
+  background: #f4f4f4;
+}
+
+h1 { text-align: center; margin-bottom: 5px; }
+.status-icon { text-align: center; font-size: 12px; color: #333; margin-bottom: 2px; }
+
+.menu {
+  display: flex;
+  gap: 6px;
+  justify-content: flex-start;
+  flex-wrap: nowrap;
+  margin-bottom: 10px;
+}
+
+.menu button:not(.dropdown-btn) {
+  padding: 8px 14px;
+  font-size: 14px;
+  border-radius: 6px;
+  background: white;
+  color: #007bff;
+  border: 1px solid #007bff;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.menu button:not(.dropdown-btn):hover {
+  background: #007bff;
+  color: white;
+}
+
+.menu .dropdown-btn {
+  padding: 6px 10px;
+  font-size: 12px;
+  background: #007bff;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.menu .dropdown-btn:hover { background: #0056b3; }
+
+.button-bar { display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-start; align-items: center; margin-bottom: 10px; }
+.button-bar button { padding: 6px 10px; border-radius: 6px; border: none; color: white; cursor: pointer; }
+.button-bar .clear { background: #ffc107; color: #000; }
+.button-bar .add { background: #17a2b8; }
+
+.list-container {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+.item { display: flex; align-items: center; padding: 6px; border-bottom: 1px solid #ddd; }
+.item.checked span { text-decoration: line-through; color: gray; }
+
+.item-left { flex: 1; display: flex; align-items: center; gap: 5px; }
+.item-right { display: flex; align-items: center; gap: 6px; }
+
+.dropdown { position: relative; display: inline-block; }
+.dropdown-content { display: none; position: absolute; right: 0; background-color: #f9f9f9; min-width: 140px; box-shadow: 0 8px 16px rgba(0,0,0,0.2); z-index: 1; border-radius: 5px; }
+.dropdown-content button { width: 100%; text-align: left; border: none; padding: 6px 10px; cursor: pointer; font-size: 12px; margin: 0; }
+.dropdown-content button:hover { opacity: 0.9; }
+.dropdown-content .edit { background: #28a745; color: white; margin-bottom: 5px; }
+.dropdown-content .remove { background: #dc3545; color: white; }
+
+.search-container { position: relative; flex: 1; max-width: 300px; }
+#searchInput { width: 100%; padding-right: 25px; box-sizing: border-box; }
+.clear-search { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); cursor: pointer; font-weight: bold; color: #888; font-size: 16px; display: none; }
+.clear-search:hover { color: #333; }
+
+.hidden { display: none; }
+#addPage { display: flex; flex-direction: column; gap: 5px; margin-top: 10px; }
+
+#checkedList .item { justify-content: flex-start; gap: 5px; }
+input[type="text"] { padding: 5px; border-radius: 5px; border: 1px solid #ccc; margin-bottom: 5px; }
