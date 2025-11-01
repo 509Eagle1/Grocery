@@ -22,20 +22,15 @@ async function promptGitHubToken() {
   }
 
   document.getElementById("tokenStatus").textContent = token ? "✅ GitHub Token Set" : "⚠️ No GitHub Token";
-  
+
   if(token){
     try{
       const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`,{
         headers:{Authorization:`token ${token}`}
       });
-      if(res.status===200 || res.status===404){
-        githubTokenValid = true;
-        console.log("GitHub token is valid ✅");
-      }else{
-        githubTokenValid = false;
-        console.log("GitHub token invalid ❌", res.status);
-      }
-    }catch(e){
+      githubTokenValid = res.status === 200 || res.status === 404;
+      console.log("GitHub token", githubTokenValid ? "valid ✅" : "invalid ❌", res.status);
+    } catch(e){
       githubTokenValid = false;
       console.log("Error validating GitHub token ❌", e);
     }
@@ -50,87 +45,79 @@ function renderMaster(filter="") {
   groceryItems.forEach((item,index)=>{
     if(filter && !item.name.toLowerCase().includes(filter.toLowerCase())) return;
 
-    const li = document.createElement("li"); 
-    li.className="item"; 
-    li.setAttribute("draggable","true");
+    const li = document.createElement("li");
+    li.className = "item";
     li.dataset.index = index;
 
     // LEFT: checkbox + name
     const leftDiv = document.createElement("div");
     leftDiv.className = "item-left";
 
-    const checkbox = document.createElement("input"); 
-    checkbox.type="checkbox"; 
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
     checkbox.checked = item.checked || false;
-    checkbox.addEventListener("change",()=>{
-      item.checked = checkbox.checked; 
-      // Move checked items to bottom
-      const checkedItems = groceryItems.filter(i => i.checked);
-      const uncheckedItems = groceryItems.filter(i => !i.checked);
-      groceryItems = [...uncheckedItems, ...checkedItems];
-      saveData();
-      renderMaster(document.getElementById("searchInput").value);
+    checkbox.addEventListener("change", ()=>{
+      item.checked = checkbox.checked;
       renderChecked();
+      saveData();
     });
 
-    const span = document.createElement("span"); 
-    span.textContent=`${item.name} (Aisle: ${item.aisle})`;
+    const span = document.createElement("span");
+    span.textContent = `${item.name} (Aisle: ${item.aisle})`;
 
-    leftDiv.appendChild(checkbox); 
+    leftDiv.appendChild(checkbox);
     leftDiv.appendChild(span);
 
-    // RIGHT: Options button + drag handle
+    // RIGHT: Options + drag handle
     const rightDiv = document.createElement("div");
     rightDiv.className = "item-right";
 
-    // Dropdown Options button
-    const dropdown = document.createElement("div"); 
-    dropdown.className="dropdown";
-    const dropBtn = document.createElement("button"); 
-    dropBtn.className="dropdown-btn"; 
-    dropBtn.textContent="Options ⏷";
+    const dropdown = document.createElement("div");
+    dropdown.className = "dropdown";
 
-    const dropContent = document.createElement("div"); 
-    dropContent.className="dropdown-content";
+    const dropBtn = document.createElement("button");
+    dropBtn.className = "dropdown-btn";
+    dropBtn.textContent = "Options ⏷";
 
-    const editBtn = document.createElement("button"); 
-    editBtn.className="edit"; 
-    editBtn.textContent="Edit";
-    editBtn.addEventListener("click",()=>{
-      const newName = prompt("Edit item:",item.name); 
-      if(newName!==null)item.name=newName.trim();
-      const newAisle = prompt("Edit aisle:",item.aisle); 
-      if(newAisle!==null)item.aisle=newAisle.trim();
+    const dropContent = document.createElement("div");
+    dropContent.className = "dropdown-content";
+
+    const editBtn = document.createElement("button");
+    editBtn.className = "edit";
+    editBtn.textContent = "Edit";
+    editBtn.addEventListener("click", ()=>{
+      const newName = prompt("Edit item:", item.name);
+      if(newName!==null) item.name = newName.trim();
+      const newAisle = prompt("Edit aisle:", item.aisle);
+      if(newAisle!==null) item.aisle = newAisle.trim();
       renderMaster(document.getElementById("searchInput").value);
       saveData();
     });
 
-    const removeBtn = document.createElement("button"); 
-    removeBtn.className="remove"; 
-    removeBtn.textContent="Remove";
-    removeBtn.addEventListener("click",(e)=>{
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "remove";
+    removeBtn.textContent = "Remove";
+    removeBtn.addEventListener("click", (e)=>{
       e.stopPropagation();
-      if(confirm(`Are you sure you want to remove "${item.name}"?`)){
+      if(confirm(`Remove "${item.name}"?`)){
         groceryItems.splice(index,1);
         saveData();
         renderMaster(document.getElementById("searchInput").value);
       }
     });
 
-    dropContent.appendChild(editBtn); 
+    dropContent.appendChild(editBtn);
     dropContent.appendChild(removeBtn);
-    dropdown.appendChild(dropBtn); 
+    dropdown.appendChild(dropBtn);
     dropdown.appendChild(dropContent);
-
     rightDiv.appendChild(dropdown);
 
     // Drag handle
     const dragHandle = document.createElement("span");
-    dragHandle.className="drag-handle";
+    dragHandle.className = "drag-handle";
     dragHandle.innerHTML='<svg viewBox="0 0 24 24"><path d="M3 12h18v2H3v-2zm0-5h18v2H3V7zm0 10h18v2H3v-2z"/></svg>';
     rightDiv.appendChild(dragHandle);
 
-    // Append left and right divs to li
     li.appendChild(leftDiv);
     li.appendChild(rightDiv);
 
@@ -147,11 +134,11 @@ function renderMaster(filter="") {
       const offset = e.clientY - bounding.top;
       if(offset > bounding.height/2){
         li.parentNode.insertBefore(draggingEl, li.nextSibling);
-      }else{
+      } else {
         li.parentNode.insertBefore(draggingEl, li);
       }
     });
-    li.addEventListener("dragend",()=>{
+    li.addEventListener("dragend", ()=>{
       li.classList.remove("dragging");
       const newItems = [];
       document.querySelectorAll("#groceryList .item").forEach(it=>{
@@ -174,35 +161,35 @@ function renderMaster(filter="") {
   });
 }
 
-// ===== Render Checked / Shopping List =====
+// ===== Render Shopping List =====
 function renderChecked() {
   const checkedList = document.getElementById("checkedList");
   checkedList.innerHTML = "";
-  groceryItems.filter(i => i.checked).forEach((item)=>{
+
+  const checkedItems = groceryItems.filter(i => i.checked);
+
+  checkedItems.forEach(item => {
     const li = document.createElement("li");
-    li.className="item";
-    li.style.justifyContent="flex-start";
+    li.className = "item";
+    li.style.justifyContent = "flex-start";
 
     const cb = document.createElement("input");
-    cb.type="checkbox";
-    cb.checked = false;
+    cb.type = "checkbox";
+    cb.checked = false; // always start unchecked
 
     const span = document.createElement("span");
-    span.textContent=`${item.name} (Aisle: ${item.aisle})`;
+    span.textContent = `${item.name} (Aisle: ${item.aisle})`;
 
     li.appendChild(cb);
     li.appendChild(span);
     checkedList.appendChild(li);
 
     cb.addEventListener("change", ()=>{
-      item.checked = cb.checked;
-      // Reorder main array
-      const checkedItems = groceryItems.filter(i => i.checked);
-      const uncheckedItems = groceryItems.filter(i => !i.checked);
-      groceryItems = [...uncheckedItems, ...checkedItems];
-      saveData();
-      renderChecked();
-      renderMaster(document.getElementById("searchInput").value);
+      if(cb.checked){
+        checkedList.appendChild(li); // move to bottom
+      } else {
+        checkedList.insertBefore(li, checkedList.firstChild); // optional: move back to top
+      }
     });
   });
 }
@@ -213,49 +200,54 @@ function addItem() {
   const aisle = document.getElementById("aisleInput").value.trim();
   if(!name) return;
   groceryItems.push({name, aisle, checked:false});
-  document.getElementById("itemInput").value = ""; 
+  document.getElementById("itemInput").value="";
   document.getElementById("aisleInput").value="";
-  saveData(); 
+  saveData();
   renderMaster();
+  renderChecked();
   exportToGitHub();
 }
 
 // ===== Page Switching =====
-function showMaster(){ document.getElementById("masterPage").classList.remove("hidden"); document.getElementById("checkedPage").classList.add("hidden"); document.getElementById("addPage").classList.add("hidden"); }
-function showChecked(){ document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.remove("hidden"); document.getElementById("addPage").classList.add("hidden"); }
-function showAdd(){ document.getElementById("addPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.add("hidden"); }
+function showMaster(){ 
+  document.getElementById("masterPage").classList.remove("hidden");
+  document.getElementById("checkedPage").classList.add("hidden");
+  document.getElementById("addPage").classList.add("hidden");
+}
+function showChecked(){ 
+  document.getElementById("masterPage").classList.add("hidden");
+  document.getElementById("checkedPage").classList.remove("hidden");
+  document.getElementById("addPage").classList.add("hidden");
+}
+function showAdd(){ 
+  document.getElementById("addPage").classList.remove("hidden");
+  document.getElementById("masterPage").classList.add("hidden");
+  document.getElementById("checkedPage").classList.add("hidden");
+}
 
-// ===== GitHub Functions =====
+// ===== GitHub Export/Restore =====
 async function exportToGitHub(){
-  if(!githubTokenValid){ alert("Cannot export: invalid token"); return; }
+  if(!githubTokenValid){ console.log("Invalid token"); return; }
   const token = localStorage.getItem("githubToken");
   const content = btoa(JSON.stringify(groceryItems,null,2));
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
   let sha;
   try{
-    const getRes = await fetch(url+"?ref="+branch,{
-      headers:{Authorization:`token ${token}`}
-    });
-    if(getRes.status === 200){ 
-      const data = await getRes.json();
-      sha = data.sha;
-    }
-  }catch(e){ console.log("Error fetching existing file",e); }
+    const getRes = await fetch(url+"?ref="+branch,{ headers:{Authorization:`token ${token}`} });
+    if(getRes.status===200){ sha = (await getRes.json()).sha; }
+  } catch(e){ console.log("Fetch error",e); }
 
   try{
-    const res = await fetch(url,{
+    await fetch(url,{
       method:"PUT",
       headers:{Authorization:`token ${token}`, "Content-Type":"application/json"},
-      body: JSON.stringify({ message:"Update grocery list", content, branch, sha })
+      body: JSON.stringify({message:"Update grocery list", content, branch, sha})
     });
-    const data = await res.json();
-    console.log("Export result:", data);
-    alert("Export complete ✅");
-  }catch(err){ console.log("Export failed", err); alert("Export failed ❌"); }
+  } catch(e){ console.log("Export failed", e); }
 }
 
 async function restoreFromGitHub(){
-  if(!githubTokenValid){ alert("Cannot restore: invalid token"); return; }
+  if(!githubTokenValid){ console.log("Invalid token"); return; }
   const token = localStorage.getItem("githubToken");
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
   try{
@@ -266,13 +258,25 @@ async function restoreFromGitHub(){
       saveData();
       renderMaster();
       renderChecked();
-      alert("Restore success ✅");
-    }else{
-      console.log("Restore failed ❌", data);
-      alert("Restore failed ❌");
     }
-  }catch(err){ console.log("Restore error ❌", err); alert("Restore error ❌"); }
+  } catch(e){ console.log("Restore failed", e); }
 }
+
+// ===== Import File =====
+document.getElementById("importListInput").addEventListener("change",(e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      groceryItems = JSON.parse(reader.result);
+      saveData();
+      renderMaster();
+      renderChecked();
+    } catch(e){ console.log("Import failed", e); }
+  };
+  reader.readAsText(file);
+});
 
 // ===== Initialize =====
 document.addEventListener("DOMContentLoaded", async ()=>{
@@ -283,8 +287,8 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   document.getElementById("addItemBtn").addEventListener("click", addItem);
   document.getElementById("clearChecksBtn").addEventListener("click", ()=>{
     groceryItems.forEach(i=>i.checked=false);
-    saveData(); 
-    renderMaster(); 
+    saveData();
+    renderMaster();
     renderChecked();
   });
 
@@ -292,59 +296,40 @@ document.addEventListener("DOMContentLoaded", async ()=>{
   document.getElementById("showCheckedBtn").addEventListener("click", showChecked);
   document.getElementById("showAddBtn").addEventListener("click", showAdd);
 
+  // Search
   const searchInput = document.getElementById("searchInput");
   const clearSearchBtn = document.getElementById("clearSearchBtn");
-  searchInput.addEventListener("input", ()=>{ 
-    renderMaster(searchInput.value); 
-    clearSearchBtn.style.display = searchInput.value ? 'block' : 'none'; 
+  searchInput.addEventListener("input", ()=> {
+    renderMaster(searchInput.value);
+    clearSearchBtn.style.display = searchInput.value ? 'block':'none';
   });
-  clearSearchBtn.addEventListener("click", ()=>{ 
-    searchInput.value=''; 
-    renderMaster(); 
-    clearSearchBtn.style.display='none'; 
+  clearSearchBtn.addEventListener("click", ()=>{
+    searchInput.value='';
+    renderMaster();
+    clearSearchBtn.style.display='none';
   });
 
-  // Admin menu toggle
-  const adminBtn = document.querySelector(".menu .dropdown-btn");
-  const adminContent = document.querySelector(".menu .dropdown-content");
-  adminBtn.addEventListener("click",(e)=>{
+  // Dropdown
+  const dropdownBtn = document.querySelector(".dropdown-btn");
+  const dropdownContent = document.querySelector(".dropdown-content");
+  dropdownBtn.addEventListener("click", (e)=>{
     e.stopPropagation();
-    adminContent.style.display = adminContent.style.display === "block" ? "none" : "block";
+    dropdownContent.style.display = dropdownContent.style.display==="block"?"none":"block";
   });
-
-  // Close all dropdowns on outside click
-  document.addEventListener("click",()=>{ 
-    document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none"); 
-  });
+  document.addEventListener("click", ()=>{ dropdownContent.style.display="none"; });
 
   // Admin buttons
   document.getElementById("exportJsonBtn").addEventListener("click", exportToGitHub);
   document.getElementById("restoreGitHubBtn").addEventListener("click", restoreFromGitHub);
-  document.getElementById("importListBtn").addEventListener("click",()=>document.getElementById("importListInput").click());
+  document.getElementById("importListBtn").addEventListener("click", ()=>document.getElementById("importListInput").click());
   document.getElementById("setTokenBtn").addEventListener("click", promptGitHubToken);
-  document.getElementById("loadTokenFileBtn").addEventListener("click",()=>document.getElementById("tokenFileInput").click());
-
-  document.getElementById("importListInput").addEventListener("change",(e)=>{
-    const file = e.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = ()=>{
-      try{
-        groceryItems = JSON.parse(reader.result);
-        saveData();
-        renderMaster();
-        renderChecked();
-        alert("Import successful ✅");
-      }catch(err){ console.log("Import failed",err); alert("Import failed ❌"); }
-    };
-    reader.readAsText(file);
-  });
+  document.getElementById("loadTokenFileBtn").addEventListener("click", ()=>document.getElementById("tokenFileInput").click());
 
   document.getElementById("tokenFileInput").addEventListener("change",(e)=>{
     const file = e.target.files[0];
     if(!file) return;
     const reader = new FileReader();
-    reader.onload = ()=>{ 
+    reader.onload = ()=>{
       localStorage.setItem("githubToken", reader.result.trim());
       promptGitHubToken();
     };
