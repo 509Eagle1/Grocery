@@ -7,7 +7,7 @@
   {
     "name": "Trash Bags 39gal",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Coffee Pods",
@@ -22,11 +22,16 @@
   {
     "name": "Bologna",
     "aisle": "1",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Apple sause",
     "aisle": "",
+    "checked": false
+  },
+  {
+    "name": "Green Grapes",
+    "aisle": "1",
     "checked": false
   },
   {
@@ -48,11 +53,6 @@
     "name": "Fruit bowls",
     "aisle": "1",
     "checked": true
-  },
-  {
-    "name": "Green Grapes",
-    "aisle": "1",
-    "checked": false
   },
   {
     "name": "Hot Dogs",
