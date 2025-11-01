@@ -160,6 +160,22 @@ function renderMaster(filter="") {
 
     list.appendChild(li);
   });
+
+  // ===== Item dropdown toggle =====
+  document.querySelectorAll('.dropdown').forEach(drop => {
+    const btn = drop.querySelector('.dropdown-btn');
+    const content = drop.querySelector('.dropdown-content');
+
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      document.querySelectorAll('.dropdown-content').forEach(dc => {
+        if(dc !== content) dc.style.display = 'none';
+      });
+      content.style.display = (content.style.display === 'block') ? 'none' : 'block';
+    });
+
+    content.addEventListener('click', e => e.stopPropagation());
+  });
 }
 
 // ===== Render Checked / Shopping List =====
@@ -204,7 +220,7 @@ function addItem() {
   document.getElementById("aisleInput").value="";
   saveData(); 
   renderMaster();
-  exportToGitHub(true);
+  exportToGitHub(true); // Auto-export
 }
 
 // ===== Page Switching =====
@@ -309,12 +325,16 @@ document.addEventListener("DOMContentLoaded",async ()=>{
 
   // Buttons
   document.getElementById("addItemBtn").addEventListener("click",addItem);
-  document.getElementById("clearChecksBtn").addEventListener("click",()=>{
-    groceryItems.forEach(i=>i.checked=false);
+
+  // ===== Updated Clear All Checks =====
+  document.getElementById("clearChecksBtn").addEventListener("click", async () => {
+    groceryItems.forEach(i => i.checked = false);
     saveData(); 
     renderMaster(); 
     renderChecked();
+    await exportToGitHub(true); // Export after clearing
   });
+
   document.getElementById("showMasterBtn").addEventListener("click",showMaster);
   document.getElementById("showCheckedBtn").addEventListener("click",showChecked);
   document.getElementById("showAddBtn").addEventListener("click",showAdd);
@@ -332,31 +352,15 @@ document.addEventListener("DOMContentLoaded",async ()=>{
     clearSearchBtn.style.display='none'; 
   });
 
-  // ===== Admin dropdown buttons =====
+  // Admin dropdown buttons
   document.getElementById("exportJsonBtn").addEventListener("click",()=>exportToGitHub(true));
   document.getElementById("restoreGitHubBtn").addEventListener("click",restoreFromGitHub);
   document.getElementById("importListBtn").addEventListener("click",()=>document.getElementById("importListInput").click());
   document.getElementById("setTokenBtn").addEventListener("click",promptGitHubToken);
   document.getElementById("loadTokenFileBtn").addEventListener("click",()=>document.getElementById("tokenFileInput").click());
 
-  // ===== Admin Dropdown Toggle Fix =====
-  const adminDropdownBtn = document.querySelector(".menu .dropdown-btn");
-  const adminDropdownContent = document.querySelector(".menu .dropdown-content");
-
-  adminDropdownBtn.addEventListener("click", (e) => {
-    e.stopPropagation(); // Prevent document click
-    const isVisible = adminDropdownContent.style.display === "block";
-    // Close all dropdowns first
-    document.querySelectorAll(".dropdown-content").forEach(dc => dc.style.display = "none");
-    // Toggle this one
-    adminDropdownContent.style.display = isVisible ? "none" : "block";
-  });
-
-  // Close dropdown when clicking outside
+  // Close dropdowns when clicking outside
   document.addEventListener("click", () => {
-    document.querySelectorAll(".dropdown-content").forEach(dc => dc.style.display = "none");
+    document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none");
   });
-
-  // Prevent dropdown content clicks from closing itself
-  adminDropdownContent.addEventListener("click", e => e.stopPropagation());
 });
