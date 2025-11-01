@@ -11,10 +11,13 @@
 <h1>Albertsons</h1>
 <div id="tokenStatus" class="status-icon">⚠️ No GitHub Token</div>
 
+<!-- Menu -->
 <div class="menu">
   <button id="showMasterBtn">Albertsons</button>
   <button id="showCheckedBtn">Shopping List</button>
   <button id="showAddBtn">Add Items</button>
+
+  <!-- Admin dropdown -->
   <div class="dropdown">
     <button class="dropdown-btn">Admin ⏷</button>
     <div class="dropdown-content">
@@ -27,8 +30,10 @@
   </div>
 </div>
 
+<!-- List Container -->
 <div class="list-container">
 
+  <!-- Albertsons Master List -->
   <div id="masterPage">
     <div class="button-bar">
       <button id="clearChecksBtn" class="clear">Clear All Checks</button>
@@ -40,18 +45,20 @@
     <ul id="groceryList"></ul>
   </div>
 
+  <!-- Shopping List -->
   <div id="checkedPage" class="hidden">
     <ul id="checkedList"></ul>
   </div>
 
+  <!-- Add Items Page -->
   <div id="addPage" class="hidden">
     <input type="text" id="itemInput" placeholder="Item name">
     <input type="text" id="aisleInput" placeholder="Aisle">
     <button id="addItemBtn" class="add">Add Item</button>
   </div>
-
 </div>
 
+<!-- Hidden Inputs for Files -->
 <input type="file" id="importListInput" accept=".json,.csv" style="display:none;">
 <input type="file" id="tokenFileInput" accept=".txt" style="display:none;">
 
