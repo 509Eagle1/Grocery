@@ -15,9 +15,14 @@
     "checked": false
   },
   {
+    "name": "Bologna",
+    "aisle": "1",
+    "checked": false
+  },
+  {
     "name": "Butter - John",
     "aisle": "1",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Apple sause",
@@ -27,11 +32,6 @@
   {
     "name": "Tater Tots",
     "aisle": "",
-    "checked": true
-  },
-  {
-    "name": "Bologna",
-    "aisle": "1",
     "checked": false
   },
   {
@@ -42,20 +42,10 @@
   {
     "name": "Toothpaste",
     "aisle": "",
-    "checked": true
-  },
-  {
-    "name": "French Fries",
-    "aisle": "",
     "checked": false
   },
   {
     "name": "Cube Steaks",
-    "aisle": "",
-    "checked": false
-  },
-  {
-    "name": "Mash Potatoes",
     "aisle": "",
     "checked": false
   },
@@ -672,6 +662,11 @@
   {
     "name": "Zzzzz123",
     "aisle": "40",
+    "checked": false
+  },
+  {
+    "name": "Jsheheh",
+    "aisle": "44",
     "checked": false
   }
 ]
