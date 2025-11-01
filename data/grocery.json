@@ -595,17 +595,7 @@
     "checked": false
   },
   {
-    "name": "Butter Sticks",
-    "aisle": "1",
-    "checked": false
-  },
-  {
     "name": "Cheese Shreded",
-    "aisle": "1",
-    "checked": false
-  },
-  {
-    "name": "Butter - John",
     "aisle": "1",
     "checked": false
   },
@@ -637,6 +627,11 @@
   {
     "name": "Bana/Straw Yogart",
     "aisle": "2",
+    "checked": false
+  },
+  {
+    "name": "Biscuits",
+    "aisle": "1",
     "checked": false
   }
 ]
