@@ -62,7 +62,6 @@ function renderMaster(filter="") {
 
     const li = document.createElement("li"); 
     li.className="item"; 
-    li.setAttribute("draggable","true");
     li.dataset.index = index;
 
     // LEFT: checkbox + name
@@ -83,104 +82,38 @@ function renderMaster(filter="") {
 
     leftDiv.appendChild(checkbox); 
     leftDiv.appendChild(span);
+
     li.appendChild(leftDiv);
 
-    // RIGHT: drag handle
+    // RIGHT: Drag handle
     const dragDiv = document.createElement("div");
     dragDiv.className = "drag-handle";
-    dragDiv.innerHTML = "☰";
+    dragDiv.innerHTML = "≡"; // visual handle
     li.appendChild(dragDiv);
 
     list.appendChild(li);
   });
 
-  enableDragDrop();
+  initSortable();
 }
 
-// ===== Render Master List with Drag Handle =====
-function renderMaster(filter="") {
+// ===== Initialize Sortable (Drag & Drop) =====
+function initSortable() {
   const list = document.getElementById("groceryList");
-  list.innerHTML = "";
+  if(list._sortable) list._sortable.destroy(); // remove previous instance
 
-  // Sort by aisle then name
-  let sortedItems = [...groceryItems]
-    .filter((item,index,self)=>self.findIndex(i=>i.name===item.name && i.aisle===item.aisle)===index)
-    .sort((a,b)=>{
-      if(a.aisle.toLowerCase() === b.aisle.toLowerCase()){
-        return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
-      }
-      return a.aisle.toLowerCase().localeCompare(b.aisle.toLowerCase());
-    });
-
-  sortedItems.forEach((item,index)=>{
-    if(filter && !item.name.toLowerCase().includes(filter.toLowerCase())) return;
-
-    const li = document.createElement("li"); 
-    li.className="item";
-
-    // LEFT: checkbox + name
-    const leftDiv = document.createElement("div");
-    leftDiv.className = "item-left";
-
-    const checkbox = document.createElement("input"); 
-    checkbox.type="checkbox"; 
-    checkbox.checked = item.checked || false;
-    checkbox.addEventListener("change",()=>{
-      item.checked = checkbox.checked; 
-      renderChecked();
+  list._sortable = new Sortable(list, {
+    handle: ".drag-handle",
+    animation: 150,
+    onEnd: (evt)=>{
+      const movedItem = groceryItems.splice(evt.oldIndex, 1)[0];
+      groceryItems.splice(evt.newIndex, 0, movedItem);
       saveData();
-    });
-
-    const span = document.createElement("span"); 
-    span.textContent=`${item.name} (Aisle: ${item.aisle})`;
-
-    leftDiv.appendChild(checkbox); 
-    leftDiv.appendChild(span);
-    li.appendChild(leftDiv);
-
-    // RIGHT: drag handle
-    const dragDiv = document.createElement("div");
-    dragDiv.className = "drag-handle";
-    dragDiv.innerHTML = "☰";
-    dragDiv.style.cursor = "grab";
-    li.appendChild(dragDiv);
-
-    // DRAG EVENTS
-    dragDiv.addEventListener("mousedown", e => {
-      li.setAttribute("draggable", "true");
-    });
-
-    li.addEventListener("dragstart", e => {
-      e.dataTransfer.effectAllowed = "move";
-      e.dataTransfer.setData("text/plain", index); // store original index
-      li.classList.add("dragging");
-    });
-
-    li.addEventListener("dragend", e => {
-      li.classList.remove("dragging");
-      li.removeAttribute("draggable");
-    });
-
-    li.addEventListener("dragover", e => {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = "move";
-    });
-
-    li.addEventListener("drop", e => {
-      e.preventDefault();
-      const fromIndex = Number(e.dataTransfer.getData("text/plain"));
-      const toIndex = index;
-      if(fromIndex === toIndex) return;
-      // Move item in array
-      const movedItem = groceryItems.splice(fromIndex, 1)[0];
-      groceryItems.splice(toIndex, 0, movedItem);
-      saveData();
-      renderMaster(filter);
-    });
-
-    list.appendChild(li);
+      renderMaster();
+    }
   });
 }
+
 // ===== Render Checked / Shopping List =====
 function renderChecked() {
   const checkedList = document.getElementById("checkedList");
