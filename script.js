@@ -15,7 +15,7 @@ function saveData() {
 
 // ===== Notification Helper =====
 function notify(msg, success = true){
-  console.log(msg); // placeholder, can implement toast notifications
+  console.log(msg); // placeholder for toast notifications
 }
 
 // ===== GitHub Token Prompt & Validation =====
@@ -42,7 +42,7 @@ async function promptGitHubToken() {
   }
 }
 
-// ===== Render Master List =====
+// ===== Render Master List with Drag Handles =====
 function renderMaster(filter="") {
   const list = document.getElementById("groceryList");
   list.innerHTML = "";
@@ -84,64 +84,59 @@ function renderMaster(filter="") {
     leftDiv.appendChild(span);
 
     // RIGHT: drag handle
-    const rightDiv = document.createElement("div");
-    rightDiv.className = "item-right";
-    rightDiv.textContent = "☰";
-    rightDiv.style.cursor = "grab";
+    const dragHandle = document.createElement("div");
+    dragHandle.className = "item-right";
+    dragHandle.textContent = "≡";
+    dragHandle.setAttribute("draggable","true");
+
+    // Drag events
+    dragHandle.addEventListener("dragstart", (e)=>{
+      e.dataTransfer.setData("text/plain", index);
+      e.dataTransfer.effectAllowed = "move";
+      li.classList.add("dragging");
+    });
+
+    dragHandle.addEventListener("dragend", (e)=>{
+      li.classList.remove("dragging");
+    });
 
     li.appendChild(leftDiv);
-    li.appendChild(rightDiv);
+    li.appendChild(dragHandle);
     list.appendChild(li);
   });
 
-  enableDragAndDrop();
-}
-
-// ===== Drag and Drop for Master List =====
-function enableDragAndDrop() {
-  const list = document.getElementById("groceryList");
-  let dragItem = null;
-  let dragIndex = null;
-
-  list.querySelectorAll(".item").forEach(item=>{
-    const handle = item.querySelector(".item-right");
-    handle.addEventListener("pointerdown", e => {
-      dragItem = item;
-      dragIndex = Number(item.dataset.index);
-      item.style.opacity = "0.5";
-      item.setPointerCapture(e.pointerId);
-    });
-
-    handle.addEventListener("pointerup", e => {
-      if(dragItem){
-        dragItem.style.opacity = "1";
-        dragItem.releasePointerCapture(e.pointerId);
-        dragItem = null;
-        dragIndex = null;
-        saveData();
+  // Add dragover & drop to reorder
+  const lis = Array.from(list.querySelectorAll(".item"));
+  lis.forEach(li=>{
+    li.addEventListener("dragover",(e)=>{
+      e.preventDefault();
+      e.dataTransfer.dropEffect="move";
+      const dragging = list.querySelector(".dragging");
+      const bounding = li.getBoundingClientRect();
+      const offset = e.clientY - bounding.top;
+      if(offset > bounding.height / 2){
+        li.after(dragging);
+      } else {
+        li.before(dragging);
       }
     });
 
-    handle.addEventListener("pointermove", e => {
-      if(dragItem){
-        const rect = dragItem.getBoundingClientRect();
-        const middleY = rect.top + rect.height/2;
-        const siblings = Array.from(list.querySelectorAll(".item")).filter(i=>i!==dragItem);
-        for(let sib of siblings){
-          const sibRect = sib.getBoundingClientRect();
-          if(e.clientY > sibRect.top && e.clientY < sibRect.bottom){
-            const targetIndex = Number(sib.dataset.index);
-            groceryItems.splice(targetIndex,0,groceryItems.splice(dragIndex,1)[0]);
-            renderMaster();
-            break;
-          }
-        }
-      }
+    li.addEventListener("drop",(e)=>{
+      e.preventDefault();
+      const draggedIndex = e.dataTransfer.getData("text/plain");
+      const draggingItem = groceryItems[draggedIndex];
+      const newIndex = Array.from(list.children).indexOf(li);
+      // Remove original
+      groceryItems.splice(draggedIndex,1);
+      // Insert at new index
+      groceryItems.splice(newIndex,0,draggingItem);
+      saveData();
+      renderMaster(filter);
     });
   });
 }
 
-// ===== Render Checked / Shopping List =====
+// ===== Render Checked / Shopping List (no drag) =====
 function renderChecked() {
   const checkedList = document.getElementById("checkedList");
   checkedList.innerHTML = "";
@@ -150,11 +145,10 @@ function renderChecked() {
   checkedItems.forEach((item)=>{
     const li = document.createElement("li");
     li.className="item";
-    li.style.justifyContent="flex-start";
 
     const cb = document.createElement("input");
     cb.type="checkbox";
-    cb.checked = false; // always unchecked when copied
+    cb.checked = false; // always unchecked in shopping list
 
     const span = document.createElement("span");
     span.textContent=`${item.name} (Aisle: ${item.aisle})`;
@@ -167,7 +161,7 @@ function renderChecked() {
       if(cb.checked){
         li.classList.add("checked");
         checkedList.appendChild(li); // move to bottom
-      }else{
+      } else {
         li.classList.remove("checked");
       }
     });
@@ -200,7 +194,7 @@ function clearAllChecks() {
   exportToGitHub(true);
 }
 
-// ===== GitHub Export / Restore =====
+// ===== GitHub Export =====
 async function exportToGitHub(showNotify=false){
   const token = localStorage.getItem("githubToken");
   if(!token){ console.log("Cannot export: no token"); return; }
@@ -233,6 +227,7 @@ async function exportToGitHub(showNotify=false){
   }
 }
 
+// ===== GitHub Restore =====
 async function restoreFromGitHub(){
   const token = localStorage.getItem("githubToken");
   if(!token){ console.log("Cannot restore: no token"); return; }
