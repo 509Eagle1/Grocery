@@ -123,7 +123,6 @@ h1 {
   user-select: none;
 }
 
-/* Touch feedback for mobile */
 .drag-handle:active {
   cursor: grabbing;
 }

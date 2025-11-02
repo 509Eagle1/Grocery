@@ -15,7 +15,7 @@ function saveData() {
 
 // ===== Notification Helper =====
 function notify(msg, success = true){
-  console.log(msg); // placeholder for toast notifications
+  console.log(msg); // placeholder, can implement toast notifications
 }
 
 // ===== GitHub Token Prompt & Validation =====
@@ -42,11 +42,12 @@ async function promptGitHubToken() {
   }
 }
 
-// ===== Render Master List with Drag Handle =====
+// ===== Render Master List =====
 function renderMaster(filter="") {
   const list = document.getElementById("groceryList");
   list.innerHTML = "";
 
+  // Sort by aisle then name
   let sortedItems = [...groceryItems]
     .filter((item,index,self)=>self.findIndex(i=>i.name===item.name && i.aisle===item.aisle)===index)
     .sort((a,b)=>{
@@ -59,75 +60,100 @@ function renderMaster(filter="") {
   sortedItems.forEach((item,index)=>{
     if(filter && !item.name.toLowerCase().includes(filter.toLowerCase())) return;
 
-    const li = document.createElement("li");
-    li.className = "item";
+    const li = document.createElement("li"); 
+    li.className="item"; 
     li.dataset.index = index;
-    li.draggable = true;
+    li.setAttribute("draggable","true");
 
     // LEFT: checkbox + name
     const leftDiv = document.createElement("div");
     leftDiv.className = "item-left";
 
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
+    const checkbox = document.createElement("input"); 
+    checkbox.type="checkbox"; 
     checkbox.checked = item.checked || false;
     checkbox.addEventListener("change",()=>{
-      item.checked = checkbox.checked;
+      item.checked = checkbox.checked; 
       renderChecked();
       saveData();
     });
 
-    const span = document.createElement("span");
+    const span = document.createElement("span"); 
     span.textContent=`${item.name} (Aisle: ${item.aisle})`;
 
-    leftDiv.appendChild(checkbox);
+    leftDiv.appendChild(checkbox); 
     leftDiv.appendChild(span);
 
     // RIGHT: drag handle
     const rightDiv = document.createElement("div");
     rightDiv.className = "item-right";
-    rightDiv.textContent = "☰";
-    rightDiv.style.cursor = "grab";
+
+    const dragHandle = document.createElement("span");
+    dragHandle.className = "drag-handle";
+    dragHandle.textContent = "☰";
+    rightDiv.appendChild(dragHandle);
 
     li.appendChild(leftDiv);
     li.appendChild(rightDiv);
+
     list.appendChild(li);
+  });
 
-    // Drag events
-    li.addEventListener('dragstart', (e)=>{
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', index);
-      li.classList.add('dragging');
+  enableDragAndDrop(); // attach drag/drop after rendering
+}
+
+// ===== Drag and Drop =====
+function enableDragAndDrop(){
+  const list = document.getElementById("groceryList");
+  let draggedItem = null;
+
+  Array.from(list.children).forEach(li => {
+    const handle = li.querySelector(".drag-handle");
+
+    // Pointer events for mobile
+    handle.addEventListener("pointerdown", (e) => {
+      draggedItem = li;
+      li.style.opacity = "0.5";
     });
 
-    li.addEventListener('dragend', ()=>{
-      li.classList.remove('dragging');
-      updateMasterOrder();
-    });
-
-    li.addEventListener('dragover', (e)=>{
-      e.preventDefault();
-      const dragging = document.querySelector('#groceryList .dragging');
-      if(dragging && dragging !== li){
-        const rect = li.getBoundingClientRect();
-        const next = (e.clientY - rect.top) / rect.height > 0.5;
-        li.parentNode.insertBefore(dragging, next ? li.nextSibling : li);
+    li.addEventListener("pointerup", (e)=>{
+      if(draggedItem){
+        draggedItem.style.opacity = "1";
+        draggedItem = null;
       }
+    });
+
+    li.addEventListener("dragstart", (e)=>{
+      draggedItem = li;
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain",""); // required for Firefox
+    });
+
+    li.addEventListener("dragover", (e)=>{
+      e.preventDefault();
+      const target = e.currentTarget;
+      if(target === draggedItem) return;
+
+      const rect = target.getBoundingClientRect();
+      const next = (e.clientY - rect.top)/(rect.bottom - rect.top) > 0.5;
+      list.insertBefore(draggedItem, next ? target.nextSibling : target);
+    });
+
+    li.addEventListener("dragend", ()=>{
+      draggedItem = null;
+      saveListOrder();
+      Array.from(list.children).forEach((li,index)=> li.dataset.index = index);
     });
   });
 }
 
-// ===== Update Master List Order =====
-function updateMasterOrder(){
+function saveListOrder(){
   const list = document.getElementById("groceryList");
-  const newOrder = [];
-  list.querySelectorAll("li").forEach(li=>{
-    const idx = parseInt(li.dataset.index);
-    newOrder.push(groceryItems[idx]);
+  const newOrder = Array.from(list.children).map(li=>{
+    return groceryItems[li.dataset.index];
   });
   groceryItems = newOrder;
   saveData();
-  renderMaster();
 }
 
 // ===== Render Checked / Shopping List =====
@@ -279,7 +305,7 @@ document.getElementById("tokenFileInput").addEventListener("change",(e)=>{
 
 // ===== Initialize =====
 document.addEventListener("DOMContentLoaded",async ()=>{
-  await promptGitHubToken();
+   await promptGitHubToken();
   renderMaster(); 
   renderChecked();
 
@@ -319,5 +345,5 @@ document.addEventListener("DOMContentLoaded",async ()=>{
     e.stopPropagation();
     const content = document.querySelector(".dropdown-content");
     content.style.display = content.style.display==="block"?"none":"block";
-      });
+  });
 });
