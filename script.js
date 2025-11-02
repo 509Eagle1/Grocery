@@ -15,7 +15,7 @@ function saveData() {
 
 // ===== Notification Helper =====
 function notify(msg, success = true){
-  console.log(msg); // placeholder, can implement toast notifications
+  console.log(msg); // placeholder for toast notifications
 }
 
 // ===== GitHub Token Prompt & Validation =====
@@ -42,12 +42,11 @@ async function promptGitHubToken() {
   }
 }
 
-// ===== Render Master List =====
+// ===== Render Master List with Drag Handle =====
 function renderMaster(filter="") {
   const list = document.getElementById("groceryList");
   list.innerHTML = "";
 
-  // Sort by aisle then name
   let sortedItems = [...groceryItems]
     .filter((item,index,self)=>self.findIndex(i=>i.name===item.name && i.aisle===item.aisle)===index)
     .sort((a,b)=>{
@@ -60,34 +59,75 @@ function renderMaster(filter="") {
   sortedItems.forEach((item,index)=>{
     if(filter && !item.name.toLowerCase().includes(filter.toLowerCase())) return;
 
-    const li = document.createElement("li"); 
-    li.className="item"; 
-    li.setAttribute("draggable","true");
+    const li = document.createElement("li");
+    li.className = "item";
     li.dataset.index = index;
+    li.draggable = true;
 
     // LEFT: checkbox + name
     const leftDiv = document.createElement("div");
     leftDiv.className = "item-left";
 
-    const checkbox = document.createElement("input"); 
-    checkbox.type="checkbox"; 
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
     checkbox.checked = item.checked || false;
     checkbox.addEventListener("change",()=>{
-      item.checked = checkbox.checked; 
+      item.checked = checkbox.checked;
       renderChecked();
       saveData();
     });
 
-    const span = document.createElement("span"); 
+    const span = document.createElement("span");
     span.textContent=`${item.name} (Aisle: ${item.aisle})`;
 
-    leftDiv.appendChild(checkbox); 
+    leftDiv.appendChild(checkbox);
     leftDiv.appendChild(span);
 
-    li.appendChild(leftDiv);
+    // RIGHT: drag handle
+    const rightDiv = document.createElement("div");
+    rightDiv.className = "item-right";
+    rightDiv.textContent = "☰";
+    rightDiv.style.cursor = "grab";
 
+    li.appendChild(leftDiv);
+    li.appendChild(rightDiv);
     list.appendChild(li);
+
+    // Drag events
+    li.addEventListener('dragstart', (e)=>{
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', index);
+      li.classList.add('dragging');
+    });
+
+    li.addEventListener('dragend', ()=>{
+      li.classList.remove('dragging');
+      updateMasterOrder();
+    });
+
+    li.addEventListener('dragover', (e)=>{
+      e.preventDefault();
+      const dragging = document.querySelector('#groceryList .dragging');
+      if(dragging && dragging !== li){
+        const rect = li.getBoundingClientRect();
+        const next = (e.clientY - rect.top) / rect.height > 0.5;
+        li.parentNode.insertBefore(dragging, next ? li.nextSibling : li);
+      }
+    });
   });
+}
+
+// ===== Update Master List Order =====
+function updateMasterOrder(){
+  const list = document.getElementById("groceryList");
+  const newOrder = [];
+  list.querySelectorAll("li").forEach(li=>{
+    const idx = parseInt(li.dataset.index);
+    newOrder.push(groceryItems[idx]);
+  });
+  groceryItems = newOrder;
+  saveData();
+  renderMaster();
 }
 
 // ===== Render Checked / Shopping List =====
@@ -103,7 +143,7 @@ function renderChecked() {
 
     const cb = document.createElement("input");
     cb.type="checkbox";
-    cb.checked = false; // always unchecked when copied
+    cb.checked = false;
 
     const span = document.createElement("span");
     span.textContent=`${item.name} (Aisle: ${item.aisle})`;
@@ -115,7 +155,7 @@ function renderChecked() {
     cb.addEventListener("change", ()=>{
       if(cb.checked){
         li.classList.add("checked");
-        checkedList.appendChild(li); // move to bottom
+        checkedList.appendChild(li);
       }else{
         li.classList.remove("checked");
       }
@@ -279,5 +319,5 @@ document.addEventListener("DOMContentLoaded",async ()=>{
     e.stopPropagation();
     const content = document.querySelector(".dropdown-content");
     content.style.display = content.style.display==="block"?"none":"block";
-  });
+      });
 });
