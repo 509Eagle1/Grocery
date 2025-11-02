@@ -1,33 +1,22 @@
-// ===== GitHub Config =====
+// ===== Local Storage & GitHub Config =====
 const owner = "509Eagle1";
 const repo = "Grocery";
 const path = "data/grocery.json";
 const branch = "main";
 
-// ===== Local Storage =====
 let groceryItems = JSON.parse(localStorage.getItem('groceryItems') || "[]");
 let githubTokenValid = false;
 
-// ===== Save / Load =====
-function saveData() {
-  localStorage.setItem('groceryItems', JSON.stringify(groceryItems));
-}
+function saveData() { localStorage.setItem('groceryItems', JSON.stringify(groceryItems)); }
+function notify(msg, success = true){ console.log(msg); }
 
-// ===== Notification Helper =====
-function notify(msg, success = true){
-  console.log(msg); // placeholder, can implement toast notifications
-}
-
-// ===== GitHub Token Prompt & Validation =====
+// ===== GitHub Token =====
 async function promptGitHubToken() {
   let token = localStorage.getItem("githubToken");
-  if (!token) {
-    token = prompt("⚠️ GitHub token missing! Enter token:") || null;
-    if(token) localStorage.setItem("githubToken", token);
-  }
-
+  if (!token) token = prompt("⚠️ GitHub token missing! Enter token:") || null;
+  if(token) localStorage.setItem("githubToken", token);
   document.getElementById("tokenStatus").textContent = token ? "✅ GitHub Token Set" : "⚠️ No GitHub Token";
-  
+
   if(token){
     try{
       const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`,{
@@ -35,19 +24,15 @@ async function promptGitHubToken() {
       });
       githubTokenValid = (res.status===200 || res.status===404);
       console.log("GitHub token is", githubTokenValid ? "valid ✅" : "invalid ❌");
-    }catch(e){
-      githubTokenValid = false;
-      console.log("Error validating GitHub token ❌", e);
-    }
+    }catch(e){ githubTokenValid = false; console.log("Error validating GitHub token ❌", e); }
   }
 }
 
-// ===== Render Master List =====
+// ===== Render Master List (with drag handle) =====
 function renderMaster(filter="") {
   const list = document.getElementById("groceryList");
   list.innerHTML = "";
 
-  // Sort by aisle then name
   let sortedItems = [...groceryItems]
     .filter((item,index,self)=>self.findIndex(i=>i.name===item.name && i.aisle===item.aisle)===index)
     .sort((a,b)=>{
@@ -63,7 +48,6 @@ function renderMaster(filter="") {
     const li = document.createElement("li"); 
     li.className="item"; 
     li.dataset.index = index;
-    li.setAttribute("draggable","true");
 
     // LEFT: checkbox + name
     const leftDiv = document.createElement("div");
@@ -84,79 +68,32 @@ function renderMaster(filter="") {
     leftDiv.appendChild(checkbox); 
     leftDiv.appendChild(span);
 
-    // RIGHT: drag handle
-    const rightDiv = document.createElement("div");
-    rightDiv.className = "item-right";
-
-    const dragHandle = document.createElement("span");
-    dragHandle.className = "drag-handle";
-    dragHandle.textContent = "☰";
-    rightDiv.appendChild(dragHandle);
-
+    // Drag Handle (Right side)
+    const handle = document.createElement("span");
+    handle.className = "drag-handle";
+    handle.textContent = "☰";
     li.appendChild(leftDiv);
-    li.appendChild(rightDiv);
+    li.appendChild(handle);
+
+    // Enable drag
+    li.setAttribute("draggable", "true");
+    li.addEventListener("dragstart", e => { e.dataTransfer.setData("text/plain", index); });
+    li.addEventListener("dragover", e => e.preventDefault());
+    li.addEventListener("drop", e => {
+      e.preventDefault();
+      const draggedIndex = parseInt(e.dataTransfer.getData("text/plain"));
+      const targetIndex = index;
+      const [movedItem] = groceryItems.splice(draggedIndex,1);
+      groceryItems.splice(targetIndex,0,movedItem);
+      saveData();
+      renderMaster(filter);
+    });
 
     list.appendChild(li);
   });
-
-  enableDragAndDrop(); // attach drag/drop after rendering
 }
 
-// ===== Drag and Drop =====
-function enableDragAndDrop(){
-  const list = document.getElementById("groceryList");
-  let draggedItem = null;
-
-  Array.from(list.children).forEach(li => {
-    const handle = li.querySelector(".drag-handle");
-
-    // Pointer events for mobile
-    handle.addEventListener("pointerdown", (e) => {
-      draggedItem = li;
-      li.style.opacity = "0.5";
-    });
-
-    li.addEventListener("pointerup", (e)=>{
-      if(draggedItem){
-        draggedItem.style.opacity = "1";
-        draggedItem = null;
-      }
-    });
-
-    li.addEventListener("dragstart", (e)=>{
-      draggedItem = li;
-      e.dataTransfer.effectAllowed = "move";
-      e.dataTransfer.setData("text/plain",""); // required for Firefox
-    });
-
-    li.addEventListener("dragover", (e)=>{
-      e.preventDefault();
-      const target = e.currentTarget;
-      if(target === draggedItem) return;
-
-      const rect = target.getBoundingClientRect();
-      const next = (e.clientY - rect.top)/(rect.bottom - rect.top) > 0.5;
-      list.insertBefore(draggedItem, next ? target.nextSibling : target);
-    });
-
-    li.addEventListener("dragend", ()=>{
-      draggedItem = null;
-      saveListOrder();
-      Array.from(list.children).forEach((li,index)=> li.dataset.index = index);
-    });
-  });
-}
-
-function saveListOrder(){
-  const list = document.getElementById("groceryList");
-  const newOrder = Array.from(list.children).map(li=>{
-    return groceryItems[li.dataset.index];
-  });
-  groceryItems = newOrder;
-  saveData();
-}
-
-// ===== Render Checked / Shopping List =====
+// ===== Render Shopping List =====
 function renderChecked() {
   const checkedList = document.getElementById("checkedList");
   checkedList.innerHTML = "";
@@ -179,12 +116,8 @@ function renderChecked() {
     checkedList.appendChild(li);
 
     cb.addEventListener("change", ()=>{
-      if(cb.checked){
-        li.classList.add("checked");
-        checkedList.appendChild(li);
-      }else{
-        li.classList.remove("checked");
-      }
+      if(cb.checked){ li.classList.add("checked"); checkedList.appendChild(li); }
+      else li.classList.remove("checked");
     });
   });
 }
@@ -206,117 +139,26 @@ function showMaster(){ document.getElementById("masterPage").classList.remove("h
 function showChecked(){ document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.remove("hidden"); document.getElementById("addPage").classList.add("hidden"); }
 function showAdd(){ document.getElementById("addPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.add("hidden"); }
 
-// ===== Clear All Checks =====
+// ===== Clear Checks =====
 function clearAllChecks() {
   groceryItems.forEach(i=>i.checked=false);
   saveData();
   renderMaster();
   renderChecked();
-  exportToGitHub(true);
 }
-
-// ===== GitHub Export =====
-async function exportToGitHub(showNotify=false){
-  const token = localStorage.getItem("githubToken");
-  if(!token){ console.log("Cannot export: no token"); return; }
-
-  const content = btoa(JSON.stringify(groceryItems,null,2));
-  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-  let sha;
-  try{
-    const getRes = await fetch(url+"?ref="+branch,{
-      headers:{Authorization:`token ${token}`}
-    });
-    if(getRes.status === 200){ 
-      const data = await getRes.json();
-      sha = data.sha;
-    }
-  }catch(e){ console.log("Error fetching existing file", e); }
-
-  try{
-    const res = await fetch(url,{
-      method:"PUT",
-      headers:{Authorization:`token ${token}`, "Content-Type":"application/json"},
-      body: JSON.stringify({ message:"Update grocery list", content, branch, sha })
-    });
-    const data = await res.json();
-    if(showNotify) notify("Exported to GitHub ✅");
-    console.log("Export result:", data);
-  }catch(err){ 
-    console.log("Export failed", err);
-    if(showNotify) notify("Export failed ❌", false);
-  }
-}
-
-// ===== GitHub Restore =====
-async function restoreFromGitHub(){
-  const token = localStorage.getItem("githubToken");
-  if(!token){ console.log("Cannot restore: no token"); return; }
-  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
-  try{
-    const res = await fetch(url,{ headers:{Authorization:`token ${token}`} });
-    const data = await res.json();
-    if(data && data.content){
-      groceryItems = JSON.parse(atob(data.content));
-      saveData();
-      renderMaster();
-      renderChecked();
-      notify("Restore success ✅");
-    }else{
-      notify("Restore failed ❌", false);
-    }
-  }catch(err){ 
-    console.log("Restore error ❌", err); 
-    notify("Restore error ❌", false);
-  }
-}
-
-// ===== Import Local File =====
-document.getElementById("importListInput").addEventListener("change",(e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ()=>{
-    try{
-      groceryItems = JSON.parse(reader.result);
-      saveData();
-      renderMaster();
-      renderChecked();
-      notify("Import success ✅");
-    }catch(err){ 
-      console.log("Import failed",err); 
-      notify("Import failed ❌", false);
-    }
-  };
-  reader.readAsText(file);
-});
-
-// ===== Load Token From File =====
-document.getElementById("tokenFileInput").addEventListener("change",(e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ()=>{ 
-    localStorage.setItem("githubToken", reader.result.trim());
-    promptGitHubToken();
-  };
-  reader.readAsText(file);
-});
 
 // ===== Initialize =====
 document.addEventListener("DOMContentLoaded",async ()=>{
-   await promptGitHubToken();
+  await promptGitHubToken();
   renderMaster(); 
   renderChecked();
 
-  // Buttons
   document.getElementById("addItemBtn").addEventListener("click",addItem);
   document.getElementById("clearChecksBtn").addEventListener("click",clearAllChecks);
   document.getElementById("showMasterBtn").addEventListener("click",showMaster);
   document.getElementById("showCheckedBtn").addEventListener("click",showChecked);
   document.getElementById("showAddBtn").addEventListener("click",showAdd);
 
-  // Search
   const searchInput=document.getElementById("searchInput");
   const clearSearchBtn=document.getElementById("clearSearchBtn");
   searchInput.addEventListener("input",()=>{ 
@@ -327,23 +169,5 @@ document.addEventListener("DOMContentLoaded",async ()=>{
     searchInput.value=''; 
     renderMaster(); 
     clearSearchBtn.style.display='none'; 
-  });
-
-  // Admin dropdown buttons
-  document.getElementById("exportJsonBtn").addEventListener("click",()=>exportToGitHub(true));
-  document.getElementById("restoreGitHubBtn").addEventListener("click",restoreFromGitHub);
-  document.getElementById("importListBtn").addEventListener("click",()=>document.getElementById("importListInput").click());
-  document.getElementById("setTokenBtn").addEventListener("click",promptGitHubToken);
-  document.getElementById("loadTokenFileBtn").addEventListener("click",()=>document.getElementById("tokenFileInput").click());
-
-  // Close dropdowns when clicking outside
-  document.addEventListener("click", () => {
-    document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none");
-  });
-
-  document.querySelector(".dropdown-btn").addEventListener("click",(e)=>{
-    e.stopPropagation();
-    const content = document.querySelector(".dropdown-content");
-    content.style.display = content.style.display==="block"?"none":"block";
   });
 });
