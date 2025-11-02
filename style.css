@@ -183,6 +183,24 @@ input[type="text"] {
   margin-bottom: 5px;
 }
 
+/* ===== Drag Handle ===== */
+.item .drag-handle {
+  cursor: grab;
+  font-size: 16px;
+  user-select: none;
+  margin-left: auto; /* push it to the right */
+  padding-left: 8px;
+  color: #888;
+}
+
+.item .drag-handle:hover {
+  color: #555;
+}
+
+.item.dragging {
+  opacity: 0.5;
+}
+
 @media(max-width:430px){
   .menu button:not(.dropdown-btn) {
     padding: 6px 10px;

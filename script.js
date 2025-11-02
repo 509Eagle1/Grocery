@@ -15,7 +15,7 @@ function saveData() {
 
 // ===== Notification Helper =====
 function notify(msg, success = true){
-  console.log(msg); // placeholder, can implement toast notifications
+  console.log(msg); // placeholder for toast notifications
 }
 
 // ===== GitHub Token Prompt & Validation =====
@@ -47,7 +47,7 @@ function renderMaster(filter="") {
   const list = document.getElementById("groceryList");
   list.innerHTML = "";
 
-  // Sort by aisle then name
+  // Sort by aisle then name, remove duplicates
   let sortedItems = [...groceryItems]
     .filter((item,index,self)=>self.findIndex(i=>i.name===item.name && i.aisle===item.aisle)===index)
     .sort((a,b)=>{
@@ -83,11 +83,77 @@ function renderMaster(filter="") {
 
     leftDiv.appendChild(checkbox); 
     leftDiv.appendChild(span);
-
     li.appendChild(leftDiv);
+
+    // RIGHT: drag handle
+    const handle = document.createElement("span");
+    handle.className = "drag-handle";
+    handle.innerHTML = "≡"; // visual handle
+    li.appendChild(handle);
 
     list.appendChild(li);
   });
+
+  enableDragDrop(); // attach drag-drop logic
+}
+
+// ===== Drag-and-Drop Logic =====
+function enableDragDrop(){
+  const list = document.getElementById("groceryList");
+  let dragged = null;
+
+  list.querySelectorAll(".item").forEach(item => {
+    const handle = item.querySelector(".drag-handle");
+
+    handle.addEventListener("mousedown", e => {
+      dragged = item;
+      item.classList.add("dragging");
+      e.preventDefault(); // prevent text selection
+    });
+    
+    item.addEventListener("mouseup", () => { dragged = null; item.classList.remove("dragging"); });
+    item.addEventListener("mouseleave", () => { dragged = null; item.classList.remove("dragging"); });
+  });
+
+  list.addEventListener("dragover", e => {
+    e.preventDefault();
+    const afterElement = getDragAfterElement(list, e.clientY);
+    const draggingItem = list.querySelector(".dragging");
+    if(draggingItem){
+      if(afterElement == null) list.appendChild(draggingItem);
+      else list.insertBefore(draggingItem, afterElement);
+    }
+  });
+
+  list.querySelectorAll(".item").forEach(item=>{
+    item.addEventListener("dragend", ()=>{
+      item.classList.remove("dragging");
+      updateGroceryItemsOrder();
+    });
+  });
+}
+
+// Helper: get element after dragging position
+function getDragAfterElement(container, y){
+  const draggableElements = [...container.querySelectorAll(".item:not(.dragging)")];
+  return draggableElements.reduce((closest, child)=>{
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height/2;
+    if(offset < 0 && offset > closest.offset) return { offset: offset, element: child };
+    else return closest;
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+// Update groceryItems order after drag-drop
+function updateGroceryItemsOrder(){
+  const list = document.getElementById("groceryList");
+  const items = [...list.querySelectorAll(".item")];
+  groceryItems = items.map(li => {
+    const index = parseInt(li.dataset.index);
+    return groceryItems[index];
+  });
+  saveData();
+  renderMaster(); // refresh to reset drag handles correctly
 }
 
 // ===== Render Checked / Shopping List =====
