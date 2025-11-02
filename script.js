@@ -47,7 +47,7 @@ function renderMaster(filter="") {
   const list = document.getElementById("groceryList");
   list.innerHTML = "";
 
-  // Sort by aisle then name and remove duplicates
+  // Sort by aisle then name
   let sortedItems = [...groceryItems]
     .filter((item,index,self)=>self.findIndex(i=>i.name===item.name && i.aisle===item.aisle)===index)
     .sort((a,b)=>{
@@ -62,17 +62,12 @@ function renderMaster(filter="") {
 
     const li = document.createElement("li"); 
     li.className="item"; 
+    li.setAttribute("draggable","true");
     li.dataset.index = index;
 
-    // LEFT: drag handle + checkbox + name
+    // LEFT: checkbox + name
     const leftDiv = document.createElement("div");
     leftDiv.className = "item-left";
-
-    // Drag handle
-    const dragHandle = document.createElement("span");
-    dragHandle.className="drag-handle";
-    dragHandle.innerHTML='<svg viewBox="0 0 24 24"><path d="M3 12h18v2H3v-2zm0-5h18v2H3V7zm0 10h18v2H3v-2z"/></svg>';
-    leftDiv.appendChild(dragHandle);
 
     const checkbox = document.createElement("input"); 
     checkbox.type="checkbox"; 
@@ -90,36 +85,6 @@ function renderMaster(filter="") {
     leftDiv.appendChild(span);
 
     li.appendChild(leftDiv);
-
-    // Drag events
-    li.setAttribute("draggable","true");
-    li.addEventListener("dragstart",(e)=>{
-      li.classList.add("dragging");
-      e.dataTransfer.setData("text/plain", index);
-    });
-    li.addEventListener("dragover",(e)=>{
-      e.preventDefault();
-      const draggingEl = document.querySelector(".dragging");
-      if(!draggingEl) return;
-      const bounding = li.getBoundingClientRect();
-      const offset = e.clientY - bounding.top;
-      if(offset > bounding.height/2){
-        li.parentNode.insertBefore(draggingEl, li.nextSibling);
-      }else{
-        li.parentNode.insertBefore(draggingEl, li);
-      }
-    });
-    li.addEventListener("dragend",()=>{
-      li.classList.remove("dragging");
-      const newItems = [];
-      document.querySelectorAll("#groceryList .item").forEach(it=>{
-        const idx = parseInt(it.dataset.index);
-        newItems.push(sortedItems[idx]);
-      });
-      groceryItems = newItems;
-      saveData();
-      renderMaster(document.getElementById("searchInput").value);
-    });
 
     list.appendChild(li);
   });
@@ -310,7 +275,6 @@ document.addEventListener("DOMContentLoaded",async ()=>{
     document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none");
   });
 
-  // Admin dropdown toggle
   document.querySelector(".dropdown-btn").addEventListener("click",(e)=>{
     e.stopPropagation();
     const content = document.querySelector(".dropdown-content");
