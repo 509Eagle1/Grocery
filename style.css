@@ -107,9 +107,9 @@ h1 {
 }
 
 .item-right {
-  cursor: grab;
-  font-weight: bold;
-  user-select: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .dropdown {
