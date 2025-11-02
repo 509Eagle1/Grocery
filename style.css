@@ -89,7 +89,6 @@ h1 {
 .item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 6px;
   border-bottom: 1px solid #ddd;
   position: relative;
@@ -101,31 +100,18 @@ h1 {
 }
 
 .item-left {
+  flex: 1;
   display: flex;
   align-items: center;
-  gap: 8px;
-  flex: 1;
-}
-
-.drag-handle {
-  cursor: grab;
-  font-size: 18px;
-  padding: 0 6px;
-  color: #888;
-  user-select: none;
-}
-
-.drag-handle:hover {
-  color: #555;
-}
-
-/* Shopping List */
-#checkedList .item {
-  justify-content: flex-start;
   gap: 5px;
 }
 
-/* Dropdown */
+.item-right {
+  cursor: grab;
+  font-weight: bold;
+  user-select: none;
+}
+
 .dropdown {
   position: relative;
   display: inline-block;
@@ -153,6 +139,8 @@ h1 {
 }
 
 .dropdown-content button:hover { opacity: 0.9; }
+.dropdown-content .edit { background: #28a745; color: white; margin-bottom: 5px; }
+.dropdown-content .remove { background: #dc3545; color: white; }
 
 .search-container {
   position: relative;
@@ -183,6 +171,11 @@ h1 {
 .hidden { display: none; }
 #addPage { display: flex; flex-direction: column; gap: 5px; flex-wrap: wrap; align-items: flex-start; margin-top: 10px; }
 
+#checkedList .item {
+  justify-content: flex-start;
+  gap: 5px;
+}
+
 input[type="text"] {
   padding: 5px;
   border-radius: 5px;
@@ -191,7 +184,12 @@ input[type="text"] {
 }
 
 @media(max-width:430px){
-  .menu button:not(.dropdown-btn) { padding: 6px 10px; font-size: 12px; }
-  .menu .dropdown-btn { padding: 5px 8px; font-size: 11px; }
-  .drag-handle { font-size: 16px; padding: 0 4px; }
+  .menu button:not(.dropdown-btn) {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .menu .dropdown-btn {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
 }

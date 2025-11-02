@@ -1,63 +1,67 @@
-/* ===== List Items ===== */
-.item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between; /* push handle to right */
-  padding: 6px;
-  border-bottom: 1px solid #ddd;
-  position: relative;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grocery Master List</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
 
-.item.checked span {
-  text-decoration: line-through;
-  color: gray;
-}
+<h1>Albertsons</h1>
+<div id="tokenStatus" class="status-icon">⚠️ No GitHub Token</div>
 
-.item-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1; /* takes up remaining space */
-}
+<!-- Menu -->
+<div class="menu">
+  <button id="showMasterBtn">Albertsons</button>
+  <button id="showCheckedBtn">Shopping List</button>
+  <button id="showAddBtn">Add Items</button>
 
-.drag-handle {
-  cursor: grab;
-  font-size: 18px;
-  padding: 0 6px;
-  color: #888;
-  user-select: none;
-}
+  <!-- Admin dropdown -->
+  <div class="dropdown">
+    <button class="dropdown-btn">Admin ⏷</button>
+    <div class="dropdown-content">
+      <button id="exportJsonBtn">Export</button>
+      <button id="restoreGitHubBtn">Restore</button>
+      <button id="importListBtn">Import List</button>
+      <button id="setTokenBtn">Set GitHub Token</button>
+      <button id="loadTokenFileBtn">Load Token From File</button>
+    </div>
+  </div>
+</div>
 
-.drag-handle:hover {
-  color: #555;
-}
+<!-- List Container -->
+<div class="list-container">
 
-/* ===== Checked List (Shopping List) ===== */
-#checkedList .item {
-  justify-content: flex-start;
-  gap: 5px;
-}
+  <!-- Albertsons Master List -->
+  <div id="masterPage">
+    <div class="button-bar">
+      <button id="clearChecksBtn" class="clear">Clear All Checks</button>
+      <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search items...">
+        <span id="clearSearchBtn" class="clear-search">×</span>
+      </div>
+    </div>
+    <ul id="groceryList"></ul>
+  </div>
 
-/* ===== Adjust input and text spacing ===== */
-input[type="text"] {
-  padding: 5px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-  margin-bottom: 5px;
-}
+  <!-- Shopping List -->
+  <div id="checkedPage" class="hidden">
+    <ul id="checkedList"></ul>
+  </div>
 
-/* ===== Responsive ===== */
-@media(max-width:430px){
-  .menu button:not(.dropdown-btn) {
-    padding: 6px 10px;
-    font-size: 12px;
-  }
-  .menu .dropdown-btn {
-    padding: 5px 8px;
-    font-size: 11px;
-  }
-  .drag-handle {
-    font-size: 16px;
-    padding: 0 4px;
-  }
-}
+  <!-- Add Items Page -->
+  <div id="addPage" class="hidden">
+    <input type="text" id="itemInput" placeholder="Item name">
+    <input type="text" id="aisleInput" placeholder="Aisle">
+    <button id="addItemBtn" class="add">Add Item</button>
+  </div>
+</div>
+
+<!-- Hidden Inputs for Files -->
+<input type="file" id="importListInput" accept=".json,.csv" style="display:none;">
+<input type="file" id="tokenFileInput" accept=".txt" style="display:none;">
+
+<script src="script.js"></script>
+</body>
+</html>
