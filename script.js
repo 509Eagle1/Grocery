@@ -15,7 +15,7 @@ function saveData() {
 
 // ===== Notification Helper =====
 function notify(msg, success = true){
-  console.log(msg); // placeholder for toast notifications
+  console.log(msg); // placeholder
 }
 
 // ===== GitHub Token Prompt & Validation =====
@@ -25,20 +25,14 @@ async function promptGitHubToken() {
     token = prompt("⚠️ GitHub token missing! Enter token:") || null;
     if(token) localStorage.setItem("githubToken", token);
   }
-
   document.getElementById("tokenStatus").textContent = token ? "✅ GitHub Token Set" : "⚠️ No GitHub Token";
-  
   if(token){
     try{
       const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`,{
         headers:{Authorization:`token ${token}`}
       });
       githubTokenValid = (res.status===200 || res.status===404);
-      console.log("GitHub token is", githubTokenValid ? "valid ✅" : "invalid ❌");
-    }catch(e){
-      githubTokenValid = false;
-      console.log("Error validating GitHub token ❌", e);
-    }
+    }catch(e){ githubTokenValid = false; }
   }
 }
 
@@ -47,14 +41,15 @@ function renderMaster(filter="") {
   const list = document.getElementById("groceryList");
   list.innerHTML = "";
 
-  // Sort by aisle then name, remove duplicates
+  // Sort by aisle then name
   let sortedItems = [...groceryItems]
     .filter((item,index,self)=>self.findIndex(i=>i.name===item.name && i.aisle===item.aisle)===index)
     .sort((a,b)=>{
       if(a.aisle.toLowerCase() === b.aisle.toLowerCase()){
         return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
       }
-      return a.aisle.toLowerCase().localeCompare(b.aisle.toLowerCase());
+      return a.aisle.toLowerCase().localeCompare(b.ais
+            return a.aisle.toLowerCase().localeCompare(b.aisle.toLowerCase());
     });
 
   sortedItems.forEach((item,index)=>{
@@ -62,7 +57,6 @@ function renderMaster(filter="") {
 
     const li = document.createElement("li"); 
     li.className="item"; 
-    li.setAttribute("draggable","true");
     li.dataset.index = index;
 
     // LEFT: checkbox + name
@@ -83,77 +77,53 @@ function renderMaster(filter="") {
 
     leftDiv.appendChild(checkbox); 
     leftDiv.appendChild(span);
-    li.appendChild(leftDiv);
 
     // RIGHT: drag handle
-    const handle = document.createElement("span");
-    handle.className = "drag-handle";
-    handle.innerHTML = "≡"; // visual handle
-    li.appendChild(handle);
+    const dragHandle = document.createElement("span");
+    dragHandle.className = "drag-handle";
+    dragHandle.innerHTML = "≡";
+    dragHandle.addEventListener("mousedown", e => {
+      li.setAttribute("draggable","true");
+    });
 
+    li.appendChild(leftDiv);
+    li.appendChild(dragHandle);
     list.appendChild(li);
   });
 
-  enableDragDrop(); // attach drag-drop logic
+  enableDragAndDrop();
 }
 
-// ===== Drag-and-Drop Logic =====
-function enableDragDrop(){
+// ===== Drag and Drop =====
+function enableDragAndDrop(){
   const list = document.getElementById("groceryList");
-  let dragged = null;
-
-  list.querySelectorAll(".item").forEach(item => {
-    const handle = item.querySelector(".drag-handle");
-
-    handle.addEventListener("mousedown", e => {
-      dragged = item;
-      item.classList.add("dragging");
-      e.preventDefault(); // prevent text selection
-    });
-    
-    item.addEventListener("mouseup", () => { dragged = null; item.classList.remove("dragging"); });
-    item.addEventListener("mouseleave", () => { dragged = null; item.classList.remove("dragging"); });
-  });
-
-  list.addEventListener("dragover", e => {
-    e.preventDefault();
-    const afterElement = getDragAfterElement(list, e.clientY);
-    const draggingItem = list.querySelector(".dragging");
-    if(draggingItem){
-      if(afterElement == null) list.appendChild(draggingItem);
-      else list.insertBefore(draggingItem, afterElement);
-    }
-  });
+  let dragged;
 
   list.querySelectorAll(".item").forEach(item=>{
-    item.addEventListener("dragend", ()=>{
-      item.classList.remove("dragging");
-      updateGroceryItemsOrder();
+    item.addEventListener("dragstart",(e)=>{
+      dragged = item;
+      e.dataTransfer.effectAllowed = "move";
+    });
+
+    item.addEventListener("dragover",(e)=>{
+      e.preventDefault();
+    });
+
+    item.addEventListener("drop",(e)=>{
+      e.preventDefault();
+      if(dragged===item) return;
+
+      const draggedIndex = [...list.children].indexOf(dragged);
+      const targetIndex = [...list.children].indexOf(item);
+
+      list.insertBefore(dragged, draggedIndex < targetIndex ? item.nextSibling : item);
+
+      // update groceryItems order
+      const movedItem = groceryItems.splice(draggedIndex,1)[0];
+      groceryItems.splice(targetIndex,0,movedItem);
+      saveData();
     });
   });
-}
-
-// Helper: get element after dragging position
-function getDragAfterElement(container, y){
-  const draggableElements = [...container.querySelectorAll(".item:not(.dragging)")];
-  return draggableElements.reduce((closest, child)=>{
-    const box = child.getBoundingClientRect();
-    const offset = y - box.top - box.height/2;
-    if(offset < 0 && offset > closest.offset) return { offset: offset, element: child };
-    else return closest;
-  }, { offset: Number.NEGATIVE_INFINITY }).element;
-}
-
-// Update groceryItems order after drag-drop
-function updateGroceryItemsOrder(){
-  const list = document.getElementById("groceryList");
-  const items = [...list.querySelectorAll(".item")];
-  groceryItems = items.map(li => {
-    const index = parseInt(li.dataset.index);
-    return groceryItems[index];
-  });
-  saveData();
-  renderMaster(); // refresh to reset drag handles correctly
 }
 
 // ===== Render Checked / Shopping List =====
@@ -165,7 +135,6 @@ function renderChecked() {
   checkedItems.forEach((item)=>{
     const li = document.createElement("li");
     li.className="item";
-    li.style.justifyContent="flex-start";
 
     const cb = document.createElement("input");
     cb.type="checkbox";
@@ -224,13 +193,8 @@ async function exportToGitHub(showNotify=false){
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
   let sha;
   try{
-    const getRes = await fetch(url+"?ref="+branch,{
-      headers:{Authorization:`token ${token}`}
-    });
-    if(getRes.status === 200){ 
-      const data = await getRes.json();
-      sha = data.sha;
-    }
+    const getRes = await fetch(url+"?ref="+branch,{headers:{Authorization:`token ${token}`}});
+    if(getRes.status === 200){ const data = await getRes.json(); sha = data.sha; }
   }catch(e){ console.log("Error fetching existing file", e); }
 
   try{
@@ -239,69 +203,9 @@ async function exportToGitHub(showNotify=false){
       headers:{Authorization:`token ${token}`, "Content-Type":"application/json"},
       body: JSON.stringify({ message:"Update grocery list", content, branch, sha })
     });
-    const data = await res.json();
     if(showNotify) notify("Exported to GitHub ✅");
-    console.log("Export result:", data);
-  }catch(err){ 
-    console.log("Export failed", err);
-    if(showNotify) notify("Export failed ❌", false);
-  }
+  }catch(err){ if(showNotify) notify("Export failed ❌", false); }
 }
-
-// ===== GitHub Restore =====
-async function restoreFromGitHub(){
-  const token = localStorage.getItem("githubToken");
-  if(!token){ console.log("Cannot restore: no token"); return; }
-  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
-  try{
-    const res = await fetch(url,{ headers:{Authorization:`token ${token}`} });
-    const data = await res.json();
-    if(data && data.content){
-      groceryItems = JSON.parse(atob(data.content));
-      saveData();
-      renderMaster();
-      renderChecked();
-      notify("Restore success ✅");
-    }else{
-      notify("Restore failed ❌", false);
-    }
-  }catch(err){ 
-    console.log("Restore error ❌", err); 
-    notify("Restore error ❌", false);
-  }
-}
-
-// ===== Import Local File =====
-document.getElementById("importListInput").addEventListener("change",(e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ()=>{
-    try{
-      groceryItems = JSON.parse(reader.result);
-      saveData();
-      renderMaster();
-      renderChecked();
-      notify("Import success ✅");
-    }catch(err){ 
-      console.log("Import failed",err); 
-      notify("Import failed ❌", false);
-    }
-  };
-  reader.readAsText(file);
-});
-
-// ===== Load Token From File =====
-document.getElementById("tokenFileInput").addEventListener("change",(e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ()=>{ 
-    localStorage.setItem("githubToken", reader.result.trim());
-    promptGitHubToken();
-  };
-  reader.readAsText(file);
-});
 
 // ===== Initialize =====
 document.addEventListener("DOMContentLoaded",async ()=>{

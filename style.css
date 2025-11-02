@@ -89,6 +89,7 @@ h1 {
 .item {
   display: flex;
   align-items: center;
+  justify-content: space-between; /* left text, right drag handle */
   padding: 6px;
   border-bottom: 1px solid #ddd;
   position: relative;
@@ -100,18 +101,26 @@ h1 {
 }
 
 .item-left {
-  flex: 1;
   display: flex;
   align-items: center;
   gap: 5px;
+  flex: 1;
 }
 
-.item-right {
-  display: flex;
+.drag-handle {
+  cursor: grab;
+  display: inline-flex;
   align-items: center;
-  gap: 6px;
+  justify-content: center;
 }
 
+.drag-handle svg {
+  width: 20px;
+  height: 20px;
+  fill: #555;
+}
+
+/* ===== Dropdown Menu ===== */
 .dropdown {
   position: relative;
   display: inline-block;
@@ -142,6 +151,7 @@ h1 {
 .dropdown-content .edit { background: #28a745; color: white; margin-bottom: 5px; }
 .dropdown-content .remove { background: #dc3545; color: white; }
 
+/* ===== Search ===== */
 .search-container {
   position: relative;
   flex: 1;
@@ -168,6 +178,7 @@ h1 {
 
 .clear-search:hover { color: #333; }
 
+/* ===== Pages ===== */
 .hidden { display: none; }
 #addPage { display: flex; flex-direction: column; gap: 5px; flex-wrap: wrap; align-items: flex-start; margin-top: 10px; }
 
@@ -183,24 +194,7 @@ input[type="text"] {
   margin-bottom: 5px;
 }
 
-/* ===== Drag Handle ===== */
-.item .drag-handle {
-  cursor: grab;
-  font-size: 16px;
-  user-select: none;
-  margin-left: auto; /* push it to the right */
-  padding-left: 8px;
-  color: #888;
-}
-
-.item .drag-handle:hover {
-  color: #555;
-}
-
-.item.dragging {
-  opacity: 0.5;
-}
-
+/* ===== Media Queries ===== */
 @media(max-width:430px){
   .menu button:not(.dropdown-btn) {
     padding: 6px 10px;
