@@ -62,6 +62,7 @@ function renderMaster(filter="") {
 
     const li = document.createElement("li"); 
     li.className="item"; 
+    li.setAttribute("draggable","true");
     li.dataset.index = index;
 
     // LEFT: checkbox + name
@@ -84,76 +85,45 @@ function renderMaster(filter="") {
     leftDiv.appendChild(span);
     li.appendChild(leftDiv);
 
+    // RIGHT: drag handle
+    const dragDiv = document.createElement("div");
+    dragDiv.className = "drag-handle";
+    dragDiv.innerHTML = "☰";
+    li.appendChild(dragDiv);
+
     list.appendChild(li);
   });
 
-  enableDragAndDrop(); // activate drag-and-drop after rendering
+  enableDragDrop();
 }
 
-// ===== Drag & Drop for Albertsons List =====
-function enableDragAndDrop() {
+// ===== Enable Drag & Drop for Albertsons List =====
+function enableDragDrop() {
   const list = document.getElementById("groceryList");
-  let dragSrcEl = null;
+  let dragged;
 
-  function handleDragStart(e) {
-    dragSrcEl = this;
-    e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/html', this.innerHTML);
-    this.classList.add('dragging');
-  }
+  list.querySelectorAll(".item").forEach(item=>{
+    item.addEventListener("dragstart",(e)=>{
+      dragged = item;
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/html", item.innerHTML);
+    });
 
-  function handleDragOver(e) {
-    if(e.preventDefault) e.preventDefault(); // allow drop
-    e.dataTransfer.dropEffect = 'move';
-    return false;
-  }
+    item.addEventListener("dragover",(e)=>{
+      e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+    });
 
-  function handleDragEnter() {
-    this.classList.add('over');
-  }
-
-  function handleDragLeave() {
-    this.classList.remove('over');
-  }
-
-  function handleDrop(e) {
-    if(e.stopPropagation) e.stopPropagation();
-    if(dragSrcEl !== this) {
-      const srcIndex = dragSrcEl.dataset.index;
-      const destIndex = this.dataset.index;
-      [groceryItems[srcIndex], groceryItems[destIndex]] = [groceryItems[destIndex], groceryItems[srcIndex]];
-      saveData();
-      renderMaster();
-    }
-    return false;
-  }
-
-  function handleDragEnd() {
-    this.classList.remove('dragging');
-    list.querySelectorAll('.item').forEach(item => item.classList.remove('over'));
-  }
-
-  const items = list.querySelectorAll('.item');
-  items.forEach(item => {
-    // Add drag handle if not exists
-    if(!item.querySelector('.drag-handle')) {
-      const handle = document.createElement('span');
-      handle.className = 'drag-handle';
-      handle.innerHTML = '☰'; // visual handle
-      handle.style.marginLeft = 'auto'; // right-aligned
-      handle.style.cursor = 'grab';
-      item.appendChild(handle);
-
-      handle.addEventListener('mousedown', () => { item.setAttribute('draggable', true); });
-      handle.addEventListener('mouseup', () => { item.setAttribute('draggable', false); });
-    }
-
-    item.addEventListener('dragstart', handleDragStart, false);
-    item.addEventListener('dragenter', handleDragEnter, false);
-    item.addEventListener('dragover', handleDragOver, false);
-    item.addEventListener('dragleave', handleDragLeave, false);
-    item.addEventListener('drop', handleDrop, false);
-    item.addEventListener('dragend', handleDragEnd, false);
+    item.addEventListener("drop",(e)=>{
+      e.preventDefault();
+      if(dragged !== item){
+        const fromIndex = dragged.dataset.index;
+        const toIndex = item.dataset.index;
+        [groceryItems[fromIndex], groceryItems[toIndex]] = [groceryItems[toIndex], groceryItems[fromIndex]];
+        saveData();
+        renderMaster();
+      }
+    });
   });
 }
 
