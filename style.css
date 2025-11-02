@@ -92,7 +92,7 @@ h1 {
   padding: 6px;
   border-bottom: 1px solid #ddd;
   position: relative;
-  gap: 6px;
+  user-select: none; /* Prevent text selection while dragging */
 }
 
 .item.checked span {
@@ -111,28 +111,15 @@ h1 {
   display: flex;
   align-items: center;
   gap: 6px;
-}
-
-/* ===== Drag Handle ===== */
-.drag-handle {
   cursor: grab;
   font-size: 18px;
   padding: 0 8px;
-  user-select: none;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #888;
+  color: #007bff;
   flex-shrink: 0;
 }
 
-.drag-handle:active {
+.item-right:active {
   cursor: grabbing;
-  color: #555;
-}
-
-.item .drag-handle {
-  margin-left: auto; /* push to right */
 }
 
 /* ===== Dropdown ===== */
@@ -166,6 +153,7 @@ h1 {
 .dropdown-content .edit { background: #28a745; color: white; margin-bottom: 5px; }
 .dropdown-content .remove { background: #dc3545; color: white; }
 
+/* ===== Search ===== */
 .search-container {
   position: relative;
   flex: 1;
@@ -192,13 +180,9 @@ h1 {
 
 .clear-search:hover { color: #333; }
 
+/* ===== Page & Inputs ===== */
 .hidden { display: none; }
 #addPage { display: flex; flex-direction: column; gap: 5px; flex-wrap: wrap; align-items: flex-start; margin-top: 10px; }
-
-#checkedList .item {
-  justify-content: flex-start;
-  gap: 5px;
-}
 
 input[type="text"] {
   padding: 5px;
@@ -207,6 +191,27 @@ input[type="text"] {
   margin-bottom: 5px;
 }
 
+/* ===== Shopping List (no drag) ===== */
+#checkedList .item {
+  justify-content: flex-start; /* no drag handle */
+  cursor: default;
+  gap: 5px;
+}
+
+/* ===== Drag Handle Hover ===== */
+.item-right:hover {
+  color: #0056b3;
+}
+
+/* ===== Mobile Touch Improvements ===== */
+@media (pointer: coarse) {
+  .item-right {
+    font-size: 22px;
+    padding: 0 12px;
+  }
+}
+
+/* ===== Responsive Menu ===== */
 @media(max-width:430px){
   .menu button:not(.dropdown-btn) {
     padding: 6px 10px;
@@ -215,10 +220,5 @@ input[type="text"] {
   .menu .dropdown-btn {
     padding: 5px 8px;
     font-size: 11px;
-  }
-
-  .drag-handle {
-    font-size: 22px;
-    padding: 0 12px;
   }
 }
