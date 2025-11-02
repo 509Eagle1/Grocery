@@ -15,7 +15,7 @@ function saveData() {
 
 // ===== Notification Helper =====
 function notify(msg, success = true){
-  console.log(msg); // placeholder, can implement toast notifications
+  console.log(msg); // simple console notify
 }
 
 // ===== GitHub Token Prompt & Validation =====
@@ -42,12 +42,12 @@ async function promptGitHubToken() {
   }
 }
 
-// ===== Render Master List =====
+// ===== Render Master List (Albertsons) =====
 function renderMaster(filter="") {
   const list = document.getElementById("groceryList");
   list.innerHTML = "";
 
-  // Sort by aisle then name
+  // Sort by aisle then name and remove duplicates
   let sortedItems = [...groceryItems]
     .filter((item,index,self)=>self.findIndex(i=>i.name===item.name && i.aisle===item.aisle)===index)
     .sort((a,b)=>{
@@ -81,56 +81,59 @@ function renderMaster(filter="") {
     const span = document.createElement("span"); 
     span.textContent=`${item.name} (Aisle: ${item.aisle})`;
 
-    // Drag handle
-    const handle = document.createElement("span");
-    handle.className = "drag-handle";
-    handle.innerHTML = "☰";
-    handle.style.cursor = "grab";
-    handle.style.marginRight = "8px";
-
-    leftDiv.appendChild(handle);
     leftDiv.appendChild(checkbox); 
     leftDiv.appendChild(span);
 
     li.appendChild(leftDiv);
+
+    // Drag handle
+    const dragHandle = document.createElement("span");
+    dragHandle.className = "drag-handle";
+    dragHandle.textContent = "⋮⋮";
+    li.appendChild(dragHandle);
+
+    // Drag events
+    li.addEventListener("dragstart", handleDragStart);
+    li.addEventListener("dragover", handleDragOver);
+    li.addEventListener("drop", handleDrop);
+    li.addEventListener("dragend", handleDragEnd);
+
     list.appendChild(li);
-
-    // ===== Drag & Drop Logic =====
-    li.addEventListener("dragstart", (e)=>{
-      e.dataTransfer.setData("text/plain", index);
-      li.classList.add("dragging");
-    });
-
-    li.addEventListener("dragend", ()=>{
-      li.classList.remove("dragging");
-    });
-
-    li.addEventListener("dragover", (e)=>{
-      e.preventDefault();
-      const dragging = document.querySelector(".dragging");
-      if(!dragging || dragging === li) return;
-      const rect = li.getBoundingClientRect();
-      const next = (e.clientY - rect.top) / rect.height > 0.5;
-      li.parentNode.insertBefore(dragging, next ? li.nextSibling : li);
-    });
   });
+}
 
-  // Save new order after drop
-  list.addEventListener("drop", ()=>{
-    const newOrder = [];
-    list.querySelectorAll(".item").forEach(li=>{
-      const span = li.querySelector("span").textContent;
-      const match = span.match(/^(.*?) \(Aisle: (.*?)\)$/);
-      if(match){
-        const name = match[1];
-        const aisle = match[2];
-        const orig = groceryItems.find(i=>i.name===name && i.aisle===aisle);
-        if(orig) newOrder.push(orig);
-      }
-    });
-    groceryItems = newOrder;
+// ===== Drag and Drop Reordering =====
+let dragSrcEl = null;
+
+function handleDragStart(e){
+  dragSrcEl = this;
+  e.dataTransfer.effectAllowed = "move";
+  e.dataTransfer.setData("text/html", this.outerHTML);
+  this.style.opacity = "0.4";
+}
+
+function handleDragOver(e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect = "move";
+  return false;
+}
+
+function handleDrop(e){
+  e.stopPropagation();
+  if(dragSrcEl !== this){
+    const fromIndex = +dragSrcEl.dataset.index;
+    const toIndex = +this.dataset.index;
+    const item = groceryItems.splice(fromIndex,1)[0];
+    groceryItems.splice(toIndex,0,item);
     saveData();
-  });
+    renderMaster();
+    exportToGitHub(true);
+  }
+  return false;
+}
+
+function handleDragEnd(){
+  this.style.opacity = "1";
 }
 
 // ===== Render Checked / Shopping List =====
@@ -179,9 +182,21 @@ function addItem() {
 }
 
 // ===== Page Switching =====
-function showMaster(){ document.getElementById("masterPage").classList.remove("hidden"); document.getElementById("checkedPage").classList.add("hidden"); document.getElementById("addPage").classList.add("hidden"); }
-function showChecked(){ document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.remove("hidden"); document.getElementById("addPage").classList.add("hidden"); }
-function showAdd(){ document.getElementById("addPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.add("hidden"); }
+function showMaster(){ 
+  document.getElementById("masterPage").classList.remove("hidden"); 
+  document.getElementById("checkedPage").classList.add("hidden"); 
+  document.getElementById("addPage").classList.add("hidden"); 
+}
+function showChecked(){ 
+  document.getElementById("masterPage").classList.add("hidden"); 
+  document.getElementById("checkedPage").classList.remove("hidden"); 
+  document.getElementById("addPage").classList.add("hidden"); 
+}
+function showAdd(){ 
+  document.getElementById("addPage").classList.remove("hidden"); 
+  document.getElementById("masterPage").classList.add("hidden"); 
+  document.getElementById("checkedPage").classList.add("hidden"); 
+}
 
 // ===== Clear All Checks =====
 function clearAllChecks() {
