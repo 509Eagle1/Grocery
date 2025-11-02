@@ -89,7 +89,6 @@ h1 {
 .item {
   display: flex;
   align-items: center;
-  justify-content: space-between; /* left text, right drag handle */
   padding: 6px;
   border-bottom: 1px solid #ddd;
   position: relative;
@@ -101,26 +100,28 @@ h1 {
 }
 
 .item-left {
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 5px;
-  flex: 1;
 }
 
+.item-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ===== Drag Handle ===== */
 .drag-handle {
   cursor: grab;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  margin-left: auto; /* right-align */
+  font-size: 16px;
+  padding: 0 6px;
+  color: #555;
 }
 
-.drag-handle svg {
-  width: 20px;
-  height: 20px;
-  fill: #555;
-}
-
-/* ===== Dropdown Menu ===== */
+/* ===== Dropdown ===== */
 .dropdown {
   position: relative;
   display: inline-block;
@@ -178,9 +179,16 @@ h1 {
 
 .clear-search:hover { color: #333; }
 
-/* ===== Pages ===== */
 .hidden { display: none; }
-#addPage { display: flex; flex-direction: column; gap: 5px; flex-wrap: wrap; align-items: flex-start; margin-top: 10px; }
+
+#addPage {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  margin-top: 10px;
+}
 
 #checkedList .item {
   justify-content: flex-start;
@@ -194,7 +202,7 @@ input[type="text"] {
   margin-bottom: 5px;
 }
 
-/* ===== Media Queries ===== */
+/* ===== Responsive ===== */
 @media(max-width:430px){
   .menu button:not(.dropdown-btn) {
     padding: 6px 10px;

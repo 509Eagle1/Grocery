@@ -26,13 +26,18 @@ async function promptGitHubToken() {
     if(token) localStorage.setItem("githubToken", token);
   }
   document.getElementById("tokenStatus").textContent = token ? "✅ GitHub Token Set" : "⚠️ No GitHub Token";
+  
   if(token){
     try{
       const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`,{
         headers:{Authorization:`token ${token}`}
       });
       githubTokenValid = (res.status===200 || res.status===404);
-    }catch(e){ githubTokenValid = false; }
+      console.log("GitHub token is", githubTokenValid ? "valid ✅" : "invalid ❌");
+    }catch(e){
+      githubTokenValid = false;
+      console.log("Error validating GitHub token ❌", e);
+    }
   }
 }
 
@@ -41,15 +46,14 @@ function renderMaster(filter="") {
   const list = document.getElementById("groceryList");
   list.innerHTML = "";
 
-  // Sort by aisle then name
+  // Sort by aisle then name, remove duplicates
   let sortedItems = [...groceryItems]
     .filter((item,index,self)=>self.findIndex(i=>i.name===item.name && i.aisle===item.aisle)===index)
     .sort((a,b)=>{
       if(a.aisle.toLowerCase() === b.aisle.toLowerCase()){
         return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
       }
-      return a.aisle.toLowerCase().localeCompare(b.ais
-            return a.aisle.toLowerCase().localeCompare(b.aisle.toLowerCase());
+      return a.aisle.toLowerCase().localeCompare(b.aisle.toLowerCase());
     });
 
   sortedItems.forEach((item,index)=>{
@@ -57,6 +61,7 @@ function renderMaster(filter="") {
 
     const li = document.createElement("li"); 
     li.className="item"; 
+    li.setAttribute("draggable","true");
     li.dataset.index = index;
 
     // LEFT: checkbox + name
@@ -78,51 +83,55 @@ function renderMaster(filter="") {
     leftDiv.appendChild(checkbox); 
     leftDiv.appendChild(span);
 
-    // RIGHT: drag handle
-    const dragHandle = document.createElement("span");
-    dragHandle.className = "drag-handle";
-    dragHandle.innerHTML = "≡";
-    dragHandle.addEventListener("mousedown", e => {
-      li.setAttribute("draggable","true");
-    });
-
     li.appendChild(leftDiv);
-    li.appendChild(dragHandle);
-    list.appendChild(li);
-  });
 
-  enableDragAndDrop();
-}
+    // RIGHT: drag handle
+    const dragDiv = document.createElement("div");
+    dragDiv.className = "drag-handle";
+    dragDiv.innerHTML = "☰";
+    li.appendChild(dragDiv);
 
-// ===== Drag and Drop =====
-function enableDragAndDrop(){
-  const list = document.getElementById("groceryList");
-  let dragged;
-
-  list.querySelectorAll(".item").forEach(item=>{
-    item.addEventListener("dragstart",(e)=>{
-      dragged = item;
+    // Drag events
+    li.addEventListener("dragstart",(e)=>{
+      li.classList.add("dragging");
       e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/plain", index);
     });
 
-    item.addEventListener("dragover",(e)=>{
+    li.addEventListener("dragover",(e)=>{
       e.preventDefault();
+      e.dataTransfer.dropEffect = "move";
+      const dragging = document.querySelector(".dragging");
+      const siblings = Array.from(list.querySelectorAll(".item:not(.dragging)"));
+      let afterElement = null;
+      for(let sibling of siblings){
+        const rect = sibling.getBoundingClientRect();
+        if(e.clientY < rect.top + rect.height/2){
+          afterElement = sibling;
+          break;
+        }
+      }
+      if(afterElement){
+        list.insertBefore(dragging, afterElement);
+      } else {
+        list.appendChild(dragging);
+      }
     });
 
-    item.addEventListener("drop",(e)=>{
-      e.preventDefault();
-      if(dragged===item) return;
-
-      const draggedIndex = [...list.children].indexOf(dragged);
-      const targetIndex = [...list.children].indexOf(item);
-
-      list.insertBefore(dragged, draggedIndex < targetIndex ? item.nextSibling : item);
-
-      // update groceryItems order
-      const movedItem = groceryItems.splice(draggedIndex,1)[0];
-      groceryItems.splice(targetIndex,0,movedItem);
+    li.addEventListener("dragend",()=>{
+      li.classList.remove("dragging");
+      // Update groceryItems order based on new DOM order
+      const newOrder = [];
+      list.querySelectorAll(".item").forEach(it=>{
+        const idx = parseInt(it.dataset.index);
+        newOrder.push(sortedItems[idx]);
+      });
+      groceryItems = newOrder;
       saveData();
+      renderMaster();
     });
+
+    list.appendChild(li);
   });
 }
 
@@ -135,6 +144,7 @@ function renderChecked() {
   checkedItems.forEach((item)=>{
     const li = document.createElement("li");
     li.className="item";
+    li.style.justifyContent="flex-start";
 
     const cb = document.createElement("input");
     cb.type="checkbox";
@@ -193,8 +203,13 @@ async function exportToGitHub(showNotify=false){
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
   let sha;
   try{
-    const getRes = await fetch(url+"?ref="+branch,{headers:{Authorization:`token ${token}`}});
-    if(getRes.status === 200){ const data = await getRes.json(); sha = data.sha; }
+    const getRes = await fetch(url+"?ref="+branch,{
+      headers:{Authorization:`token ${token}`}
+    });
+    if(getRes.status === 200){ 
+      const data = await getRes.json();
+      sha = data.sha;
+    }
   }catch(e){ console.log("Error fetching existing file", e); }
 
   try{
@@ -203,9 +218,68 @@ async function exportToGitHub(showNotify=false){
       headers:{Authorization:`token ${token}`, "Content-Type":"application/json"},
       body: JSON.stringify({ message:"Update grocery list", content, branch, sha })
     });
+    const data = await res.json();
     if(showNotify) notify("Exported to GitHub ✅");
-  }catch(err){ if(showNotify) notify("Export failed ❌", false); }
+  }catch(err){ 
+    console.log("Export failed", err);
+    if(showNotify) notify("Export failed ❌", false);
+  }
 }
+
+// ===== GitHub Restore =====
+async function restoreFromGitHub(){
+  const token = localStorage.getItem("githubToken");
+  if(!token){ console.log("Cannot restore: no token"); return; }
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
+  try{
+    const res = await fetch(url,{ headers:{Authorization:`token ${token}`} });
+    const data = await res.json();
+    if(data && data.content){
+      groceryItems = JSON.parse(atob(data.content));
+      saveData();
+      renderMaster();
+      renderChecked();
+      notify("Restore success ✅");
+    }else{
+      notify("Restore failed ❌", false);
+    }
+  }catch(err){ 
+    console.log("Restore error ❌", err); 
+    notify("Restore error ❌", false);
+  }
+}
+
+// ===== Import Local File =====
+document.getElementById("importListInput").addEventListener("change",(e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      groceryItems = JSON.parse(reader.result);
+      saveData();
+      renderMaster();
+      renderChecked();
+      notify("Import success ✅");
+    }catch(err){ 
+      console.log("Import failed",err); 
+      notify("Import failed ❌", false);
+    }
+  };
+  reader.read AsText(file);
+});
+
+// ===== Load Token From File =====
+document.getElementById("tokenFileInput").addEventListener("change",(e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{ 
+    localStorage.setItem("githubToken", reader.result.trim());
+    promptGitHubToken();
+  };
+  reader.readAsText(file);
+});
 
 // ===== Initialize =====
 document.addEventListener("DOMContentLoaded",async ()=>{
