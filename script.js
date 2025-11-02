@@ -42,11 +42,12 @@ async function promptGitHubToken() {
   }
 }
 
-// ===== Render Master List (Albertsons Page) =====
+// ===== Render Master List =====
 function renderMaster(filter="") {
   const list = document.getElementById("groceryList");
   list.innerHTML = "";
 
+  // Sort by aisle then name and remove duplicates
   let sortedItems = [...groceryItems]
     .filter((item,index,self)=>self.findIndex(i=>i.name===item.name && i.aisle===item.aisle)===index)
     .sort((a,b)=>{
@@ -61,22 +62,18 @@ function renderMaster(filter="") {
 
     const li = document.createElement("li"); 
     li.className="item"; 
-    li.setAttribute("draggable","true");
     li.dataset.index = index;
-    li.style.display = "flex";
-    li.style.alignItems = "center";
-    li.style.justifyContent = "flex-start";
-    li.style.gap = "8px";
 
-    // Drag handle (☰)
+    // LEFT: drag handle + checkbox + name
+    const leftDiv = document.createElement("div");
+    leftDiv.className = "item-left";
+
+    // Drag handle
     const dragHandle = document.createElement("span");
-    dragHandle.textContent = "☰";
-    dragHandle.className = "drag-handle";
-    dragHandle.style.cursor = "grab";
-    dragHandle.style.paddingRight = "5px";
-    dragHandle.style.fontSize = "18px";
+    dragHandle.className="drag-handle";
+    dragHandle.innerHTML='<svg viewBox="0 0 24 24"><path d="M3 12h18v2H3v-2zm0-5h18v2H3V7zm0 10h18v2H3v-2z"/></svg>';
+    leftDiv.appendChild(dragHandle);
 
-    // Checkbox + name
     const checkbox = document.createElement("input"); 
     checkbox.type="checkbox"; 
     checkbox.checked = item.checked || false;
@@ -89,41 +86,42 @@ function renderMaster(filter="") {
     const span = document.createElement("span"); 
     span.textContent=`${item.name} (Aisle: ${item.aisle})`;
 
-    li.appendChild(dragHandle);
-    li.appendChild(checkbox);
-    li.appendChild(span);
+    leftDiv.appendChild(checkbox); 
+    leftDiv.appendChild(span);
 
-    list.appendChild(li);
+    li.appendChild(leftDiv);
 
-    // Drag Events
-    li.addEventListener("dragstart", (e)=>{
+    // Drag events
+    li.setAttribute("draggable","true");
+    li.addEventListener("dragstart",(e)=>{
       li.classList.add("dragging");
-      e.dataTransfer.effectAllowed = "move";
       e.dataTransfer.setData("text/plain", index);
     });
-    li.addEventListener("dragend", ()=>{
+    li.addEventListener("dragover",(e)=>{
+      e.preventDefault();
+      const draggingEl = document.querySelector(".dragging");
+      if(!draggingEl) return;
+      const bounding = li.getBoundingClientRect();
+      const offset = e.clientY - bounding.top;
+      if(offset > bounding.height/2){
+        li.parentNode.insertBefore(draggingEl, li.nextSibling);
+      }else{
+        li.parentNode.insertBefore(draggingEl, li);
+      }
+    });
+    li.addEventListener("dragend",()=>{
       li.classList.remove("dragging");
+      const newItems = [];
+      document.querySelectorAll("#groceryList .item").forEach(it=>{
+        const idx = parseInt(it.dataset.index);
+        newItems.push(sortedItems[idx]);
+      });
+      groceryItems = newItems;
+      saveData();
+      renderMaster(document.getElementById("searchInput").value);
     });
-  });
 
-  // Drop target behavior
-  list.addEventListener("dragover", (e)=>{
-    e.preventDefault();
-    const dragging = document.querySelector(".dragging");
-    const siblings = [...list.querySelectorAll(".item:not(.dragging)")];
-    const nextSibling = siblings.find(sib => e.clientY <= sib.getBoundingClientRect().top + sib.offsetHeight / 2);
-    list.insertBefore(dragging, nextSibling);
-  });
-
-  list.addEventListener("drop", ()=>{
-    const newOrder = [];
-    list.querySelectorAll(".item").forEach(li=>{
-      const idx = li.dataset.index;
-      newOrder.push(sortedItems[idx]);
-    });
-    groceryItems = newOrder;
-    saveData();
-    renderMaster(filter);
+    list.appendChild(li);
   });
 }
 
@@ -140,7 +138,7 @@ function renderChecked() {
 
     const cb = document.createElement("input");
     cb.type="checkbox";
-    cb.checked = false;
+    cb.checked = false; // always unchecked when copied
 
     const span = document.createElement("span");
     span.textContent=`${item.name} (Aisle: ${item.aisle})`;
@@ -152,7 +150,7 @@ function renderChecked() {
     cb.addEventListener("change", ()=>{
       if(cb.checked){
         li.classList.add("checked");
-        checkedList.appendChild(li);
+        checkedList.appendChild(li); // move to bottom
       }else{
         li.classList.remove("checked");
       }
@@ -210,7 +208,9 @@ async function exportToGitHub(showNotify=false){
       headers:{Authorization:`token ${token}`, "Content-Type":"application/json"},
       body: JSON.stringify({ message:"Update grocery list", content, branch, sha })
     });
+    const data = await res.json();
     if(showNotify) notify("Exported to GitHub ✅");
+    console.log("Export result:", data);
   }catch(err){ 
     console.log("Export failed", err);
     if(showNotify) notify("Export failed ❌", false);
@@ -278,12 +278,14 @@ document.addEventListener("DOMContentLoaded",async ()=>{
   renderMaster(); 
   renderChecked();
 
+  // Buttons
   document.getElementById("addItemBtn").addEventListener("click",addItem);
   document.getElementById("clearChecksBtn").addEventListener("click",clearAllChecks);
   document.getElementById("showMasterBtn").addEventListener("click",showMaster);
   document.getElementById("showCheckedBtn").addEventListener("click",showChecked);
   document.getElementById("showAddBtn").addEventListener("click",showAdd);
 
+  // Search
   const searchInput=document.getElementById("searchInput");
   const clearSearchBtn=document.getElementById("clearSearchBtn");
   searchInput.addEventListener("input",()=>{ 
@@ -296,16 +298,19 @@ document.addEventListener("DOMContentLoaded",async ()=>{
     clearSearchBtn.style.display='none'; 
   });
 
+  // Admin dropdown buttons
   document.getElementById("exportJsonBtn").addEventListener("click",()=>exportToGitHub(true));
   document.getElementById("restoreGitHubBtn").addEventListener("click",restoreFromGitHub);
   document.getElementById("importListBtn").addEventListener("click",()=>document.getElementById("importListInput").click());
   document.getElementById("setTokenBtn").addEventListener("click",promptGitHubToken);
   document.getElementById("loadTokenFileBtn").addEventListener("click",()=>document.getElementById("tokenFileInput").click());
 
+  // Close dropdowns when clicking outside
   document.addEventListener("click", () => {
     document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none");
   });
 
+  // Admin dropdown toggle
   document.querySelector(".dropdown-btn").addEventListener("click",(e)=>{
     e.stopPropagation();
     const content = document.querySelector(".dropdown-content");
