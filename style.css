@@ -26,7 +26,6 @@ h1 {
   margin-bottom: 10px;
 }
 
-/* Main buttons: Albertsons, Shopping List, Add Items */
 .menu button:not(.dropdown-btn) {
   padding: 8px 14px;
   font-size: 14px;

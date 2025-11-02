@@ -15,7 +15,7 @@ function saveData() {
 
 // ===== Notification Helper =====
 function notify(msg, success = true){
-  console.log(msg);
+  console.log(msg); // placeholder for toast notifications
 }
 
 // ===== GitHub Token Prompt & Validation =====
@@ -42,12 +42,12 @@ async function promptGitHubToken() {
   }
 }
 
-// ===== Render Master List =====
+// ===== Render Master List (Albertsons) =====
 function renderMaster(filter="") {
   const list = document.getElementById("groceryList");
   list.innerHTML = "";
 
-  // Remove duplicates and sort by aisle, then by name
+  // Remove duplicates and sort by aisle, then item name
   const uniqueItems = [];
   const seen = new Set();
   groceryItems.forEach(item => {
@@ -83,12 +83,11 @@ function renderMaster(filter="") {
 
     const span = document.createElement("span"); 
     span.textContent=`${item.name} (Aisle: ${item.aisle})`;
-    if(checkbox.checked) span.style.textDecoration = "line-through";
+    span.style.textDecoration = "none"; // ✅ No line-through on Albertsons list
 
     checkbox.addEventListener("change",()=>{
       item.checked = checkbox.checked;
-      span.style.textDecoration = checkbox.checked ? "line-through" : "none";
-      renderChecked();
+      renderChecked(); // update shopping list
       saveData();
     });
 
@@ -99,7 +98,6 @@ function renderMaster(filter="") {
     const rightDiv = document.createElement("div");
     rightDiv.className = "item-right";
 
-    // Dropdown Options button
     const dropdown = document.createElement("div"); 
     dropdown.className="dropdown";
     const dropBtn = document.createElement("button"); 
@@ -149,7 +147,7 @@ function renderMaster(filter="") {
     li.appendChild(leftDiv);
     li.appendChild(rightDiv);
 
-    // Drag & Drop
+    // Drag events
     li.addEventListener("dragstart",(e)=>{
       li.classList.add("dragging");
       e.dataTransfer.setData("text/plain", index);
@@ -210,7 +208,7 @@ function renderChecked() {
 
     const cb = document.createElement("input");
     cb.type="checkbox";
-    cb.checked = false; // always start unchecked
+    cb.checked = false; // ✅ Always unchecked when moved to shopping list
 
     const span = document.createElement("span");
     span.textContent=`${item.name} (Aisle: ${item.aisle})`;
@@ -242,7 +240,7 @@ function addItem() {
   document.getElementById("aisleInput").value="";
   saveData(); 
   renderMaster();
-  exportToGitHub(true);
+  exportToGitHub(true); // Auto-export
 }
 
 // ===== Page Switching =====
@@ -250,7 +248,7 @@ function showMaster(){ document.getElementById("masterPage").classList.remove("h
 function showChecked(){ document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.remove("hidden"); document.getElementById("addPage").classList.add("hidden"); }
 function showAdd(){ document.getElementById("addPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.add("hidden"); }
 
-// ===== GitHub Export / Restore =====
+// ===== GitHub Export =====
 async function exportToGitHub(showNotify=false){
   if(!githubTokenValid){ console.log("Cannot export: invalid token"); return; }
   const token = localStorage.getItem("githubToken");
@@ -258,9 +256,15 @@ async function exportToGitHub(showNotify=false){
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
   let sha;
   try{
-    const getRes = await fetch(url+"?ref="+branch,{ headers:{Authorization:`token ${token}`} });
-    if(getRes.status === 200){ const data = await getRes.json(); sha = data.sha; }
+    const getRes = await fetch(url+"?ref="+branch,{
+      headers:{Authorization:`token ${token}`}
+    });
+    if(getRes.status === 200){ 
+      const data = await getRes.json();
+      sha = data.sha;
+    }
   }catch(e){ console.log("Error fetching existing file", e); }
+
   try{
     const res = await fetch(url,{
       method:"PUT",
@@ -276,6 +280,7 @@ async function exportToGitHub(showNotify=false){
   }
 }
 
+// ===== GitHub Restore =====
 async function restoreFromGitHub(){
   if(!githubTokenValid){ console.log("Cannot restore: invalid token"); return; }
   const token = localStorage.getItem("githubToken");
@@ -292,10 +297,13 @@ async function restoreFromGitHub(){
     }else{
       notify("Restore failed ❌", false);
     }
-  }catch(err){ notify("Restore error ❌", false); }
+  }catch(err){ 
+    console.log("Restore error ❌", err); 
+    notify("Restore error ❌", false);
+  }
 }
 
-// ===== Import / Token File =====
+// ===== Import Local File =====
 document.getElementById("importListInput").addEventListener("change",(e)=>{
   const file = e.target.files[0];
   if(!file) return;
@@ -307,11 +315,15 @@ document.getElementById("importListInput").addEventListener("change",(e)=>{
       renderMaster();
       renderChecked();
       notify("Import success ✅");
-    }catch(err){ notify("Import failed ❌", false); }
+    }catch(err){ 
+      console.log("Import failed",err); 
+      notify("Import failed ❌", false);
+    }
   };
   reader.readAsText(file);
 });
 
+// ===== Load Token From File =====
 document.getElementById("tokenFileInput").addEventListener("change",(e)=>{
   const file = e.target.files[0];
   if(!file) return;
@@ -329,8 +341,8 @@ document.addEventListener("DOMContentLoaded",async ()=>{
   renderMaster(); 
   renderChecked();
 
+  // Buttons
   document.getElementById("addItemBtn").addEventListener("click",addItem);
-
   document.getElementById("clearChecksBtn").addEventListener("click",()=>{
     groceryItems.forEach(i=>i.checked=false);
     saveData(); 
@@ -338,11 +350,11 @@ document.addEventListener("DOMContentLoaded",async ()=>{
     renderChecked();
     exportToGitHub(true);
   });
-
   document.getElementById("showMasterBtn").addEventListener("click",showMaster);
   document.getElementById("showCheckedBtn").addEventListener("click",showChecked);
   document.getElementById("showAddBtn").addEventListener("click",showAdd);
 
+  // Search
   const searchInput=document.getElementById("searchInput");
   const clearSearchBtn=document.getElementById("clearSearchBtn");
   searchInput.addEventListener("input",()=>{ 
