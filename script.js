@@ -15,7 +15,7 @@ function saveData() {
 
 // ===== Notification Helper =====
 function notify(msg, success = true){
-  console.log(msg); // placeholder
+  console.log(msg); // placeholder, can implement toast notifications
 }
 
 // ===== GitHub Token Prompt & Validation =====
@@ -25,6 +25,7 @@ async function promptGitHubToken() {
     token = prompt("⚠️ GitHub token missing! Enter token:") || null;
     if(token) localStorage.setItem("githubToken", token);
   }
+
   document.getElementById("tokenStatus").textContent = token ? "✅ GitHub Token Set" : "⚠️ No GitHub Token";
   
   if(token){
@@ -46,7 +47,7 @@ function renderMaster(filter="") {
   const list = document.getElementById("groceryList");
   list.innerHTML = "";
 
-  // Sort by aisle then name, remove duplicates
+  // Sort by aisle then name
   let sortedItems = [...groceryItems]
     .filter((item,index,self)=>self.findIndex(i=>i.name===item.name && i.aisle===item.aisle)===index)
     .sort((a,b)=>{
@@ -61,7 +62,6 @@ function renderMaster(filter="") {
 
     const li = document.createElement("li"); 
     li.className="item"; 
-    li.setAttribute("draggable","true");
     li.dataset.index = index;
 
     // LEFT: checkbox + name
@@ -82,56 +82,78 @@ function renderMaster(filter="") {
 
     leftDiv.appendChild(checkbox); 
     leftDiv.appendChild(span);
-
     li.appendChild(leftDiv);
 
-    // RIGHT: drag handle
-    const dragDiv = document.createElement("div");
-    dragDiv.className = "drag-handle";
-    dragDiv.innerHTML = "☰";
-    li.appendChild(dragDiv);
+    list.appendChild(li);
+  });
 
-    // Drag events
-    li.addEventListener("dragstart",(e)=>{
-      li.classList.add("dragging");
-      e.dataTransfer.effectAllowed = "move";
-      e.dataTransfer.setData("text/plain", index);
-    });
+  enableDragAndDrop(); // activate drag-and-drop after rendering
+}
 
-    li.addEventListener("dragover",(e)=>{
-      e.preventDefault();
-      e.dataTransfer.dropEffect = "move";
-      const dragging = document.querySelector(".dragging");
-      const siblings = Array.from(list.querySelectorAll(".item:not(.dragging)"));
-      let afterElement = null;
-      for(let sibling of siblings){
-        const rect = sibling.getBoundingClientRect();
-        if(e.clientY < rect.top + rect.height/2){
-          afterElement = sibling;
-          break;
-        }
-      }
-      if(afterElement){
-        list.insertBefore(dragging, afterElement);
-      } else {
-        list.appendChild(dragging);
-      }
-    });
+// ===== Drag & Drop for Albertsons List =====
+function enableDragAndDrop() {
+  const list = document.getElementById("groceryList");
+  let dragSrcEl = null;
 
-    li.addEventListener("dragend",()=>{
-      li.classList.remove("dragging");
-      // Update groceryItems order based on new DOM order
-      const newOrder = [];
-      list.querySelectorAll(".item").forEach(it=>{
-        const idx = parseInt(it.dataset.index);
-        newOrder.push(sortedItems[idx]);
-      });
-      groceryItems = newOrder;
+  function handleDragStart(e) {
+    dragSrcEl = this;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', this.innerHTML);
+    this.classList.add('dragging');
+  }
+
+  function handleDragOver(e) {
+    if(e.preventDefault) e.preventDefault(); // allow drop
+    e.dataTransfer.dropEffect = 'move';
+    return false;
+  }
+
+  function handleDragEnter() {
+    this.classList.add('over');
+  }
+
+  function handleDragLeave() {
+    this.classList.remove('over');
+  }
+
+  function handleDrop(e) {
+    if(e.stopPropagation) e.stopPropagation();
+    if(dragSrcEl !== this) {
+      const srcIndex = dragSrcEl.dataset.index;
+      const destIndex = this.dataset.index;
+      [groceryItems[srcIndex], groceryItems[destIndex]] = [groceryItems[destIndex], groceryItems[srcIndex]];
       saveData();
       renderMaster();
-    });
+    }
+    return false;
+  }
 
-    list.appendChild(li);
+  function handleDragEnd() {
+    this.classList.remove('dragging');
+    list.querySelectorAll('.item').forEach(item => item.classList.remove('over'));
+  }
+
+  const items = list.querySelectorAll('.item');
+  items.forEach(item => {
+    // Add drag handle if not exists
+    if(!item.querySelector('.drag-handle')) {
+      const handle = document.createElement('span');
+      handle.className = 'drag-handle';
+      handle.innerHTML = '☰'; // visual handle
+      handle.style.marginLeft = 'auto'; // right-aligned
+      handle.style.cursor = 'grab';
+      item.appendChild(handle);
+
+      handle.addEventListener('mousedown', () => { item.setAttribute('draggable', true); });
+      handle.addEventListener('mouseup', () => { item.setAttribute('draggable', false); });
+    }
+
+    item.addEventListener('dragstart', handleDragStart, false);
+    item.addEventListener('dragenter', handleDragEnter, false);
+    item.addEventListener('dragover', handleDragOver, false);
+    item.addEventListener('dragleave', handleDragLeave, false);
+    item.addEventListener('drop', handleDrop, false);
+    item.addEventListener('dragend', handleDragEnd, false);
   });
 }
 
@@ -220,6 +242,7 @@ async function exportToGitHub(showNotify=false){
     });
     const data = await res.json();
     if(showNotify) notify("Exported to GitHub ✅");
+    console.log("Export result:", data);
   }catch(err){ 
     console.log("Export failed", err);
     if(showNotify) notify("Export failed ❌", false);
@@ -266,7 +289,7 @@ document.getElementById("importListInput").addEventListener("change",(e)=>{
       notify("Import failed ❌", false);
     }
   };
-  reader.read AsText(file);
+  reader.readAsText(file);
 });
 
 // ===== Load Token From File =====
