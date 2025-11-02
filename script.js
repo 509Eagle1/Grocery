@@ -47,6 +47,19 @@ function renderMaster(filter="") {
   const list = document.getElementById("groceryList");
   list.innerHTML = "";
 
+  // Sort by aisle, then name, remove duplicates
+  const seen = new Set();
+  groceryItems = groceryItems.filter(item => {
+    const key = (item.name + "|" + item.aisle).toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).sort((a, b) => {
+    const aisleCompare = a.aisle.localeCompare(b.aisle, undefined, { numeric: true });
+    if (aisleCompare !== 0) return aisleCompare;
+    return a.name.localeCompare(b.name);
+  });
+
   groceryItems.forEach((item,index)=>{
     if(filter && !item.name.toLowerCase().includes(filter.toLowerCase())) return;
 
@@ -55,7 +68,6 @@ function renderMaster(filter="") {
     li.setAttribute("draggable","true");
     li.dataset.index = index;
 
-    // LEFT: checkbox + name
     const leftDiv = document.createElement("div");
     leftDiv.className = "item-left";
 
@@ -74,11 +86,9 @@ function renderMaster(filter="") {
     leftDiv.appendChild(checkbox); 
     leftDiv.appendChild(span);
 
-    // RIGHT: Options button + drag handle
     const rightDiv = document.createElement("div");
     rightDiv.className = "item-right";
 
-    // Dropdown Options button
     const dropdown = document.createElement("div"); 
     dropdown.className="dropdown";
     const dropBtn = document.createElement("button"); 
@@ -116,52 +126,14 @@ function renderMaster(filter="") {
     dropContent.appendChild(removeBtn);
     dropdown.appendChild(dropBtn); 
     dropdown.appendChild(dropContent);
-
     rightDiv.appendChild(dropdown);
 
-    // Drag handle
-    const dragHandle = document.createElement("span");
-    dragHandle.className="drag-handle";
-    dragHandle.innerHTML='<svg viewBox="0 0 24 24"><path d="M3 12h18v2H3v-2zm0-5h18v2H3V7zm0 10h18v2H3v-2z"/></svg>';
-    rightDiv.appendChild(dragHandle);
-
-    // Append left and right divs to li
     li.appendChild(leftDiv);
     li.appendChild(rightDiv);
-
-    // Drag events
-    li.addEventListener("dragstart",(e)=>{
-      li.classList.add("dragging");
-      e.dataTransfer.setData("text/plain", index);
-    });
-    li.addEventListener("dragover",(e)=>{
-      e.preventDefault();
-      const draggingEl = document.querySelector(".dragging");
-      if(!draggingEl) return;
-      const bounding = li.getBoundingClientRect();
-      const offset = e.clientY - bounding.top;
-      if(offset > bounding.height/2){
-        li.parentNode.insertBefore(draggingEl, li.nextSibling);
-      }else{
-        li.parentNode.insertBefore(draggingEl, li);
-      }
-    });
-    li.addEventListener("dragend",()=>{
-      li.classList.remove("dragging");
-      const newItems = [];
-      document.querySelectorAll("#groceryList .item").forEach(it=>{
-        const idx = parseInt(it.dataset.index);
-        newItems.push(groceryItems[idx]);
-      });
-      groceryItems = newItems;
-      saveData();
-      renderMaster(document.getElementById("searchInput").value);
-    });
-
     list.appendChild(li);
   });
 
-  // ===== Item dropdown toggle =====
+  // Dropdown toggle behavior
   document.querySelectorAll('.dropdown').forEach(drop => {
     const btn = drop.querySelector('.dropdown-btn');
     const content = drop.querySelector('.dropdown-content');
@@ -173,7 +145,6 @@ function renderMaster(filter="") {
       });
       content.style.display = (content.style.display === 'block') ? 'none' : 'block';
     });
-
     content.addEventListener('click', e => e.stopPropagation());
   });
 }
@@ -183,14 +154,15 @@ function renderChecked() {
   const checkedList = document.getElementById("checkedList");
   checkedList.innerHTML = "";
   const checkedItems = groceryItems.filter(i=>i.checked);
+
   checkedItems.forEach((item)=>{
     const li = document.createElement("li");
-    li.className="item";
+    li.className="item checked";
     li.style.justifyContent="flex-start";
 
     const cb = document.createElement("input");
     cb.type="checkbox";
-    cb.checked = false;
+    cb.checked = true;
 
     const span = document.createElement("span");
     span.textContent=`${item.name} (Aisle: ${item.aisle})`;
@@ -198,15 +170,6 @@ function renderChecked() {
     li.appendChild(cb);
     li.appendChild(span);
     checkedList.appendChild(li);
-
-    cb.addEventListener("change", ()=>{
-      if(cb.checked){
-        li.classList.add("checked");
-        checkedList.appendChild(li);
-      }else{
-        li.classList.remove("checked");
-      }
-    });
   });
 }
 
@@ -220,7 +183,7 @@ function addItem() {
   document.getElementById("aisleInput").value="";
   saveData(); 
   renderMaster();
-  exportToGitHub(true); // Auto-export
+  exportToGitHub(true);
 }
 
 // ===== Page Switching =====
@@ -236,9 +199,7 @@ async function exportToGitHub(showNotify=false){
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
   let sha;
   try{
-    const getRes = await fetch(url+"?ref="+branch,{
-      headers:{Authorization:`token ${token}`}
-    });
+    const getRes = await fetch(url+"?ref="+branch,{ headers:{Authorization:`token ${token}`} });
     if(getRes.status === 200){ 
       const data = await getRes.json();
       sha = data.sha;
@@ -274,10 +235,8 @@ async function restoreFromGitHub(){
       renderMaster();
       renderChecked();
       notify("Restore success ✅");
-      console.log("Restore success");
     }else{
       notify("Restore failed ❌", false);
-      console.log("Restore failed", data);
     }
   }catch(err){ 
     console.log("Restore error ❌", err); 
@@ -285,61 +244,27 @@ async function restoreFromGitHub(){
   }
 }
 
-// ===== Import Local File =====
-document.getElementById("importListInput").addEventListener("change",(e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ()=>{
-    try{
-      groceryItems = JSON.parse(reader.result);
-      saveData();
-      renderMaster();
-      renderChecked();
-      notify("Import success ✅");
-    }catch(err){ 
-      console.log("Import failed",err); 
-      notify("Import failed ❌", false);
-    }
-  };
-  reader.readAsText(file);
-});
-
-// ===== Load Token From File =====
-document.getElementById("tokenFileInput").addEventListener("change",(e)=>{
-  const file = e.target.files[0];
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ()=>{ 
-    localStorage.setItem("githubToken", reader.result.trim());
-    promptGitHubToken();
-  };
-  reader.readAsText(file);
-});
-
 // ===== Initialize =====
 document.addEventListener("DOMContentLoaded",async ()=>{
   await promptGitHubToken();
   renderMaster(); 
   renderChecked();
 
-  // Buttons
   document.getElementById("addItemBtn").addEventListener("click",addItem);
 
-  // ===== Updated Clear All Checks =====
-  document.getElementById("clearChecksBtn").addEventListener("click", async () => {
-    groceryItems.forEach(i => i.checked = false);
+  // ✅ Clear All Checks: clears + exports
+  document.getElementById("clearChecksBtn").addEventListener("click",async ()=>{
+    groceryItems.forEach(i=>i.checked=false);
     saveData(); 
     renderMaster(); 
     renderChecked();
-    await exportToGitHub(true); // Export after clearing
+    await exportToGitHub(true);
   });
 
   document.getElementById("showMasterBtn").addEventListener("click",showMaster);
   document.getElementById("showCheckedBtn").addEventListener("click",showChecked);
   document.getElementById("showAddBtn").addEventListener("click",showAdd);
 
-  // Search
   const searchInput=document.getElementById("searchInput");
   const clearSearchBtn=document.getElementById("clearSearchBtn");
   searchInput.addEventListener("input",()=>{ 
@@ -359,7 +284,6 @@ document.addEventListener("DOMContentLoaded",async ()=>{
   document.getElementById("setTokenBtn").addEventListener("click",promptGitHubToken);
   document.getElementById("loadTokenFileBtn").addEventListener("click",()=>document.getElementById("tokenFileInput").click());
 
-  // Close dropdowns when clicking outside
   document.addEventListener("click", () => {
     document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none");
   });
