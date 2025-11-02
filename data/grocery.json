@@ -42,7 +42,7 @@
   {
     "name": "Grandmas",
     "aisle": "",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Mash Potatoes",
@@ -67,7 +67,7 @@
   {
     "name": "Trash Bags 39gal",
     "aisle": "",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Bacon",
@@ -87,7 +87,7 @@
   {
     "name": "Broccoli",
     "aisle": "1",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Butter - Jan",
@@ -142,7 +142,7 @@
   {
     "name": "Fruit bowls",
     "aisle": "1",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Green Grapes",
