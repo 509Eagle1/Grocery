@@ -15,7 +15,7 @@ function saveData() {
 
 // ===== Notification Helper =====
 function notify(msg, success = true){
-  console.log(msg); // placeholder, can implement toast notifications
+  console.log(msg); // placeholder
 }
 
 // ===== GitHub Token Prompt & Validation =====
@@ -42,12 +42,12 @@ async function promptGitHubToken() {
   }
 }
 
-// ===== Render Master List =====
+// ===== Render Master List with Drag-and-Drop =====
 function renderMaster(filter="") {
   const list = document.getElementById("groceryList");
   list.innerHTML = "";
 
-  // Sort by aisle then name
+  // Sort by aisle then name, remove duplicates
   let sortedItems = [...groceryItems]
     .filter((item,index,self)=>self.findIndex(i=>i.name===item.name && i.aisle===item.aisle)===index)
     .sort((a,b)=>{
@@ -65,7 +65,6 @@ function renderMaster(filter="") {
     li.setAttribute("draggable","true");
     li.dataset.index = index;
 
-    // LEFT: checkbox + name
     const leftDiv = document.createElement("div");
     leftDiv.className = "item-left";
 
@@ -83,8 +82,38 @@ function renderMaster(filter="") {
 
     leftDiv.appendChild(checkbox); 
     leftDiv.appendChild(span);
-
     li.appendChild(leftDiv);
+
+    // Drag-and-drop handlers
+    li.addEventListener("dragstart",(e)=>{
+      li.classList.add("dragging");
+      e.dataTransfer.setData("text/plain", index);
+    });
+
+    li.addEventListener("dragover",(e)=>{
+      e.preventDefault();
+      const draggingEl = document.querySelector(".dragging");
+      if(!draggingEl || draggingEl === li) return;
+      const bounding = li.getBoundingClientRect();
+      const offset = e.clientY - bounding.top;
+      if(offset > bounding.height/2){
+        li.parentNode.insertBefore(draggingEl, li.nextSibling);
+      } else {
+        li.parentNode.insertBefore(draggingEl, li);
+      }
+    });
+
+    li.addEventListener("dragend",()=>{
+      li.classList.remove("dragging");
+      const newItems = [];
+      document.querySelectorAll("#groceryList .item").forEach(it=>{
+        const idx = parseInt(it.dataset.index);
+        newItems.push(sortedItems[idx]);
+      });
+      groceryItems = newItems;
+      saveData();
+      renderMaster(document.getElementById("searchInput").value);
+    });
 
     list.appendChild(li);
   });
@@ -103,7 +132,7 @@ function renderChecked() {
 
     const cb = document.createElement("input");
     cb.type="checkbox";
-    cb.checked = false; // always unchecked when copied
+    cb.checked = false;
 
     const span = document.createElement("span");
     span.textContent=`${item.name} (Aisle: ${item.aisle})`;
@@ -115,7 +144,7 @@ function renderChecked() {
     cb.addEventListener("change", ()=>{
       if(cb.checked){
         li.classList.add("checked");
-        checkedList.appendChild(li); // move to bottom
+        checkedList.appendChild(li);
       }else{
         li.classList.remove("checked");
       }
@@ -175,7 +204,6 @@ async function exportToGitHub(showNotify=false){
     });
     const data = await res.json();
     if(showNotify) notify("Exported to GitHub ✅");
-    console.log("Export result:", data);
   }catch(err){ 
     console.log("Export failed", err);
     if(showNotify) notify("Export failed ❌", false);
@@ -231,6 +259,7 @@ document.getElementById("tokenFileInput").addEventListener("change",(e)=>{
   if(!file) return;
   const reader = new FileReader();
   reader.onload = ()=>{ 
+    localStorage.setItem("github
     localStorage.setItem("githubToken", reader.result.trim());
     promptGitHubToken();
   };
@@ -238,46 +267,56 @@ document.getElementById("tokenFileInput").addEventListener("change",(e)=>{
 });
 
 // ===== Initialize =====
-document.addEventListener("DOMContentLoaded",async ()=>{
+document.addEventListener("DOMContentLoaded", async () => {
   await promptGitHubToken();
   renderMaster(); 
   renderChecked();
 
-  // Buttons
-  document.getElementById("addItemBtn").addEventListener("click",addItem);
-  document.getElementById("clearChecksBtn").addEventListener("click",clearAllChecks);
-  document.getElementById("showMasterBtn").addEventListener("click",showMaster);
-  document.getElementById("showCheckedBtn").addEventListener("click",showChecked);
-  document.getElementById("showAddBtn").addEventListener("click",showAdd);
+  // Page buttons
+  document.getElementById("showMasterBtn").addEventListener("click", showMaster);
+  document.getElementById("showCheckedBtn").addEventListener("click", showChecked);
+  document.getElementById("showAddBtn").addEventListener("click", showAdd);
+
+  // Add item
+  document.getElementById("addItemBtn").addEventListener("click", addItem);
+
+  // Clear all checks + export
+  document.getElementById("clearChecksBtn").addEventListener("click", clearAllChecks);
 
   // Search
-  const searchInput=document.getElementById("searchInput");
-  const clearSearchBtn=document.getElementById("clearSearchBtn");
-  searchInput.addEventListener("input",()=>{ 
+  const searchInput = document.getElementById("searchInput");
+  const clearSearchBtn = document.getElementById("clearSearchBtn");
+  searchInput.addEventListener("input", () => {
     renderMaster(searchInput.value); 
-    clearSearchBtn.style.display = searchInput.value ? 'block' : 'none'; 
+    clearSearchBtn.style.display = searchInput.value ? 'block' : 'none';
   });
-  clearSearchBtn.addEventListener("click",()=>{ 
-    searchInput.value=''; 
+  clearSearchBtn.addEventListener("click", () => {
+    searchInput.value = ''; 
     renderMaster(); 
-    clearSearchBtn.style.display='none'; 
+    clearSearchBtn.style.display = 'none'; 
   });
 
   // Admin dropdown buttons
-  document.getElementById("exportJsonBtn").addEventListener("click",()=>exportToGitHub(true));
-  document.getElementById("restoreGitHubBtn").addEventListener("click",restoreFromGitHub);
-  document.getElementById("importListBtn").addEventListener("click",()=>document.getElementById("importListInput").click());
-  document.getElementById("setTokenBtn").addEventListener("click",promptGitHubToken);
-  document.getElementById("loadTokenFileBtn").addEventListener("click",()=>document.getElementById("tokenFileInput").click());
+  document.getElementById("exportJsonBtn").addEventListener("click", () => exportToGitHub(true));
+  document.getElementById("restoreGitHubBtn").addEventListener("click", restoreFromGitHub);
+  document.getElementById("importListBtn").addEventListener("click", () => document.getElementById("importListInput").click());
+  document.getElementById("setTokenBtn").addEventListener("click", promptGitHubToken);
+  document.getElementById("loadTokenFileBtn").addEventListener("click", () => document.getElementById("tokenFileInput").click());
+
+  // Toggle dropdown visibility
+  document.querySelectorAll(".dropdown .dropdown-btn").forEach(btn => {
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const content = btn.nextElementSibling;
+      document.querySelectorAll(".dropdown-content").forEach(dc => {
+        if(dc !== content) dc.style.display = "none";
+      });
+      content.style.display = (content.style.display === "block") ? "none" : "block";
+    });
+  });
 
   // Close dropdowns when clicking outside
   document.addEventListener("click", () => {
-    document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none");
-  });
-
-  document.querySelector(".dropdown-btn").addEventListener("click",(e)=>{
-    e.stopPropagation();
-    const content = document.querySelector(".dropdown-content");
-    content.style.display = content.style.display==="block"?"none":"block";
+    document.querySelectorAll(".dropdown-content").forEach(dc => dc.style.display = "none");
   });
 });
