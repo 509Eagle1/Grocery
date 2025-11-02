@@ -27,7 +27,7 @@ async function promptGitHubToken() {
   }
 
   document.getElementById("tokenStatus").textContent = token ? "✅ GitHub Token Set" : "⚠️ No GitHub Token";
-  
+
   if(token){
     try{
       const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`,{
@@ -42,18 +42,21 @@ async function promptGitHubToken() {
   }
 }
 
-// ===== Remove duplicates & sort =====
-function cleanAndSortMaster() {
+// ===== Render Master List =====
+function renderMaster(filter="") {
+  const list = document.getElementById("groceryList");
+  list.innerHTML = "";
+
+  // Remove duplicates and sort by aisle, then by name
   const uniqueItems = [];
   const seen = new Set();
   groceryItems.forEach(item => {
-    const key = item.name.toLowerCase() + '|' + item.aisle.toLowerCase();
-    if(!seen.has(key)) {
-      uniqueItems.push(item);
+    const key = item.name.toLowerCase() + "|" + item.aisle.toLowerCase();
+    if(!seen.has(key)){
       seen.add(key);
+      uniqueItems.push(item);
     }
   });
-
   uniqueItems.sort((a,b)=>{
     if(a.aisle.toLowerCase() < b.aisle.toLowerCase()) return -1;
     if(a.aisle.toLowerCase() > b.aisle.toLowerCase()) return 1;
@@ -62,17 +65,7 @@ function cleanAndSortMaster() {
     return 0;
   });
 
-  groceryItems = uniqueItems;
-}
-
-// ===== Render Master List =====
-function renderMaster(filter="") {
-  cleanAndSortMaster();
-
-  const list = document.getElementById("groceryList");
-  list.innerHTML = "";
-
-  groceryItems.forEach((item,index)=>{
+  uniqueItems.forEach((item,index)=>{
     if(filter && !item.name.toLowerCase().includes(filter.toLowerCase())) return;
 
     const li = document.createElement("li"); 
@@ -80,6 +73,7 @@ function renderMaster(filter="") {
     li.setAttribute("draggable","true");
     li.dataset.index = index;
 
+    // LEFT: checkbox + name
     const leftDiv = document.createElement("div");
     leftDiv.className = "item-left";
 
@@ -87,29 +81,25 @@ function renderMaster(filter="") {
     checkbox.type="checkbox"; 
     checkbox.checked = item.checked || false;
 
-    checkbox.addEventListener("change", () => {
-      if (checkbox.checked) {
-        const shoppingList = JSON.parse(localStorage.getItem("shoppingList") || "[]");
-        const exists = shoppingList.some(i => i.name === item.name && i.aisle === item.aisle);
-        if (!exists) {
-          const copy = { ...item, checked: false };
-          shoppingList.push(copy);
-          localStorage.setItem("shoppingList", JSON.stringify(shoppingList));
-          renderChecked();
-        }
-        checkbox.checked = false;
-      }
-    });
-
     const span = document.createElement("span"); 
     span.textContent=`${item.name} (Aisle: ${item.aisle})`;
+    if(checkbox.checked) span.style.textDecoration = "line-through";
+
+    checkbox.addEventListener("change",()=>{
+      item.checked = checkbox.checked;
+      span.style.textDecoration = checkbox.checked ? "line-through" : "none";
+      renderChecked();
+      saveData();
+    });
 
     leftDiv.appendChild(checkbox); 
     leftDiv.appendChild(span);
 
+    // RIGHT: Options button + drag handle
     const rightDiv = document.createElement("div");
     rightDiv.className = "item-right";
 
+    // Dropdown Options button
     const dropdown = document.createElement("div"); 
     dropdown.className="dropdown";
     const dropBtn = document.createElement("button"); 
@@ -147,8 +137,10 @@ function renderMaster(filter="") {
     dropContent.appendChild(removeBtn);
     dropdown.appendChild(dropBtn); 
     dropdown.appendChild(dropContent);
+
     rightDiv.appendChild(dropdown);
 
+    // Drag handle
     const dragHandle = document.createElement("span");
     dragHandle.className="drag-handle";
     dragHandle.innerHTML='<svg viewBox="0 0 24 24"><path d="M3 12h18v2H3v-2zm0-5h18v2H3V7zm0 10h18v2H3v-2z"/></svg>';
@@ -157,6 +149,7 @@ function renderMaster(filter="") {
     li.appendChild(leftDiv);
     li.appendChild(rightDiv);
 
+    // Drag & Drop
     li.addEventListener("dragstart",(e)=>{
       li.classList.add("dragging");
       e.dataTransfer.setData("text/plain", index);
@@ -178,7 +171,7 @@ function renderMaster(filter="") {
       const newItems = [];
       document.querySelectorAll("#groceryList .item").forEach(it=>{
         const idx = parseInt(it.dataset.index);
-        newItems.push(groceryItems[idx]);
+        newItems.push(uniqueItems[idx]);
       });
       groceryItems = newItems;
       saveData();
@@ -188,6 +181,7 @@ function renderMaster(filter="") {
     list.appendChild(li);
   });
 
+  // Dropdown toggle
   document.querySelectorAll('.dropdown').forEach(drop => {
     const btn = drop.querySelector('.dropdown-btn');
     const content = drop.querySelector('.dropdown-content');
@@ -204,20 +198,19 @@ function renderMaster(filter="") {
   });
 }
 
-// ===== Render Shopping List =====
+// ===== Render Checked / Shopping List =====
 function renderChecked() {
   const checkedList = document.getElementById("checkedList");
   checkedList.innerHTML = "";
-  let shoppingList = JSON.parse(localStorage.getItem("shoppingList") || "[]");
 
-  shoppingList.forEach((item,index)=>{
+  groceryItems.filter(i => i.checked).forEach(item => {
     const li = document.createElement("li");
     li.className="item";
     li.style.justifyContent="flex-start";
 
     const cb = document.createElement("input");
     cb.type="checkbox";
-    cb.checked = item.checked || false;
+    cb.checked = false; // always start unchecked
 
     const span = document.createElement("span");
     span.textContent=`${item.name} (Aisle: ${item.aisle})`;
@@ -226,17 +219,15 @@ function renderChecked() {
     li.appendChild(span);
     checkedList.appendChild(li);
 
-    cb.addEventListener("change", ()=>{
-      item.checked = cb.checked;
+    cb.addEventListener("change", () => {
       if(cb.checked){
         li.classList.add("checked");
-        shoppingList.splice(index,1);
-        shoppingList.push(item);
+        span.style.textDecoration = "line-through";
+        checkedList.appendChild(li); // move to bottom
       } else {
         li.classList.remove("checked");
+        span.style.textDecoration = "none";
       }
-      localStorage.setItem("shoppingList", JSON.stringify(shoppingList));
-      renderChecked();
     });
   });
 }
@@ -259,7 +250,7 @@ function showMaster(){ document.getElementById("masterPage").classList.remove("h
 function showChecked(){ document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.remove("hidden"); document.getElementById("addPage").classList.add("hidden"); }
 function showAdd(){ document.getElementById("addPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.add("hidden"); }
 
-// ===== GitHub Export =====
+// ===== GitHub Export / Restore =====
 async function exportToGitHub(showNotify=false){
   if(!githubTokenValid){ console.log("Cannot export: invalid token"); return; }
   const token = localStorage.getItem("githubToken");
@@ -267,15 +258,9 @@ async function exportToGitHub(showNotify=false){
   const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
   let sha;
   try{
-    const getRes = await fetch(url+"?ref="+branch,{
-      headers:{Authorization:`token ${token}`}
-    });
-    if(getRes.status === 200){ 
-      const data = await getRes.json();
-      sha = data.sha;
-    }
+    const getRes = await fetch(url+"?ref="+branch,{ headers:{Authorization:`token ${token}`} });
+    if(getRes.status === 200){ const data = await getRes.json(); sha = data.sha; }
   }catch(e){ console.log("Error fetching existing file", e); }
-
   try{
     const res = await fetch(url,{
       method:"PUT",
@@ -291,7 +276,6 @@ async function exportToGitHub(showNotify=false){
   }
 }
 
-// ===== GitHub Restore =====
 async function restoreFromGitHub(){
   if(!githubTokenValid){ console.log("Cannot restore: invalid token"); return; }
   const token = localStorage.getItem("githubToken");
@@ -305,18 +289,13 @@ async function restoreFromGitHub(){
       renderMaster();
       renderChecked();
       notify("Restore success ✅");
-      console.log("Restore success");
     }else{
       notify("Restore failed ❌", false);
-      console.log("Restore failed", data);
     }
-  }catch(err){ 
-    console.log("Restore error ❌", err); 
-    notify("Restore error ❌", false);
-  }
+  }catch(err){ notify("Restore error ❌", false); }
 }
 
-// ===== Import Local File =====
+// ===== Import / Token File =====
 document.getElementById("importListInput").addEventListener("change",(e)=>{
   const file = e.target.files[0];
   if(!file) return;
@@ -328,15 +307,11 @@ document.getElementById("importListInput").addEventListener("change",(e)=>{
       renderMaster();
       renderChecked();
       notify("Import success ✅");
-    }catch(err){ 
-      console.log("Import failed",err); 
-      notify("Import failed ❌", false);
-    }
+    }catch(err){ notify("Import failed ❌", false); }
   };
   reader.readAsText(file);
 });
 
-// ===== Load Token From File =====
 document.getElementById("tokenFileInput").addEventListener("change",(e)=>{
   const file = e.target.files[0];
   if(!file) return;
@@ -354,8 +329,8 @@ document.addEventListener("DOMContentLoaded",async ()=>{
   renderMaster(); 
   renderChecked();
 
-  // Buttons
   document.getElementById("addItemBtn").addEventListener("click",addItem);
+
   document.getElementById("clearChecksBtn").addEventListener("click",()=>{
     groceryItems.forEach(i=>i.checked=false);
     saveData(); 
@@ -363,11 +338,11 @@ document.addEventListener("DOMContentLoaded",async ()=>{
     renderChecked();
     exportToGitHub(true);
   });
+
   document.getElementById("showMasterBtn").addEventListener("click",showMaster);
   document.getElementById("showCheckedBtn").addEventListener("click",showChecked);
   document.getElementById("showAddBtn").addEventListener("click",showAdd);
 
-  // Search
   const searchInput=document.getElementById("searchInput");
   const clearSearchBtn=document.getElementById("clearSearchBtn");
   searchInput.addEventListener("input",()=>{ 
