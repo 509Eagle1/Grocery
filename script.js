@@ -81,12 +81,55 @@ function renderMaster(filter="") {
     const span = document.createElement("span"); 
     span.textContent=`${item.name} (Aisle: ${item.aisle})`;
 
+    // Drag handle
+    const handle = document.createElement("span");
+    handle.className = "drag-handle";
+    handle.innerHTML = "☰";
+    handle.style.cursor = "grab";
+    handle.style.marginRight = "8px";
+
+    leftDiv.appendChild(handle);
     leftDiv.appendChild(checkbox); 
     leftDiv.appendChild(span);
 
     li.appendChild(leftDiv);
-
     list.appendChild(li);
+
+    // ===== Drag & Drop Logic =====
+    li.addEventListener("dragstart", (e)=>{
+      e.dataTransfer.setData("text/plain", index);
+      li.classList.add("dragging");
+    });
+
+    li.addEventListener("dragend", ()=>{
+      li.classList.remove("dragging");
+    });
+
+    li.addEventListener("dragover", (e)=>{
+      e.preventDefault();
+      const dragging = document.querySelector(".dragging");
+      if(!dragging || dragging === li) return;
+      const rect = li.getBoundingClientRect();
+      const next = (e.clientY - rect.top) / rect.height > 0.5;
+      li.parentNode.insertBefore(dragging, next ? li.nextSibling : li);
+    });
+  });
+
+  // Save new order after drop
+  list.addEventListener("drop", ()=>{
+    const newOrder = [];
+    list.querySelectorAll(".item").forEach(li=>{
+      const span = li.querySelector("span").textContent;
+      const match = span.match(/^(.*?) \(Aisle: (.*?)\)$/);
+      if(match){
+        const name = match[1];
+        const aisle = match[2];
+        const orig = groceryItems.find(i=>i.name===name && i.aisle===aisle);
+        if(orig) newOrder.push(orig);
+      }
+    });
+    groceryItems = newOrder;
+    saveData();
   });
 }
 
