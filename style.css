@@ -89,11 +89,9 @@ h1 {
 .item {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 6px;
   border-bottom: 1px solid #ddd;
   position: relative;
-  cursor: grab;
 }
 
 .item.checked span {
@@ -102,33 +100,18 @@ h1 {
 }
 
 .item-left {
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 5px;
-  flex: 1;
 }
 
 .item-right {
   display: flex;
   align-items: center;
   gap: 6px;
-  cursor: grab;
-  font-size: 18px;
-  user-select: none;
 }
 
-.item-right:active {
-  cursor: grabbing;
-}
-
-/* Drag Handle Symbol */
-.item-right::before {
-  content: "☰";
-  margin-right: 5px;
-  cursor: grab;
-}
-
-/* ===== Dropdown Menu ===== */
 .dropdown {
   position: relative;
   display: inline-block;
@@ -159,7 +142,6 @@ h1 {
 .dropdown-content .edit { background: #28a745; color: white; margin-bottom: 5px; }
 .dropdown-content .remove { background: #dc3545; color: white; }
 
-/* ===== Search Container ===== */
 .search-container {
   position: relative;
   flex: 1;
@@ -187,15 +169,7 @@ h1 {
 .clear-search:hover { color: #333; }
 
 .hidden { display: none; }
-
-#addPage { 
-  display: flex; 
-  flex-direction: column; 
-  gap: 5px; 
-  flex-wrap: wrap; 
-  align-items: flex-start; 
-  margin-top: 10px; 
-}
+#addPage { display: flex; flex-direction: column; gap: 5px; flex-wrap: wrap; align-items: flex-start; margin-top: 10px; }
 
 #checkedList .item {
   justify-content: flex-start;
@@ -209,7 +183,11 @@ input[type="text"] {
   margin-bottom: 5px;
 }
 
-/* ===== Responsive ===== */
+/* ===== Remove drag-and-drop cursor / handlers ===== */
+.item {
+  cursor: default;
+}
+
 @media(max-width:430px){
   .menu button:not(.dropdown-btn) {
     padding: 6px 10px;
@@ -218,8 +196,5 @@ input[type="text"] {
   .menu .dropdown-btn {
     padding: 5px 8px;
     font-size: 11px;
-  }
-  .item-right::before {
-    font-size: 16px;
   }
 }
