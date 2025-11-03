@@ -183,11 +183,6 @@ input[type="text"] {
   margin-bottom: 5px;
 }
 
-/* ===== Remove drag-and-drop cursor / handlers ===== */
-.item {
-  cursor: default;
-}
-
 @media(max-width:430px){
   .menu button:not(.dropdown-btn) {
     padding: 6px 10px;
