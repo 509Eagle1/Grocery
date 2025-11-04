@@ -22,7 +22,7 @@
   {
     "name": "Coffee Pods",
     "aisle": "4",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Apple sause",
@@ -37,7 +37,7 @@
   {
     "name": "Cheese Shreded",
     "aisle": "1",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Butter Sticks",
@@ -47,7 +47,7 @@
   {
     "name": "Cheese Sliced",
     "aisle": "1",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Corn on the Cob",
@@ -72,7 +72,7 @@
   {
     "name": "Butter - John",
     "aisle": "1",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Eggs",
@@ -567,7 +567,7 @@
   {
     "name": "Mash Potatoes",
     "aisle": "",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Powdered Sugar",
@@ -582,7 +582,7 @@
   {
     "name": "Tater Tots",
     "aisle": "",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Toothpaste",
