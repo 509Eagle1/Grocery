@@ -222,17 +222,17 @@
   {
     "name": "Tortillas",
     "aisle": "2",
-    "checked": true
+    "checked": false
   },
   {
     "name": "A&W Root Beer",
     "aisle": "4",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Baking Pans",
     "aisle": "4",
-    "checked": true
+    "checked": false
   },
   {
     "name": "BBQ Sauce",
@@ -642,6 +642,11 @@
   {
     "name": "wmfs",
     "aisle": "9",
+    "checked": false
+  },
+  {
+    "name": "deli dkajf",
+    "aisle": "1",
     "checked": false
   }
 ]
