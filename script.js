@@ -90,7 +90,6 @@ function renderMaster(filter="") {
     left.appendChild(span);
     li.appendChild(left);
 
-    // Right buttons
     const right = document.createElement("div");
     right.className = "item-right";
 
@@ -118,7 +117,6 @@ function enterEditMode(li, item) {
 
   left.innerHTML = "";
 
-  // Disabled checkbox
   const checkbox = document.createElement("input");
   checkbox.type = "checkbox";
   checkbox.checked = item.checked;
@@ -138,8 +136,11 @@ function enterEditMode(li, item) {
   left.appendChild(nameInput);
   left.appendChild(aisleInput);
 
-  // Right side: Save | Cancel | Delete
+  // STACKED BUTTONS
   right.innerHTML = "";
+  right.style.display = "flex";
+  right.style.flexDirection = "column";
+  right.style.gap = "4px";
 
   const saveBtn = document.createElement("button");
   saveBtn.textContent = "Save";
@@ -175,11 +176,9 @@ function enterEditMode(li, item) {
     renderMaster();
   });
 
-  // DELETE with confirmation
+  // DELETE (with confirmation)
   deleteBtn.addEventListener("click", () => {
-    const ok = confirm(`Delete "${item.name}" from the list?`);
-    if (!ok) return;
-
+    if (!confirm(`Delete "${item.name}"?`)) return;
     groceryItems = groceryItems.filter(i => i !== item);
     saveData();
     renderMaster();
