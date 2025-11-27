@@ -212,25 +212,12 @@ function renderChecked() {
   const list = document.getElementById("checkedList");
   list.innerHTML = "";
 
-  // Sort checked items by aisle for display
-  let checkedItems = groceryItems
-    .filter(i => i.checked)
-    .sort((a, b) => {
-      let aA = parseInt(a.aisle) || 0;
-      let bA = parseInt(b.aisle) || 0;
-      if (aA === bA) {
-        return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
-      }
-      return aA - bA;
-    });
-
-  checkedItems.forEach(item => {
+  groceryItems.filter(i=>i.checked).forEach(item=>{
     const li = document.createElement("li");
     li.className = "item";
 
     const cb = document.createElement("input");
     cb.type = "checkbox";
-    cb.checked = true;
 
     const span = document.createElement("span");
     span.textContent = `${item.name} (Aisle: ${item.aisle})`;
@@ -239,34 +226,27 @@ function renderChecked() {
     li.appendChild(span);
     list.appendChild(li);
 
-    // Handle direct checkbox click
-    cb.addEventListener("click", (e) => {
+    // Checkbox click
+    cb.addEventListener("click",(e)=>{
       e.stopPropagation();
-
-      // Item becomes unchecked → put it back in aisle order
-      item.checked = false;
-      saveData();
-
-      renderChecked();
-      renderMaster(document.getElementById("searchInput").value);
+      cb.checked = false;
+      li.classList.add("checked");
+      list.appendChild(li);
     });
 
-    // Row click toggles too
-    li.addEventListener("click", () => {
+    // ENABLE row click toggle
+    li.addEventListener("click",(e)=>{
+      if (e.target.tagName === "INPUT" || e.target.tagName === "BUTTON") return;
       cb.checked = !cb.checked;
-
-      if (!cb.checked) {
-        // Unchecked → put back in main list in aisle order
-        item.checked = false;
-        saveData();
-
-        renderChecked();
-        renderMaster(document.getElementById("searchInput").value);
+      if(cb.checked){
+        li.classList.add("checked");
+        list.appendChild(li);
+      } else {
+        li.classList.remove("checked");
       }
     });
   });
 }
-
 
 // Add item
 function addItem() {
