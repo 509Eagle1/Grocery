@@ -8,6 +8,9 @@ const branch = "main";
 let groceryItems = JSON.parse(localStorage.getItem('groceryItems') || "[]");
 let githubTokenValid = false;
 
+// ===== Sorting Mode =====
+let sortMode = "aisle"; // default sorting by aisle
+
 // ===== Save / Load =====
 function saveData() {
   localStorage.setItem('groceryItems', JSON.stringify(groceryItems));
@@ -47,14 +50,22 @@ function renderMaster(filter="") {
   const list = document.getElementById("groceryList");
   list.innerHTML = "";
 
-  // Sort by aisle then name
+  // Sort items based on selected mode
   let sortedItems = [...groceryItems]
     .filter((item,index,self)=>self.findIndex(i=>i.name===item.name && i.aisle===item.aisle)===index)
     .sort((a,b)=>{
-      if(a.aisle.toLowerCase() === b.aisle.toLowerCase()){
+      if (sortMode === "name") {
         return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+      } else {
+        // numeric aisle sort
+        let aAisle = parseInt(a.aisle) || 0;
+        let bAisle = parseInt(b.aisle) || 0;
+
+        if (aAisle === bAisle) {
+          return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
+        }
+        return aAisle - bAisle;
       }
-      return a.aisle.toLowerCase().localeCompare(b.aisle.toLowerCase());
     });
 
   sortedItems.forEach((item,index)=>{
@@ -103,7 +114,7 @@ function renderChecked() {
 
     const cb = document.createElement("input");
     cb.type="checkbox";
-    cb.checked = false; // always unchecked when copied
+    cb.checked = false; // always unchecked when moved here
 
     const span = document.createElement("span");
     span.textContent=`${item.name} (Aisle: ${item.aisle})`;
@@ -136,9 +147,21 @@ function addItem() {
 }
 
 // ===== Page Switching =====
-function showMaster(){ document.getElementById("masterPage").classList.remove("hidden"); document.getElementById("checkedPage").classList.add("hidden"); document.getElementById("addPage").classList.add("hidden"); }
-function showChecked(){ document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.remove("hidden"); document.getElementById("addPage").classList.add("hidden"); }
-function showAdd(){ document.getElementById("addPage").classList.remove("hidden"); document.getElementById("masterPage").classList.add("hidden"); document.getElementById("checkedPage").classList.add("hidden"); }
+function showMaster(){ 
+  document.getElementById("masterPage").classList.remove("hidden"); 
+  document.getElementById("checkedPage").classList.add("hidden"); 
+  document.getElementById("addPage").classList.add("hidden"); 
+}
+function showChecked(){ 
+  document.getElementById("masterPage").classList.add("hidden"); 
+  document.getElementById("checkedPage").classList.remove("hidden"); 
+  document.getElementById("addPage").classList.add("hidden"); 
+}
+function showAdd(){ 
+  document.getElementById("addPage").classList.remove("hidden"); 
+  document.getElementById("masterPage").classList.add("hidden"); 
+  document.getElementById("checkedPage").classList.add("hidden"); 
+}
 
 // ===== Clear All Checks =====
 function clearAllChecks() {
@@ -249,6 +272,17 @@ document.addEventListener("DOMContentLoaded",async ()=>{
   document.getElementById("showMasterBtn").addEventListener("click",showMaster);
   document.getElementById("showCheckedBtn").addEventListener("click",showChecked);
   document.getElementById("showAddBtn").addEventListener("click",showAdd);
+
+  // NEW: Sort Buttons
+  document.getElementById("sortNameBtn").addEventListener("click",()=>{
+    sortMode = "name";
+    renderMaster(document.getElementById("searchInput").value);
+  });
+
+  document.getElementById("sortAisleBtn").addEventListener("click",()=>{
+    sortMode = "aisle";
+    renderMaster(document.getElementById("searchInput").value);
+  });
 
   // Search
   const searchInput=document.getElementById("searchInput");
