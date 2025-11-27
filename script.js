@@ -356,4 +356,35 @@ document.addEventListener("DOMContentLoaded",async ()=>{
   });
 
   // Search
-  const searchInput = document.getElementById("searchInput")
+  const searchInput = document.getElementById("searchInput");
+  const clearSearchBtn = document.getElementById("clearSearchBtn");
+
+  searchInput.addEventListener("input",()=>{
+    renderMaster(searchInput.value);
+    clearSearchBtn.style.display = searchInput.value ? "block" : "none";
+  });
+
+  clearSearchBtn.addEventListener("click",()=>{
+    searchInput.value="";
+    clearSearchBtn.style.display="none";
+    renderMaster();
+  });
+
+  // Admin menu actions
+  document.getElementById("exportJsonBtn").addEventListener("click",()=>exportToGitHub(true));
+  document.getElementById("restoreGitHubBtn").addEventListener("click",restoreFromGitHub);
+  document.getElementById("importListBtn").addEventListener("click",()=>document.getElementById("importListInput").click());
+  document.getElementById("setTokenBtn").addEventListener("click",promptGitHubToken);
+  document.getElementById("loadTokenFileBtn").addEventListener("click",()=>document.getElementById("tokenFileInput").click());
+
+  // Dropdown close behavior
+  document.addEventListener("click",()=>{
+    document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none");
+  });
+
+  document.querySelector(".dropdown-btn").addEventListener("click",(e)=>{
+    e.stopPropagation();
+    const content = document.querySelector(".dropdown-content");
+    content.style.display = content.style.display==="block" ? "none" : "block";
+  });
+});
