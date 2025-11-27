@@ -24,4 +24,47 @@
       <button id="restoreGitHubBtn">Restore</button>
       <button id="importListBtn">Import List</button>
       <button id="setTokenBtn">Set GitHub Token</button>
-      <button id="loadTokenFileBtn">Load Token
+      <button id="loadTokenFileBtn">Load Token From File</button>
+    </div>
+  </div>
+</div>
+
+<div class="list-container">
+
+  <!-- Master List -->
+  <div id="masterPage">
+    <div class="button-bar">
+      <button id="clearChecksBtn" class="clear">Clear All Checks</button>
+
+      <button id="sortNameBtn">Sort by Name</button>
+      <button id="sortAisleBtn">Sort by Aisle</button>
+
+      <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search items...">
+        <span id="clearSearchBtn" class="clear-search">×</span>
+      </div>
+    </div>
+    <ul id="groceryList"></ul>
+  </div>
+
+  <!-- Shopping List -->
+  <div id="checkedPage" class="hidden">
+    <ul id="checkedList"></ul>
+  </div>
+
+  <!-- Add Items -->
+  <div id="addPage" class="hidden">
+    <input type="text" id="itemInput" placeholder="Item name">
+    <input type="text" id="aisleInput" placeholder="Aisle">
+    <button id="addItemBtn" class="add">Add Item</button>
+  </div>
+
+</div>
+
+<!-- Hidden file inputs -->
+<input type="file" id="importListInput" accept=".json,.csv" style="display:none;">
+<input type="file" id="tokenFileInput" accept=".txt" style="display:none;">
+
+<script src="script.js"></script>
+</body>
+</html>
