@@ -21,7 +21,7 @@ function notify(msg, success = true){
   console.log(msg);
 }
 
-// ===== GitHub Token Prompt & Validation =====
+// ===== GitHub Token Prompt =====
 async function promptGitHubToken() {
   let token = localStorage.getItem("githubToken");
   if (!token) {
@@ -43,6 +43,23 @@ async function promptGitHubToken() {
       githubTokenValid = false;
     }
   }
+}
+
+// ===== Helper: Row Click Toggle =====
+function enableRowToggle(li, checkbox, item) {
+  li.addEventListener("click", (event) => {
+
+    // If clicking inside input (edit mode), ignore
+    if (event.target.tagName === "INPUT" || event.target.tagName === "BUTTON") return;
+
+    // Toggle checkbox
+    checkbox.checked = !checkbox.checked;
+    item.checked = checkbox.checked;
+
+    saveData();
+    renderChecked();
+    renderMaster(document.getElementById("searchInput").value);
+  });
 }
 
 // ===== Render Master List =====
@@ -77,7 +94,9 @@ function renderMaster(filter="") {
     const checkbox = document.createElement("input");
     checkbox.type="checkbox";
     checkbox.checked = item.checked || false;
-    checkbox.addEventListener("change",()=>{
+
+    checkbox.addEventListener("click",(e)=>{
+      e.stopPropagation();
       item.checked = checkbox.checked;
       saveData();
       renderChecked();
@@ -98,11 +117,17 @@ function renderMaster(filter="") {
     editBtn.style.padding = "4px 6px";
     editBtn.style.fontSize = "12px";
 
-    editBtn.addEventListener("click", () => enterEditMode(li, item));
-    right.appendChild(editBtn);
+    editBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      enterEditMode(li, item);
+    });
 
+    right.appendChild(editBtn);
     li.appendChild(right);
     list.appendChild(li);
+
+    // ENABLE row click toggle
+    enableRowToggle(li, checkbox, item);
   });
 }
 
@@ -136,7 +161,6 @@ function enterEditMode(li, item) {
   left.appendChild(nameInput);
   left.appendChild(aisleInput);
 
-  // STACKED BUTTONS
   right.innerHTML = "";
   right.style.display = "flex";
   right.style.flexDirection = "column";
@@ -145,17 +169,14 @@ function enterEditMode(li, item) {
   const saveBtn = document.createElement("button");
   saveBtn.textContent = "Save";
   saveBtn.style.fontSize = "12px";
-  saveBtn.style.padding = "4px 6px";
 
   const cancelBtn = document.createElement("button");
   cancelBtn.textContent = "Cancel";
   cancelBtn.style.fontSize = "12px";
-  cancelBtn.style.padding = "4px 6px";
 
   const deleteBtn = document.createElement("button");
   deleteBtn.textContent = "Delete";
   deleteBtn.style.fontSize = "12px";
-  deleteBtn.style.padding = "4px 6px";
   deleteBtn.style.background = "#dc3545";
   deleteBtn.style.color = "white";
 
@@ -176,7 +197,7 @@ function enterEditMode(li, item) {
     renderMaster();
   });
 
-  // DELETE (with confirmation)
+  // DELETE (confirmation)
   deleteBtn.addEventListener("click", () => {
     if (!confirm(`Delete "${item.name}"?`)) return;
     groceryItems = groceryItems.filter(i => i !== item);
@@ -190,6 +211,7 @@ function enterEditMode(li, item) {
 function renderChecked() {
   const list = document.getElementById("checkedList");
   list.innerHTML = "";
+
   groceryItems.filter(i=>i.checked).forEach(item=>{
     const li = document.createElement("li");
     li.className = "item";
@@ -204,7 +226,18 @@ function renderChecked() {
     li.appendChild(span);
     list.appendChild(li);
 
-    cb.addEventListener("change", ()=>{
+    // Checkbox click
+    cb.addEventListener("click",(e)=>{
+      e.stopPropagation();
+      cb.checked = false;
+      li.classList.add("checked");
+      list.appendChild(li);
+    });
+
+    // ENABLE row click toggle
+    li.addEventListener("click",(e)=>{
+      if (e.target.tagName === "INPUT" || e.target.tagName === "BUTTON") return;
+      cb.checked = !cb.checked;
       if(cb.checked){
         li.classList.add("checked");
         list.appendChild(li);
