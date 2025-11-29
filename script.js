@@ -10,10 +10,21 @@ let githubTokenValid = false;
 
 // Sorting mode
 let sortMode = "aisle";
+let autoExportTimer = null; // debounce timer for auto export
 
 // Save
 function saveData() {
  localStorage.setItem('groceryItems', JSON.stringify(groceryItems));
+}
+
+function scheduleAutoExport(reason="change") {
+ // Only auto-export if we have a token and not running as file://
+ const token = localStorage.getItem("githubToken");
+ if (!token || window.location.protocol === 'file:') return;
+ clearTimeout(autoExportTimer);
+ autoExportTimer = setTimeout(()=>{
+ exportToGitHub(false, true, `Auto sync (${reason})`);
+ },1500); //1.5s debounce
 }
 
 // Notification
@@ -61,6 +72,7 @@ function enableRowToggle(li, checkbox, item) {
  renderChecked();
  const si = document.getElementById("searchInput");
  renderMaster(si ? si.value : "");
+ scheduleAutoExport("toggle item");
  });
 }
 
@@ -103,6 +115,7 @@ function renderMaster(filter="") {
  item.checked = checkbox.checked;
  saveData();
  renderChecked();
+ scheduleAutoExport("check item");
  });
 
  const span = document.createElement("span");
@@ -190,6 +203,7 @@ function enterEditMode(li, item) {
  item.aisle = aisleInput.value.trim() || origAisle;
  saveData();
  renderMaster();
+ scheduleAutoExport("edit item");
  });
 
  cancelBtn.addEventListener("click", () => {
@@ -202,6 +216,7 @@ function enterEditMode(li, item) {
  saveData();
  renderMaster();
  renderChecked();
+ scheduleAutoExport("delete item");
  });
 }
 
@@ -246,12 +261,13 @@ function renderChecked() {
 }
 
 // ===== GitHub Export =====
-async function exportToGitHub(downloadAlso = false) {
+async function exportToGitHub(downloadAlso = false, autoCommit = false, autoMessage = "Auto sync") {
  const token = localStorage.getItem("githubToken");
  if (!token || window.location.protocol === 'file:') {
- // Local mode: just download the JSON
+ if (downloadAlso) {
  notify("Local export: downloading grocery.json");
  downloadLocalJson();
+ }
  return;
  }
  const content = btoa(unescape(encodeURIComponent(JSON.stringify(groceryItems, null,2))));
@@ -274,7 +290,7 @@ async function exportToGitHub(downloadAlso = false) {
  "Content-Type": "application/json"
  },
  body: JSON.stringify({
- message: "Update grocery list",
+ message: autoCommit ? autoMessage : "Update grocery list",
  content,
  branch,
  sha
@@ -282,7 +298,7 @@ async function exportToGitHub(downloadAlso = false) {
  });
  if (!resPut.ok) {
  notify("GitHub export failed: " + resPut.status, false);
- } else {
+ } else if (!autoCommit) {
  notify("GitHub export successful.");
  }
  } catch (e) {
@@ -304,7 +320,6 @@ function downloadLocalJson() {
 // ===== Restore: GitHub or Local =====
 async function restoreFromGitHub() {
  const token = localStorage.getItem("githubToken");
- // In local mode or without token, try local file first
  if (!token || window.location.protocol === 'file:') {
  try {
  const resLocal = await fetch(path, { cache: 'no-cache' });
@@ -319,14 +334,12 @@ async function restoreFromGitHub() {
  renderMaster();
  renderChecked();
  notify("Local restore completed.");
- return;
  } catch (e) {
  notify("Local restore error: " + e.message, false);
+ }
  return;
  }
- }
 
- // Otherwise, use GitHub
  try {
  const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
  headers: { Authorization: `token ${token}` }
@@ -376,6 +389,7 @@ function handleImport(e) {
  saveData();
  renderMaster();
  notify("Import completed.");
+ scheduleAutoExport("import");
  } catch (err) {
  notify("Import failed: " + err.message, false);
  } finally {
@@ -410,14 +424,12 @@ function addItem() {
  const name = nameInput.value.trim();
  const aisle = aisleInput.value.trim();
  if(!name) return;
-
  groceryItems.push({name, aisle, checked:false});
  saveData();
-
  nameInput.value="";
  aisleInput.value="";
-
  renderMaster();
+ scheduleAutoExport("add item");
 }
 
 // Page switching
@@ -443,6 +455,7 @@ function clearAllChecks() {
  saveData();
  renderMaster();
  renderChecked();
+ scheduleAutoExport("clear checks");
 }
 
 // ===== Initialize =====
@@ -471,55 +484,22 @@ document.addEventListener("DOMContentLoaded", async ()=>{
 
  addItemBtn?.addEventListener("click", addItem);
  clearChecksBtn?.addEventListener("click", clearAllChecks);
-
  showMasterBtn?.addEventListener("click", showMaster);
  showCheckedBtn?.addEventListener("click", showChecked);
  showAddBtn?.addEventListener("click", showAdd);
-
- sortNameBtn?.addEventListener("click", ()=>{
- sortMode = "name";
- renderMaster(searchInput?.value || "");
- });
-
- sortAisleBtn?.addEventListener("click", ()=>{
- sortMode = "aisle";
- renderMaster(searchInput?.value || "");
- });
-
- searchInput?.addEventListener("input", ()=>{
- renderMaster(searchInput.value);
- if (clearSearchBtn) clearSearchBtn.style.display = searchInput.value ? "block" : "none";
- });
-
- clearSearchBtn?.addEventListener("click", ()=>{
- if (!searchInput) return;
- searchInput.value="";
- clearSearchBtn.style.display="none";
- renderMaster();
- });
-
+ sortNameBtn?.addEventListener("click", ()=>{ sortMode = "name"; renderMaster(searchInput?.value || ""); });
+ sortAisleBtn?.addEventListener("click", ()=>{ sortMode = "aisle"; renderMaster(searchInput?.value || ""); });
+ searchInput?.addEventListener("input", ()=>{ renderMaster(searchInput.value); if (clearSearchBtn) clearSearchBtn.style.display = searchInput.value ? "block" : "none"; });
+ clearSearchBtn?.addEventListener("click", ()=>{ if (!searchInput) return; searchInput.value=""; clearSearchBtn.style.display="none"; renderMaster(); });
  exportJsonBtn?.addEventListener("click", ()=>exportToGitHub(true));
  restoreGitHubBtn?.addEventListener("click", restoreFromGitHub);
  importListBtn?.addEventListener("click", ()=>importListInput?.click());
  setTokenBtn?.addEventListener("click", promptGitHubToken);
  loadTokenFileBtn?.addEventListener("click", ()=>tokenFileInput?.click());
-
  importListInput?.addEventListener("change", handleImport);
  tokenFileInput?.addEventListener("change", handleTokenFileLoad);
-
- document.addEventListener("click", ()=>{
- document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none");
- });
-
+ document.addEventListener("click", ()=>{ document.querySelectorAll(".dropdown-content").forEach(dc=>dc.style.display="none"); });
  const ddBtn = document.querySelector(".dropdown-btn");
- ddBtn?.addEventListener("click", (e)=>{
- e.stopPropagation();
- const content = document.querySelector(".dropdown-content");
- if (content) {
- content.style.display = content.style.display === "block" ? "none" : "block";
- }
- });
- } catch (e) {
- console.error("Initialization error:", e);
- }
+ ddBtn?.addEventListener("click", (e)=>{ e.stopPropagation(); const content = document.querySelector(".dropdown-content"); if (content) { content.style.display = content.style.display === "block" ? "none" : "block"; } });
+ } catch (e) { console.error("Initialization error:", e); }
 });
