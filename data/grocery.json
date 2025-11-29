@@ -222,7 +222,7 @@
   {
     "name": "Tortillas",
     "aisle": "2",
-    "checked": true
+    "checked": false
   },
   {
     "name": "A&W Root Beer",
