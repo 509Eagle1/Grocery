@@ -147,7 +147,7 @@
   {
     "name": "Bagels",
     "aisle": "2",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Bread",
