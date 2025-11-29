@@ -357,7 +357,7 @@
   {
     "name": "Almond Milk",
     "aisle": "5",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Beef Roast",
