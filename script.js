@@ -270,41 +270,47 @@ async function exportToGitHub(downloadAlso = false, autoCommit = false, autoMess
  }
  return;
  }
- const content = btoa(unescape(encodeURIComponent(JSON.stringify(groceryItems, null,2))));
+ try {
+ // Build base64 content
+ const jsonText = JSON.stringify(groceryItems, null,2);
+ const content = btoa(unescape(encodeURIComponent(jsonText)));
+ // Get existing file sha (if exists)
  let sha = null;
- try {
- const resGet = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
- headers: { Authorization: `token ${token}` }
- });
- if (resGet.status ===200) {
- const json = await resGet.json();
- sha = json.sha;
- }
- } catch { /* ignore */ }
-
- try {
- const resPut = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
- method: "PUT",
+ const resGet = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
  headers: {
  Authorization: `token ${token}`,
- "Content-Type": "application/json"
- },
- body: JSON.stringify({
- message: autoCommit ? autoMessage : "Update grocery list",
- content,
- branch,
- sha
- })
+ 'Accept': 'application/vnd.github+json',
+ 'User-Agent': 'WebProject1/1.0'
+ }
  });
+ if (resGet.status ===200) {
+ const getBody = await resGet.json();
+ sha = getBody.sha;
+ } else if (resGet.status !==404) {
+ const errTxt = await resGet.text();
+ notify(`GitHub pre-check failed: ${resGet.status} ${errTxt}`, false);
+ }
+ // Commit
+ const message = autoCommit ? autoMessage : 'Update grocery list';
+ const resPut = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+ method: 'PUT',
+ headers: {
+ Authorization: `token ${token}`,
+ 'Accept': 'application/vnd.github+json',
+ 'User-Agent': 'WebProject1/1.0',
+ 'Content-Type': 'application/json'
+ },
+ body: JSON.stringify({ message, content, branch, sha })
+ });
+ const putTxt = await resPut.text();
  if (!resPut.ok) {
- notify("GitHub export failed: " + resPut.status, false);
+ notify(`GitHub export failed: ${resPut.status} ${putTxt}`, false);
  } else if (!autoCommit) {
- notify("GitHub export successful.");
+ notify('GitHub export successful.');
  }
  } catch (e) {
- notify("GitHub export exception: " + e.message, false);
+ notify('GitHub export exception: ' + e.message, false);
  }
-
  if (downloadAlso) downloadLocalJson();
 }
 
