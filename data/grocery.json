@@ -222,12 +222,12 @@
   {
     "name": "Tortillas",
     "aisle": "2",
-    "checked": false
+    "checked": true
   },
   {
     "name": "A&W Root Beer",
     "aisle": "4",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Baking Pans",
