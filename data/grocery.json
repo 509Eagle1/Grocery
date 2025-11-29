@@ -27,7 +27,7 @@
   {
     "name": "Apple sause",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Canadian Bacon",
@@ -147,7 +147,7 @@
   {
     "name": "Bagels",
     "aisle": "2",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Bread",
