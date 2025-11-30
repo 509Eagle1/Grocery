@@ -7,7 +7,7 @@
   {
     "name": "Bologna",
     "aisle": "1",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Broccoli",
@@ -17,7 +17,7 @@
   {
     "name": "Trash Bags 39gal",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Coffee Pods",
@@ -32,12 +32,12 @@
   {
     "name": "Canadian Bacon",
     "aisle": "1",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Cheese Shreded",
     "aisle": "1",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Butter Sticks",
@@ -67,12 +67,12 @@
   {
     "name": "Dressing",
     "aisle": "1",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Butter - John",
     "aisle": "1",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Eggs",
@@ -87,7 +87,7 @@
   {
     "name": "Green Grapes",
     "aisle": "1",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Hot Dogs",
@@ -97,7 +97,7 @@
   {
     "name": "Milk",
     "aisle": "1",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Onion",
@@ -112,7 +112,7 @@
   {
     "name": "Pistachio",
     "aisle": "1",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Potatoes",
@@ -632,7 +632,7 @@
   {
     "name": "Butter - Jan",
     "aisle": "1",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Cobras",
