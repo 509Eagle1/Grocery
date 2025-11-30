@@ -577,17 +577,17 @@
   {
     "name": "Shampoo",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Tater Tots",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Toothpaste",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Trash Bags 39gal",
