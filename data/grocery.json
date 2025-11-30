@@ -2,12 +2,12 @@
   {
     "name": "Food Coloring",
     "aisle": "",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Bologna",
     "aisle": "1",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Broccoli",
@@ -17,7 +17,7 @@
   {
     "name": "Trash Bags 39gal",
     "aisle": "",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Coffee Pods",
@@ -32,12 +32,12 @@
   {
     "name": "Canadian Bacon",
     "aisle": "1",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Cheese Shreded",
     "aisle": "1",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Butter Sticks",
@@ -62,17 +62,17 @@
   {
     "name": "Cube Steaks",
     "aisle": "",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Dressing",
     "aisle": "1",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Butter - John",
     "aisle": "1",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Eggs",
@@ -87,7 +87,7 @@
   {
     "name": "Green Grapes",
     "aisle": "1",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Hot Dogs",
@@ -97,7 +97,7 @@
   {
     "name": "Milk",
     "aisle": "1",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Onion",
@@ -112,7 +112,7 @@
   {
     "name": "Pistachio",
     "aisle": "1",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Potatoes",
@@ -532,12 +532,12 @@
   {
     "name": "Coffee Pods",
     "aisle": "",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Cresent Rolls",
     "aisle": "",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Cube Steaks",
@@ -547,7 +547,7 @@
   {
     "name": "Dawn",
     "aisle": "",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Food Coloring",
@@ -557,12 +557,12 @@
   {
     "name": "French Fries",
     "aisle": "",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Grandmas",
     "aisle": "",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Mash Potatoes",
@@ -572,22 +572,22 @@
   {
     "name": "Powdered Sugar",
     "aisle": "",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Shampoo",
     "aisle": "",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Tater Tots",
     "aisle": "",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Toothpaste",
     "aisle": "",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Trash Bags 39gal",
@@ -632,7 +632,7 @@
   {
     "name": "Butter - Jan",
     "aisle": "1",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Cobras",
