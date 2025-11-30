@@ -2,7 +2,7 @@
   {
     "name": "Food Coloring",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Bologna",
@@ -62,7 +62,7 @@
   {
     "name": "Cube Steaks",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Dressing",
@@ -532,12 +532,12 @@
   {
     "name": "Coffee Pods",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Cresent Rolls",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Cube Steaks",
@@ -547,7 +547,7 @@
   {
     "name": "Dawn",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Food Coloring",
@@ -557,7 +557,7 @@
   {
     "name": "French Fries",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Grandmas",
