@@ -27,7 +27,7 @@
   {
     "name": "Apple sause",
     "aisle": "",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Canadian Bacon",
@@ -147,7 +147,7 @@
   {
     "name": "Bagels",
     "aisle": "2",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Bread",
@@ -222,22 +222,22 @@
   {
     "name": "Tortillas",
     "aisle": "2",
-    "checked": true
+    "checked": false
   },
   {
     "name": "A&W Root Beer",
     "aisle": "4",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Baking Pans",
     "aisle": "4",
-    "checked": true
+    "checked": false
   },
   {
     "name": "BBQ Sauce",
     "aisle": "4",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Bratwurst",
@@ -357,7 +357,7 @@
   {
     "name": "Almond Milk",
     "aisle": "5",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Beef Roast",
@@ -562,7 +562,7 @@
   {
     "name": "Grandmas",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Mash Potatoes",
@@ -572,7 +572,7 @@
   {
     "name": "Powdered Sugar",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Shampoo",
