@@ -537,7 +537,7 @@
   {
     "name": "Cresent Rolls",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Cube Steaks",
@@ -562,7 +562,7 @@
   {
     "name": "Grandmas",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Mash Potatoes",
@@ -582,7 +582,7 @@
   {
     "name": "Tater Tots",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Toothpaste",
