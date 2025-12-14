@@ -22,7 +22,7 @@
   {
     "name": "Coffee Pods",
     "aisle": "4",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Apple sause",
@@ -252,7 +252,7 @@
   {
     "name": "Chex",
     "aisle": "4",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Deli Turkey",
@@ -537,7 +537,7 @@
   {
     "name": "Cresent Rolls",
     "aisle": "",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Cube Steaks",
@@ -562,7 +562,12 @@
   {
     "name": "Grandmas",
     "aisle": "",
-    "checked": true
+    "checked": false
+  },
+  {
+    "name": "Mash Potatoes",
+    "aisle": "",
+    "checked": false
   },
   {
     "name": "Powdered Sugar",
@@ -577,7 +582,7 @@
   {
     "name": "Tater Tots",
     "aisle": "",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Toothpaste",
@@ -637,6 +642,11 @@
   {
     "name": "wmfs",
     "aisle": "9",
+    "checked": false
+  },
+  {
+    "name": "deli dkajf",
+    "aisle": "1",
     "checked": false
   }
 ]
