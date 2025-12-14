@@ -12,7 +12,7 @@
   {
     "name": "Broccoli",
     "aisle": "1",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Trash Bags 39gal",
@@ -22,7 +22,7 @@
   {
     "name": "Coffee Pods",
     "aisle": "4",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Apple sause",
@@ -42,7 +42,7 @@
   {
     "name": "Butter Sticks",
     "aisle": "1",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Cheese Sliced",
@@ -72,7 +72,7 @@
   {
     "name": "Butter - John",
     "aisle": "1",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Eggs",
@@ -252,7 +252,7 @@
   {
     "name": "Chex",
     "aisle": "4",
-    "checked": true
+    "checked": false
   },
   {
     "name": "Deli Turkey",
@@ -537,7 +537,7 @@
   {
     "name": "Cresent Rolls",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Cube Steaks",
@@ -562,12 +562,7 @@
   {
     "name": "Grandmas",
     "aisle": "",
-    "checked": false
-  },
-  {
-    "name": "Mash Potatoes",
-    "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Powdered Sugar",
@@ -582,12 +577,12 @@
   {
     "name": "Tater Tots",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Toothpaste",
     "aisle": "",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Trash Bags 39gal",
@@ -632,7 +627,7 @@
   {
     "name": "Butter - Jan",
     "aisle": "1",
-    "checked": false
+    "checked": true
   },
   {
     "name": "Cobras",
@@ -642,11 +637,6 @@
   {
     "name": "wmfs",
     "aisle": "9",
-    "checked": false
-  },
-  {
-    "name": "deli dkajf",
-    "aisle": "1",
     "checked": false
   }
 ]
